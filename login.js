@@ -73,12 +73,80 @@ if (form) {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
 
-    if (mode === 'signup' && !emailInput.value.trim().toLowerCase().endsWith(SCHOOL_DOMAIN)) {
-      showEmailError();
-      emailInput.focus();
+    if (mode === 'signup') {
+      if (!emailInput.value.trim().toLowerCase().endsWith(SCHOOL_DOMAIN)) {
+        showEmailError();
+        emailInput.focus();
+        return;
+      }
+      openProfileModal();
       return;
     }
 
+    window.location.href = 'index.html';
+  });
+}
+
+// Complete-profile modal (shown right after a successful sign up)
+const profileModal = document.getElementById('profile-modal');
+const profileForm = document.getElementById('profile-form');
+const firstNameInput = document.getElementById('first-name');
+const lastNameInput = document.getElementById('last-name');
+const nicknameInput = document.getElementById('nickname');
+const gradeSelect = document.getElementById('grade');
+
+const previewAvatar = document.getElementById('preview-avatar');
+const previewName = document.getElementById('preview-name');
+const previewNickname = document.getElementById('preview-nickname');
+const previewGrade = document.getElementById('preview-grade');
+
+function openProfileModal() {
+  profileModal.hidden = false;
+  document.body.style.overflow = 'hidden';
+  firstNameInput.focus();
+}
+
+function closeProfileModal() {
+  profileModal.hidden = true;
+  document.body.style.overflow = '';
+}
+
+function updatePreview() {
+  const first = firstNameInput.value.trim();
+  const last = lastNameInput.value.trim();
+  const nickname = nicknameInput.value.trim();
+  const grade = gradeSelect.value;
+
+  const fullName = [first, last].filter(Boolean).join(' ');
+  previewName.textContent = fullName || 'Your name';
+  previewAvatar.textContent = ((first[0] || '') + (last[0] || '')).toUpperCase() || '?';
+  previewNickname.textContent = nickname ? `"${nickname}"` : 'Nickname';
+
+  if (grade) {
+    previewGrade.hidden = false;
+    previewGrade.querySelector('span').textContent = grade;
+  } else {
+    previewGrade.hidden = true;
+  }
+}
+
+[firstNameInput, lastNameInput, nicknameInput, gradeSelect].forEach((el) => {
+  if (el) el.addEventListener('input', updatePreview);
+});
+
+const profileModalClose = document.getElementById('profile-modal-close');
+const profileModalCancel = document.getElementById('profile-modal-cancel');
+if (profileModalClose) profileModalClose.addEventListener('click', closeProfileModal);
+if (profileModalCancel) profileModalCancel.addEventListener('click', closeProfileModal);
+if (profileModal) {
+  profileModal.addEventListener('click', (e) => {
+    if (e.target === profileModal) closeProfileModal();
+  });
+}
+
+if (profileForm) {
+  profileForm.addEventListener('submit', (e) => {
+    e.preventDefault();
     window.location.href = 'index.html';
   });
 }

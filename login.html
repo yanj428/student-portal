@@ -134,6 +134,78 @@
     </div>
   </div>
 
+  <!-- Complete profile modal (shown after a successful sign up) -->
+  <div class="modal-overlay" id="profile-modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
+      <div class="modal-header">
+        <h2 id="profile-modal-title">Complete your profile</h2>
+        <button type="button" class="modal-close" id="profile-modal-close" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <form id="profile-form">
+        <div class="modal-body">
+          <div class="modal-fields">
+            <div class="modal-field-row">
+              <div class="modal-field">
+                <label class="field-label" for="first-name">First name</label>
+                <input class="field-input" type="text" id="first-name" placeholder="Enter your first name" required />
+              </div>
+              <div class="modal-field">
+                <label class="field-label" for="last-name">Last name</label>
+                <input class="field-input" type="text" id="last-name" placeholder="Enter your last name" required />
+              </div>
+            </div>
+
+            <div class="modal-field">
+              <label class="field-label" for="nickname">Nickname</label>
+              <input class="field-input" type="text" id="nickname" placeholder="What should we call you?" />
+            </div>
+
+            <div class="modal-field">
+              <label class="field-label" for="grade">Grade</label>
+              <select class="field-input" id="grade" required>
+                <option value="" disabled selected>Select your grade</option>
+                <option>Grade 1</option>
+                <option>Grade 2</option>
+                <option>Grade 3</option>
+                <option>Grade 4</option>
+                <option>Grade 5</option>
+                <option>Grade 6</option>
+                <option>Grade 7</option>
+                <option>Grade 8</option>
+                <option>Grade 9</option>
+                <option>Grade 10</option>
+                <option>Grade 11</option>
+                <option>Grade 12</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-preview">
+            <span class="preview-label">Preview</span>
+            <div class="preview-avatar" id="preview-avatar">?</div>
+            <div class="preview-name" id="preview-name">Your name</div>
+            <div class="preview-nickname" id="preview-nickname">Nickname</div>
+            <div class="preview-grade-pill" id="preview-grade" hidden>
+              <svg viewBox="0 0 24 24" fill="none"><path d="M12 3L1 8.5L12 14L21 9.9V16.5H23V8.5L12 3Z" fill="currentColor"/><path d="M5 10.7V15.5C5 15.5 7.5 18 12 18C16.5 18 19 15.5 19 15.5V10.7L12 14L5 10.7Z" fill="currentColor"/></svg>
+              <span>Grade</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <span class="modal-hint">This information appears on your student profile.</span>
+          <div class="modal-actions">
+            <button type="button" class="modal-btn cancel" id="profile-modal-cancel">Cancel</button>
+            <button type="submit" class="modal-btn save">Save and continue</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="login.js"></script>
 </body>
 </html>

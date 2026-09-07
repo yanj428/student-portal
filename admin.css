@@ -250,6 +250,53 @@ tr:last-child td { border-bottom: none; }
 .delete-btn:hover { color: #C0392B; }
 .delete-btn svg { width: 16px; height: 16px; }
 
+/* Homepage content editor */
+.content-form {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+.content-section h3 {
+  font-size: 14px;
+  margin: 0 0 12px 0;
+}
+.content-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.content-row {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+.content-row.stacked {
+  grid-template-columns: 1fr;
+}
+.content-row.two-col {
+  grid-template-columns: 90px 1fr 1fr;
+}
+.content-row.calendar-row {
+  grid-template-columns: 56px 64px 1fr 1fr;
+}
+.content-row.project-row {
+  grid-template-columns: 1fr 90px;
+}
+.content-row .row-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding-top: 11px;
+}
+.content-row textarea.field-input {
+  resize: vertical;
+  min-height: 44px;
+  font-family: inherit;
+}
+.content-form .btn.primary { align-self: flex-start; }
+
 @media (max-width: 640px) {
   .form-row { grid-template-columns: 1fr; }
+  .content-row, .content-row.two-col { grid-template-columns: 1fr; }
 }

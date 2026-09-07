@@ -116,6 +116,63 @@ app.delete('/api/admin/students/:id', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
+// ---- Homepage content (text only — the layout/section list is fixed) ----
+function validateContent(content) {
+  const shape = db.DEFAULT_CONTENT;
+  if (!content || typeof content !== 'object') return 'Invalid content.';
+
+  for (const key of Object.keys(shape)) {
+    if (!Array.isArray(content[key]) || content[key].length !== shape[key].length) {
+      return `"${key}" must be a list of exactly ${shape[key].length} item(s).`;
+    }
+  }
+
+  for (const a of content.announcements) {
+    if (typeof a.title !== 'string' || typeof a.body !== 'string') return 'Each announcement needs a title and body.';
+  }
+  for (const e of content.calendarEvents) {
+    if (![e.day, e.month, e.title, e.subtitle].every((v) => typeof v === 'string')) {
+      return 'Each calendar event needs day, month, title, and subtitle.';
+    }
+  }
+  for (const l of content.lunchMenu) {
+    if (typeof l.weekday !== 'string' || typeof l.item !== 'string') return 'Each lunch entry needs a weekday and item.';
+  }
+  for (const c of content.clubs) {
+    if (typeof c !== 'string') return 'Each club must be text.';
+  }
+  for (const p of content.projects) {
+    if (typeof p.title !== 'string' || typeof p.percent !== 'number' || p.percent < 0 || p.percent > 100) {
+      return 'Each project needs a title and a percent between 0 and 100.';
+    }
+  }
+  for (const q of content.quickLinks) {
+    if (typeof q.label !== 'string' || typeof q.url !== 'string') return 'Each quick link needs a label and URL.';
+  }
+  for (const m of content.council) {
+    if (typeof m.initials !== 'string') return 'Each council member needs initials.';
+  }
+
+  return null;
+}
+
+app.get('/api/content', requireStudent, (req, res) => {
+  res.json({ content: db.readContent() });
+});
+
+app.get('/api/admin/content', requireAdmin, (req, res) => {
+  res.json({ content: db.readContent() });
+});
+
+app.put('/api/admin/content', requireAdmin, (req, res) => {
+  const { content } = req.body || {};
+  const error = validateContent(content);
+  if (error) return res.status(400).json({ error });
+
+  db.writeContent(content);
+  res.json({ content });
+});
+
 // ---- Student auth ----
 app.post('/api/login', (req, res) => {
   const { email, password } = req.body || {};

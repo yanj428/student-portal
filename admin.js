@@ -20,6 +20,7 @@ function showAdminPanel() {
   gate.hidden = true;
   adminPage.hidden = false;
   loadStudents();
+  loadContent();
 }
 
 function showGate() {
@@ -157,6 +158,170 @@ createForm.addEventListener('submit', async (e) => {
   } finally {
     createSubmit.disabled = false;
     createSubmit.textContent = 'Create account';
+  }
+});
+
+// ---- Homepage content editor ----
+const contentForm = document.getElementById('content-form');
+const contentError = document.getElementById('content-error');
+const contentSuccess = document.getElementById('content-success');
+const contentSave = document.getElementById('content-save');
+
+const announcementsFields = document.getElementById('announcements-fields');
+const calendarFields = document.getElementById('calendar-fields');
+const lunchFields = document.getElementById('lunch-fields');
+const councilFields = document.getElementById('council-fields');
+const clubsFields = document.getElementById('clubs-fields');
+const projectsFields = document.getElementById('projects-fields');
+const quicklinksFields = document.getElementById('quicklinks-fields');
+
+function fieldAttrs(section, index, field) {
+  return `data-section="${section}" data-index="${index}" data-field="${field}"`;
+}
+
+async function loadContent() {
+  const res = await fetch('/api/admin/content');
+  if (!res.ok) return;
+  const { content } = await res.json();
+  renderContentForm(content);
+}
+
+function renderContentForm(content) {
+  announcementsFields.innerHTML = content.announcements
+    .map(
+      (a, i) => `
+        <div class="content-row stacked">
+          <label class="row-label">Announcement ${i + 1}</label>
+          <input class="field-input" ${fieldAttrs('announcements', i, 'title')} value="${escapeHtml(a.title)}" placeholder="Title" />
+          <textarea class="field-input" ${fieldAttrs('announcements', i, 'body')} placeholder="Body">${escapeHtml(a.body)}</textarea>
+        </div>`
+    )
+    .join('');
+
+  calendarFields.innerHTML = content.calendarEvents
+    .map(
+      (e, i) => `
+        <div class="content-row calendar-row">
+          <input class="field-input" ${fieldAttrs('calendarEvents', i, 'day')} value="${escapeHtml(e.day)}" placeholder="Day" />
+          <input class="field-input" ${fieldAttrs('calendarEvents', i, 'month')} value="${escapeHtml(e.month)}" placeholder="Month" />
+          <input class="field-input" ${fieldAttrs('calendarEvents', i, 'title')} value="${escapeHtml(e.title)}" placeholder="Event title" />
+          <input class="field-input" ${fieldAttrs('calendarEvents', i, 'subtitle')} value="${escapeHtml(e.subtitle)}" placeholder="Subtitle" />
+        </div>`
+    )
+    .join('');
+
+  lunchFields.innerHTML = content.lunchMenu
+    .map(
+      (l, i) => `
+        <div class="content-row">
+          <span class="row-label">${escapeHtml(l.weekday)}</span>
+          <input class="field-input" ${fieldAttrs('lunchMenu', i, 'item')} value="${escapeHtml(l.item)}" placeholder="Menu item" />
+          <input type="hidden" ${fieldAttrs('lunchMenu', i, 'weekday')} value="${escapeHtml(l.weekday)}" />
+        </div>`
+    )
+    .join('');
+
+  councilFields.innerHTML = content.council
+    .map(
+      (m, i) => `
+        <div class="content-row">
+          <label class="row-label">Member ${i + 1}</label>
+          <input class="field-input" ${fieldAttrs('council', i, 'initials')} value="${escapeHtml(m.initials)}" placeholder="Initials (e.g. EM)" maxlength="3" />
+        </div>`
+    )
+    .join('');
+
+  clubsFields.innerHTML = content.clubs
+    .map(
+      (c, i) => `
+        <div class="content-row">
+          <label class="row-label">Club ${i + 1}</label>
+          <input class="field-input" data-section="clubs" data-index="${i}" value="${escapeHtml(c)}" placeholder="Club name" />
+        </div>`
+    )
+    .join('');
+
+  projectsFields.innerHTML = content.projects
+    .map(
+      (p, i) => `
+        <div class="content-row project-row">
+          <input class="field-input" ${fieldAttrs('projects', i, 'title')} value="${escapeHtml(p.title)}" placeholder="Project title" />
+          <input class="field-input" type="number" min="0" max="100" ${fieldAttrs('projects', i, 'percent')} value="${p.percent}" placeholder="%" />
+        </div>`
+    )
+    .join('');
+
+  quicklinksFields.innerHTML = content.quickLinks
+    .map(
+      (q, i) => `
+        <div class="content-row two-col">
+          <label class="row-label">Link ${i + 1}</label>
+          <input class="field-input" ${fieldAttrs('quickLinks', i, 'label')} value="${escapeHtml(q.label)}" placeholder="Label" />
+          <input class="field-input" ${fieldAttrs('quickLinks', i, 'url')} value="${escapeHtml(q.url)}" placeholder="URL" />
+        </div>`
+    )
+    .join('');
+}
+
+function collectContentFromForm() {
+  const content = {
+    announcements: [],
+    calendarEvents: [],
+    lunchMenu: [],
+    clubs: [],
+    projects: [],
+    quickLinks: [],
+    council: [],
+  };
+
+  contentForm.querySelectorAll('[data-section]').forEach((el) => {
+    const section = el.dataset.section;
+    const index = Number(el.dataset.index);
+    const field = el.dataset.field;
+    const value = el.type === 'number' ? Number(el.value) : el.value;
+
+    if (!content[section][index]) content[section][index] = section === 'clubs' ? '' : {};
+
+    if (section === 'clubs') {
+      content[section][index] = value;
+    } else {
+      content[section][index][field] = value;
+    }
+  });
+
+  return content;
+}
+
+contentForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  contentError.hidden = true;
+  contentSuccess.hidden = true;
+  contentSave.disabled = true;
+  contentSave.textContent = 'Saving…';
+
+  try {
+    const res = await fetch('/api/admin/content', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: collectContentFromForm() }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      contentError.textContent = data.error || 'Could not save content.';
+      contentError.hidden = false;
+      return;
+    }
+
+    contentSuccess.textContent = 'Homepage content updated.';
+    contentSuccess.hidden = false;
+    renderContentForm(data.content);
+  } catch {
+    contentError.textContent = 'Could not reach the server. Please try again.';
+    contentError.hidden = false;
+  } finally {
+    contentSave.disabled = false;
+    contentSave.textContent = 'Save content';
   }
 });
 

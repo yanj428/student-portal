@@ -103,5 +103,9 @@
     {
       "initials": "TS"
     }
-  ]
+  ],
+  "lunchSchedule": {
+    "weekLabel": "",
+    "imageUrl": ""
+  }
 }

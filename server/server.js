@@ -1,12 +1,34 @@
 require('dotenv').config();
 
+const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
+const multer = require('multer');
 
 const db = require('./db');
+
+const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
+const LUNCH_UPLOADS_DIR = path.join(UPLOADS_DIR, 'lunch');
+fs.mkdirSync(LUNCH_UPLOADS_DIR, { recursive: true });
+
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const lunchImageUpload = multer({
+  storage: multer.diskStorage({
+    destination: LUNCH_UPLOADS_DIR,
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+      cb(null, `${Date.now()}-${crypto.randomBytes(6).toString('hex')}${ext}`);
+    },
+  }),
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!ALLOWED_IMAGE_TYPES.has(file.mimetype)) return cb(new Error('Only JPEG, PNG, WEBP, or GIF images are allowed.'));
+    cb(null, true);
+  },
+});
 
 const SCHOOL_DOMAIN = '@kpis.ac.th';
 const PORT = process.env.PORT || 8791;
@@ -134,6 +156,9 @@ function validateContent(content) {
   if (typeof content.weeklySlide.weekLabel !== 'string' || typeof content.weeklySlide.canvaEmbedUrl !== 'string') {
     return 'Weekly slide needs a week label and a Canva embed URL (both can be blank).';
   }
+  if (typeof content.lunchSchedule.weekLabel !== 'string' || typeof content.lunchSchedule.imageUrl !== 'string') {
+    return 'Lunch schedule needs a week label and image (both can be blank).';
+  }
 
   for (const a of content.announcements) {
     if (typeof a.title !== 'string' || typeof a.body !== 'string') return 'Each announcement needs a title and body.';
@@ -179,6 +204,43 @@ app.put('/api/admin/content', requireAdmin, (req, res) => {
 
   db.writeContent(content);
   res.json({ content });
+});
+
+// ---- Weekly lunch schedule image ----
+app.post('/api/admin/lunch-image', requireAdmin, (req, res) => {
+  lunchImageUpload.single('image')(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message || 'Could not upload image.' });
+    if (!req.file) return res.status(400).json({ error: 'No image was uploaded.' });
+
+    const weekLabel = typeof req.body.weekLabel === 'string' ? req.body.weekLabel.trim() : '';
+    const content = db.readContent();
+    const previousImageUrl = content.lunchSchedule.imageUrl;
+
+    content.lunchSchedule = { weekLabel, imageUrl: `/uploads/lunch/${req.file.filename}` };
+    db.writeContent(content);
+
+    if (previousImageUrl && previousImageUrl.startsWith('/uploads/lunch/')) {
+      const previousPath = path.join(UPLOADS_DIR, 'lunch', path.basename(previousImageUrl));
+      fs.unlink(previousPath, () => {});
+    }
+
+    res.status(201).json({ lunchSchedule: content.lunchSchedule });
+  });
+});
+
+app.delete('/api/admin/lunch-image', requireAdmin, (req, res) => {
+  const content = db.readContent();
+  const imageUrl = content.lunchSchedule.imageUrl;
+
+  content.lunchSchedule = { weekLabel: '', imageUrl: '' };
+  db.writeContent(content);
+
+  if (imageUrl && imageUrl.startsWith('/uploads/lunch/')) {
+    const imagePath = path.join(UPLOADS_DIR, 'lunch', path.basename(imageUrl));
+    fs.unlink(imagePath, () => {});
+  }
+
+  res.json({ lunchSchedule: content.lunchSchedule });
 });
 
 // ---- Slide archive (older weekly Canva slides) ----
@@ -621,6 +683,28 @@ app.get('/api/me', requireStudent, (req, res) => {
 });
 
 // ---- Static site ----
+// The project root doubles as the web root (all the .html/.css/.js files live there),
+// but that root also holds data/ (password hashes, student PII), server/, and config
+// files that must never be servable over HTTP. Block those paths before the static
+// handler rather than trying to serve only an allowlist, since that would be a much
+// bigger restructure of an otherwise-flat project layout.
+const BLOCKED_STATIC_PREFIXES = ['/data', '/server', '/node_modules', '/.git'];
+const BLOCKED_STATIC_FILES = new Set([
+  '/.env',
+  '/.env.example',
+  '/.gitignore',
+  '/package.json',
+  '/package-lock.json',
+]);
+app.use((req, res, next) => {
+  const p = req.path;
+  if (BLOCKED_STATIC_FILES.has(p) || BLOCKED_STATIC_PREFIXES.some((prefix) => p === prefix || p.startsWith(prefix + '/'))) {
+    return res.status(404).end();
+  }
+  next();
+});
+
+app.use('/uploads', express.static(UPLOADS_DIR));
 app.use(express.static(path.join(__dirname, '..'), { extensions: ['html'] }));
 
 app.listen(PORT, () => {

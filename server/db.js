@@ -48,6 +48,10 @@ const DEFAULT_CONTENT = {
     weekLabel: '',
     canvaEmbedUrl: '',
   },
+  lunchSchedule: {
+    weekLabel: '',
+    imageUrl: '',
+  },
 };
 
 function ensureStore() {

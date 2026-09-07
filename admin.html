@@ -182,6 +182,34 @@
       </section>
 
       <section class="panel">
+        <h2>Lunch schedule</h2>
+        <p class="panel-hint">Upload this week's lunch menu picture. Uploading a new one replaces the current image.</p>
+
+        <div class="lunch-current" id="lunch-current" hidden>
+          <img id="lunch-current-image" alt="Current lunch schedule" />
+          <div class="lunch-current-info">
+            <span id="lunch-current-label"></span>
+            <button type="button" class="btn reject" id="lunch-remove-btn">Remove</button>
+          </div>
+        </div>
+
+        <form id="lunch-upload-form" class="archive-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="lunch-week-label">Week label</label>
+              <input class="field-input" type="text" id="lunch-week-label" placeholder="e.g. Week of Sep 8" />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="lunch-image-input">Menu picture</label>
+              <input class="field-input" type="file" id="lunch-image-input" accept="image/png,image/jpeg,image/webp,image/gif" required />
+            </div>
+          </div>
+          <p class="field-error" id="lunch-upload-error" hidden></p>
+          <button type="submit" class="btn primary" id="lunch-upload-submit">Upload menu</button>
+        </form>
+      </section>
+
+      <section class="panel">
         <h2>Slide archive</h2>
         <p class="panel-hint">Move a past week's Canva slide here once you replace it above, so students can still find it.</p>
 

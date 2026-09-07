@@ -30,17 +30,6 @@ async function loadAnnouncementsPage() {
   } else {
     weekLabelEl.hidden = true;
   }
-
-  const listEl = document.getElementById('announcements-list');
-  listEl.innerHTML = (content.announcements || [])
-    .map(
-      (a) => `
-        <article class="announcement-card">
-          <h3>${announcementsEscapeHtml(a.title)}</h3>
-          <p>${announcementsEscapeHtml(a.body)}</p>
-        </article>`
-    )
-    .join('');
 }
 
 async function loadSlideArchive() {

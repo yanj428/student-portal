@@ -113,26 +113,3 @@
   white-space: nowrap;
 }
 .archive-view-link:hover { text-decoration: underline; }
-
-/* Announcements list */
-.announcements-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.announcement-card {
-  background: var(--surface);
-  border-radius: var(--radius-md);
-  padding: 18px 20px;
-  box-shadow: var(--shadow);
-}
-.announcement-card h3 {
-  font-size: 15px;
-  margin: 0 0 6px 0;
-}
-.announcement-card p {
-  font-size: 13.5px;
-  line-height: 1.6;
-  color: var(--text-muted);
-  margin: 0;
-}

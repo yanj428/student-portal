@@ -218,6 +218,30 @@
       </section>
 
       <section class="panel">
+        <h2>Community Service clubs</h2>
+        <p class="panel-hint">Write about each community service club — students see these on the Community Service page.</p>
+
+        <form id="cs-club-form" class="archive-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="cs-club-name">Club name</label>
+              <input class="field-input" type="text" id="cs-club-name" placeholder="e.g. Beach Cleanup Club" required />
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="cs-club-description">Description</label>
+            <textarea class="field-input" id="cs-club-description" rows="3" placeholder="What does this club do, and how can students get involved?" required></textarea>
+          </div>
+          <p class="field-error" id="cs-club-error" hidden></p>
+          <button type="submit" class="btn primary" id="cs-club-submit">Add club</button>
+        </form>
+
+        <div class="cs-club-admin-list" id="cs-club-admin-list">
+          <p class="empty-hint" id="cs-club-empty-hint">No community service clubs added yet.</p>
+        </div>
+      </section>
+
+      <section class="panel">
         <div class="panel-header">
           <h2>Student Voice moderation</h2>
           <span class="count-badge" id="voice-pending-count">0</span>

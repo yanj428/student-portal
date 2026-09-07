@@ -23,6 +23,7 @@ function showAdminPanel() {
   loadContent();
   loadVoicePending();
   loadSlideArchive();
+  loadCsClubs();
 }
 
 function showGate() {
@@ -474,6 +475,79 @@ archiveForm.addEventListener('submit', async (e) => {
   } finally {
     archiveSubmit.disabled = false;
     archiveSubmit.textContent = 'Add to archive';
+  }
+});
+
+// ---- Community Service clubs ----
+const csClubForm = document.getElementById('cs-club-form');
+const csClubNameInput = document.getElementById('cs-club-name');
+const csClubDescriptionInput = document.getElementById('cs-club-description');
+const csClubError = document.getElementById('cs-club-error');
+const csClubSubmit = document.getElementById('cs-club-submit');
+const csClubAdminList = document.getElementById('cs-club-admin-list');
+const csClubEmptyHint = document.getElementById('cs-club-empty-hint');
+
+async function loadCsClubs() {
+  const res = await fetch('/api/admin/cs-clubs');
+  if (!res.ok) return;
+  const { clubs } = await res.json();
+  renderCsClubsAdmin(clubs);
+}
+
+function renderCsClubsAdmin(clubs) {
+  csClubAdminList.querySelectorAll('.cs-club-item').forEach((el) => el.remove());
+  csClubEmptyHint.hidden = clubs.length > 0;
+
+  clubs.forEach((club) => {
+    const div = document.createElement('div');
+    div.className = 'cs-club-item';
+    div.innerHTML = `
+      <div class="cs-club-item-head">
+        <span class="cs-club-item-name">${escapeHtml(club.name)}</span>
+        <button class="delete-btn" aria-label="Remove club"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7H20M9 7V4C9 3.4 9.4 3 10 3H14C14.6 3 15 3.4 15 4V7M18 7L17.3 19C17.2 19.6 16.7 20 16.1 20H7.9C7.3 20 6.8 19.6 6.7 19L6 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <p class="cs-club-item-body">${escapeHtml(club.description)}</p>
+    `;
+    div.querySelector('.delete-btn').addEventListener('click', async () => {
+      if (!confirm(`Remove "${club.name}" from the Community Service page?`)) return;
+      await fetch(`/api/admin/cs-clubs/${club.id}`, { method: 'DELETE' });
+      loadCsClubs();
+    });
+    csClubAdminList.appendChild(div);
+  });
+}
+
+csClubForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  csClubError.hidden = true;
+  csClubSubmit.disabled = true;
+  csClubSubmit.textContent = 'Adding…';
+
+  try {
+    const res = await fetch('/api/admin/cs-clubs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: csClubNameInput.value.trim(),
+        description: csClubDescriptionInput.value.trim(),
+      }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      csClubError.textContent = data.error || 'Could not add club.';
+      csClubError.hidden = false;
+      return;
+    }
+
+    csClubForm.reset();
+    loadCsClubs();
+  } catch {
+    csClubError.textContent = 'Could not reach the server. Please try again.';
+    csClubError.hidden = false;
+  } finally {
+    csClubSubmit.disabled = false;
+    csClubSubmit.textContent = 'Add club';
   }
 });
 

@@ -1,0 +1,134 @@
+.voice-header {
+  margin-bottom: 4px;
+}
+.voice-header h1 {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+}
+.voice-header p {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.section-heading {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 14px 0;
+}
+
+/* Intro */
+.cs-intro {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+.cs-intro p {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text);
+  margin: 0 0 12px 0;
+}
+.cs-intro p:last-child { margin-bottom: 0; }
+.cs-intro a {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* IPAR process */
+.ipar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+.ipar-step {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+.ipar-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.ipar-step h3 {
+  font-size: 14px;
+  margin: 0 0 6px 0;
+}
+.ipar-step p {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Resources */
+.resource-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.resource-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 13px 16px;
+  box-shadow: var(--shadow);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+}
+.resource-link:hover { color: var(--primary); }
+.resource-link svg { width: 16px; height: 16px; color: var(--text-muted); flex-shrink: 0; }
+.resource-link:hover svg { color: var(--primary); }
+
+/* Clubs */
+.cs-clubs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.cs-clubs-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 0;
+}
+.cs-club-card {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+}
+.cs-club-card h3 {
+  font-size: 15px;
+  margin: 0 0 6px 0;
+}
+.cs-club-card p {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 900px) {
+  .ipar-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .ipar-grid { grid-template-columns: 1fr; }
+}

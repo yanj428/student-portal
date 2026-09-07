@@ -303,6 +303,38 @@ tr:last-child td { border-bottom: none; }
 }
 .content-form .btn.primary { align-self: flex-start; }
 
+/* Community Service clubs (admin) */
+.cs-club-admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+.cs-club-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cs-club-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.cs-club-item-name {
+  font-size: 14px;
+  font-weight: 700;
+}
+.cs-club-item-body {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+}
+
 /* Student Voice moderation */
 .voice-pending-list {
   display: flex;

@@ -232,6 +232,77 @@ app.delete('/api/admin/slide-archive/:id', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
+// ---- Community Service clubs (write-ups admins add/remove) ----
+function publicCsClub(club) {
+  return { id: club.id, name: club.name, description: club.description, createdAt: club.createdAt };
+}
+
+app.get('/api/cs-clubs', requireStudent, (req, res) => {
+  const clubs = db
+    .readCsClubs()
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(publicCsClub);
+  res.json({ clubs });
+});
+
+app.get('/api/admin/cs-clubs', requireAdmin, (req, res) => {
+  const clubs = db
+    .readCsClubs()
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(publicCsClub);
+  res.json({ clubs });
+});
+
+app.post('/api/admin/cs-clubs', requireAdmin, (req, res) => {
+  const { name, description } = req.body || {};
+  if (typeof name !== 'string' || !name.trim()) {
+    return res.status(400).json({ error: 'Club name is required.' });
+  }
+  if (typeof description !== 'string' || !description.trim()) {
+    return res.status(400).json({ error: 'Description is required.' });
+  }
+
+  const clubs = db.readCsClubs();
+  const club = {
+    id: crypto.randomUUID(),
+    name: name.trim(),
+    description: description.trim(),
+    createdAt: new Date().toISOString(),
+  };
+  clubs.push(club);
+  db.writeCsClubs(clubs);
+
+  res.status(201).json({ club: publicCsClub(club) });
+});
+
+app.put('/api/admin/cs-clubs/:id', requireAdmin, (req, res) => {
+  const { name, description } = req.body || {};
+  if (typeof name !== 'string' || !name.trim()) {
+    return res.status(400).json({ error: 'Club name is required.' });
+  }
+  if (typeof description !== 'string' || !description.trim()) {
+    return res.status(400).json({ error: 'Description is required.' });
+  }
+
+  const clubs = db.readCsClubs();
+  const club = clubs.find((c) => c.id === req.params.id);
+  if (!club) return res.status(404).json({ error: 'Club not found.' });
+
+  club.name = name.trim();
+  club.description = description.trim();
+  db.writeCsClubs(clubs);
+
+  res.json({ club: publicCsClub(club) });
+});
+
+app.delete('/api/admin/cs-clubs/:id', requireAdmin, (req, res) => {
+  const clubs = db.readCsClubs();
+  const next = clubs.filter((c) => c.id !== req.params.id);
+  if (next.length === clubs.length) return res.status(404).json({ error: 'Club not found.' });
+  db.writeCsClubs(next);
+  res.json({ ok: true });
+});
+
 // ---- Student Voice (form-style posts — every post and reply needs admin approval) ----
 const VOICE_BODY_MAX = 2000;
 const VOICE_TITLE_MAX = 120;

@@ -6,6 +6,7 @@ const STUDENTS_FILE = path.join(DATA_DIR, 'students.json');
 const CONTENT_FILE = path.join(DATA_DIR, 'content.json');
 const VOICE_FILE = path.join(DATA_DIR, 'voice-posts.json');
 const SLIDE_ARCHIVE_FILE = path.join(DATA_DIR, 'slide-archive.json');
+const CS_CLUBS_FILE = path.join(DATA_DIR, 'cs-clubs.json');
 
 // Text shown on the homepage. Admins edit these values; the page layout itself is fixed.
 const DEFAULT_CONTENT = {
@@ -54,6 +55,7 @@ function ensureStore() {
   if (!fs.existsSync(CONTENT_FILE)) fs.writeFileSync(CONTENT_FILE, JSON.stringify(DEFAULT_CONTENT, null, 2) + '\n');
   if (!fs.existsSync(VOICE_FILE)) fs.writeFileSync(VOICE_FILE, '[]\n');
   if (!fs.existsSync(SLIDE_ARCHIVE_FILE)) fs.writeFileSync(SLIDE_ARCHIVE_FILE, '[]\n');
+  if (!fs.existsSync(CS_CLUBS_FILE)) fs.writeFileSync(CS_CLUBS_FILE, '[]\n');
 }
 
 function readStudents() {
@@ -146,6 +148,21 @@ function writeSlideArchive(slides) {
   fs.writeFileSync(SLIDE_ARCHIVE_FILE, JSON.stringify(slides, null, 2) + '\n');
 }
 
+function readCsClubs() {
+  ensureStore();
+  const raw = fs.readFileSync(CS_CLUBS_FILE, 'utf8');
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+function writeCsClubs(clubs) {
+  ensureStore();
+  fs.writeFileSync(CS_CLUBS_FILE, JSON.stringify(clubs, null, 2) + '\n');
+}
+
 module.exports = {
   readStudents,
   writeStudents,
@@ -159,5 +176,7 @@ module.exports = {
   writeVoicePosts,
   readSlideArchive,
   writeSlideArchive,
+  readCsClubs,
+  writeCsClubs,
   DEFAULT_CONTENT,
 };

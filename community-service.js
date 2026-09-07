@@ -26,4 +26,32 @@ async function loadCsClubs() {
   });
 }
 
+async function loadCsEvents() {
+  const res = await fetch('/api/cs-events');
+  if (!res.ok) return;
+  const { events } = await res.json();
+
+  const listEl = document.getElementById('cs-events-list');
+  const emptyEl = document.getElementById('cs-events-empty');
+
+  listEl.querySelectorAll('.cs-event-card').forEach((el) => el.remove());
+  emptyEl.hidden = events.length > 0;
+
+  events.forEach((event) => {
+    const article = document.createElement('article');
+    article.className = 'cs-event-card';
+    article.innerHTML = `
+      <div class="cs-event-head">
+        <h3 class="cs-event-title">${csEscapeHtml(event.title)}</h3>
+        <span class="cs-event-date">${csEscapeHtml(event.eventDate)}</span>
+      </div>
+      <p class="cs-event-club">Hosted by ${csEscapeHtml(event.club)}</p>
+      <p class="cs-event-desc">${csEscapeHtml(event.description)}</p>
+      ${event.signupUrl ? `<a class="cs-event-signup" href="${csEscapeHtml(event.signupUrl)}" target="_blank" rel="noopener">Sign up</a>` : ''}
+    `;
+    listEl.appendChild(article);
+  });
+}
+
 loadCsClubs();
+loadCsEvents();

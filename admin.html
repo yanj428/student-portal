@@ -242,6 +242,44 @@
       </section>
 
       <section class="panel">
+        <h2>Community Service events &amp; opportunities</h2>
+        <p class="panel-hint">Post volunteer opportunities for clubs to recruit students — students see these on the Community Service page.</p>
+
+        <form id="cs-event-form" class="archive-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="cs-event-title">Event title</label>
+              <input class="field-input" type="text" id="cs-event-title" placeholder="e.g. Beach Cleanup Day" required />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="cs-event-club">Hosting club</label>
+              <input class="field-input" type="text" id="cs-event-club" placeholder="e.g. Beach Cleanup Club" required />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="cs-event-date">Date</label>
+              <input class="field-input" type="text" id="cs-event-date" placeholder="e.g. Sat, Sep 20" required />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="cs-event-signup">Signup link (optional)</label>
+              <input class="field-input" type="text" id="cs-event-signup" placeholder="Google Form, sheet, etc." />
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="cs-event-description">Description</label>
+            <textarea class="field-input" id="cs-event-description" rows="3" placeholder="What will volunteers do? How many are needed?" required></textarea>
+          </div>
+          <p class="field-error" id="cs-event-error" hidden></p>
+          <button type="submit" class="btn primary" id="cs-event-submit">Post opportunity</button>
+        </form>
+
+        <div class="cs-event-admin-list" id="cs-event-admin-list">
+          <p class="empty-hint" id="cs-event-empty-hint">No events or opportunities posted yet.</p>
+        </div>
+      </section>
+
+      <section class="panel">
         <div class="panel-header">
           <h2>Student Voice moderation</h2>
           <span class="count-badge" id="voice-pending-count">0</span>

@@ -335,6 +335,41 @@ tr:last-child td { border-bottom: none; }
   white-space: pre-wrap;
 }
 
+.cs-event-admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+.cs-event-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cs-event-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.cs-event-item-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+.cs-event-item-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.cs-event-item-body {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+}
+
 /* Student Voice moderation */
 .voice-pending-list {
   display: flex;

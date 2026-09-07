@@ -122,12 +122,30 @@
       </section>
 
       <section class="composer">
-        <textarea id="post-input" class="composer-input" placeholder="What's on your mind?" maxlength="2000"></textarea>
-        <div class="composer-footer">
-          <span class="composer-hint">Posts are reviewed before they're visible to other students.</span>
-          <button class="btn primary" id="post-submit">Post</button>
-        </div>
-        <p class="field-error" id="post-error" hidden></p>
+        <h2 class="composer-title">Share something</h2>
+        <form id="post-form">
+          <label class="field-label" for="post-title">Title</label>
+          <input class="field-input" type="text" id="post-title" placeholder="Sum it up in a few words" maxlength="120" required />
+
+          <label class="field-label" for="post-category">Category</label>
+          <select class="field-input" id="post-category" required>
+            <option value="" disabled selected>Select a category</option>
+            <option value="Suggestion">Suggestion</option>
+            <option value="Concern">Concern</option>
+            <option value="Question">Question</option>
+            <option value="Shoutout">Shoutout</option>
+            <option value="Other">Other</option>
+          </select>
+
+          <label class="field-label" for="post-input">Message</label>
+          <textarea id="post-input" class="composer-input" placeholder="Share the details…" maxlength="2000" required></textarea>
+
+          <div class="composer-footer">
+            <span class="composer-hint">Posts are reviewed before they're visible to other students.</span>
+            <button type="submit" class="btn primary" id="post-submit">Submit</button>
+          </div>
+          <p class="field-error" id="post-error" hidden></p>
+        </form>
       </section>
 
       <section class="voice-feed" id="voice-feed">

@@ -16,12 +16,39 @@
 .composer {
   background: var(--surface);
   border-radius: var(--radius-md);
-  padding: 18px;
+  padding: 20px;
   box-shadow: var(--shadow);
+}
+.composer-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 14px 0;
+}
+.composer .field-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  margin: 14px 0 6px 0;
+}
+.composer .field-label:first-of-type { margin-top: 0; }
+.composer .field-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  background: #fff;
+}
+.composer .field-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(150,30,32,0.1);
 }
 .composer-input {
   width: 100%;
-  min-height: 70px;
+  min-height: 90px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 12px 14px;
@@ -40,7 +67,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 10px;
+  margin-top: 16px;
 }
 .composer-hint {
   font-size: 12px;
@@ -141,6 +168,24 @@
   letter-spacing: 0.03em;
   padding: 2px 8px;
   border-radius: 999px;
+}
+
+.category-badge {
+  display: inline-block;
+  background: #EFE9E4;
+  color: var(--text-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.post-title {
+  font-size: 15.5px;
+  font-weight: 700;
+  margin: 0 0 6px 0;
 }
 
 .post-body {

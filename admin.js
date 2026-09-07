@@ -355,8 +355,9 @@ function renderVoicePending(items) {
           <span class="mod-item-author">${escapeHtml(item.authorName)}</span>
           <span class="mod-item-meta"> &middot; ${escapeHtml(item.authorGrade)} &middot; ${created}</span>
         </div>
-        <span class="mod-type-badge">${item.type === 'post' ? 'Post' : 'Reply'}</span>
+        <span class="mod-type-badge">${item.type === 'post' ? escapeHtml(item.category) : 'Reply'}</span>
       </div>
+      ${item.type === 'post' ? `<div class="mod-item-title">${escapeHtml(item.title)}</div>` : ''}
       ${item.type === 'reply' ? `<div class="mod-item-context">Replying to: "${escapeHtml(item.postPreview)}${item.postPreview.length >= 80 ? '…' : ''}"</div>` : ''}
       <p class="mod-item-body">${escapeHtml(item.body)}</p>
       <div class="mod-item-actions">

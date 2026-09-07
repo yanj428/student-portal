@@ -173,8 +173,10 @@ app.put('/api/admin/content', requireAdmin, (req, res) => {
   res.json({ content });
 });
 
-// ---- Student Voice (blog-style posts — every post and reply needs admin approval) ----
+// ---- Student Voice (form-style posts — every post and reply needs admin approval) ----
 const VOICE_BODY_MAX = 2000;
+const VOICE_TITLE_MAX = 120;
+const VOICE_CATEGORIES = ['Suggestion', 'Concern', 'Question', 'Shoutout', 'Other'];
 
 function initials(name) {
   return name
@@ -211,6 +213,8 @@ function publicPost(post, viewerId) {
     authorGrade: post.authorGrade,
     authorInitials: initials(post.authorName),
     isMine: post.authorId === viewerId,
+    title: post.title,
+    category: post.category,
     body: post.body,
     createdAt: post.createdAt,
     status: post.authorId === viewerId ? post.status : undefined,
@@ -232,12 +236,22 @@ app.get('/api/voice/posts', requireStudent, (req, res) => {
 });
 
 app.post('/api/voice/posts', requireStudent, (req, res) => {
-  const { body } = req.body || {};
+  const { title, category, body } = req.body || {};
+
+  if (typeof title !== 'string' || !title.trim()) {
+    return res.status(400).json({ error: 'Title is required.' });
+  }
+  if (title.length > VOICE_TITLE_MAX) {
+    return res.status(400).json({ error: `Title is too long (max ${VOICE_TITLE_MAX} characters).` });
+  }
+  if (!VOICE_CATEGORIES.includes(category)) {
+    return res.status(400).json({ error: 'Please choose a category.' });
+  }
   if (typeof body !== 'string' || !body.trim()) {
-    return res.status(400).json({ error: 'Post cannot be empty.' });
+    return res.status(400).json({ error: 'Message cannot be empty.' });
   }
   if (body.length > VOICE_BODY_MAX) {
-    return res.status(400).json({ error: `Post is too long (max ${VOICE_BODY_MAX} characters).` });
+    return res.status(400).json({ error: `Message is too long (max ${VOICE_BODY_MAX} characters).` });
   }
 
   const student = db.findById(req.session.studentId);
@@ -247,6 +261,8 @@ app.post('/api/voice/posts', requireStudent, (req, res) => {
     authorId: student.id,
     authorName: `${student.firstName} ${student.lastName}`,
     authorGrade: student.grade,
+    title: title.trim(),
+    category,
     body: body.trim(),
     createdAt: new Date().toISOString(),
     status: 'pending',
@@ -313,6 +329,8 @@ app.get('/api/admin/voice/pending', requireAdmin, (req, res) => {
       id: p.id,
       authorName: p.authorName,
       authorGrade: p.authorGrade,
+      title: p.title,
+      category: p.category,
       body: p.body,
       createdAt: p.createdAt,
     }));

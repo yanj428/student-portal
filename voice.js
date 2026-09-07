@@ -18,6 +18,9 @@ function timeAgo(iso) {
 
 const feedEl = document.getElementById('voice-feed');
 const feedEmpty = document.getElementById('feed-empty');
+const postForm = document.getElementById('post-form');
+const postTitleInput = document.getElementById('post-title');
+const postCategorySelect = document.getElementById('post-category');
 const postInput = document.getElementById('post-input');
 const postSubmit = document.getElementById('post-submit');
 const postError = document.getElementById('post-error');
@@ -55,8 +58,10 @@ function renderPost(post) {
           </div>
           <div class="post-subline">${voiceEscapeHtml(post.authorGrade)} &middot; ${timeAgo(post.createdAt)}</div>
         </div>
+        <span class="category-badge">${voiceEscapeHtml(post.category)}</span>
       </div>
 
+      <h3 class="post-title">${voiceEscapeHtml(post.title)}</h3>
       <p class="post-body">${voiceEscapeHtml(post.body)}</p>
 
       <div class="post-actions">
@@ -144,36 +149,45 @@ function wireFeedEvents() {
   });
 }
 
-postSubmit.addEventListener('click', async () => {
-  const body = postInput.value.trim();
+postForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
   postError.hidden = true;
-  if (!body) return;
+
+  const title = postTitleInput.value.trim();
+  const category = postCategorySelect.value;
+  const body = postInput.value.trim();
+
+  if (!title || !category || !body) {
+    postError.textContent = 'Please fill in title, category, and message.';
+    postError.hidden = false;
+    return;
+  }
 
   postSubmit.disabled = true;
-  postSubmit.textContent = 'Posting…';
+  postSubmit.textContent = 'Submitting…';
 
   try {
     const res = await fetch('/api/voice/posts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ body }),
+      body: JSON.stringify({ title, category, body }),
     });
     const data = await res.json();
 
     if (!res.ok) {
-      postError.textContent = data.error || 'Could not post.';
+      postError.textContent = data.error || 'Could not submit.';
       postError.hidden = false;
       return;
     }
 
-    postInput.value = '';
+    postForm.reset();
     loadPosts();
   } catch {
     postError.textContent = 'Could not reach the server. Please try again.';
     postError.hidden = false;
   } finally {
     postSubmit.disabled = false;
-    postSubmit.textContent = 'Post';
+    postSubmit.textContent = 'Submit';
   }
 });
 

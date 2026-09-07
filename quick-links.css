@@ -1,0 +1,61 @@
+.voice-header {
+  margin-bottom: 4px;
+}
+.voice-header h1 {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+}
+.voice-header p {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.links-page-section {
+  margin-top: 4px;
+}
+.links-page-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.links-page-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 0;
+  grid-column: 1 / -1;
+}
+.link-page-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+  text-decoration: none;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.link-page-card:hover { color: var(--primary); }
+.link-page-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--primary-tint);
+  color: var(--primary);
+}
+.link-page-icon svg { width: 16px; height: 16px; }
+
+@media (max-width: 900px) {
+  .links-page-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .links-page-grid { grid-template-columns: 1fr; }
+}

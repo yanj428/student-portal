@@ -38,71 +38,32 @@
     }
   ],
   "lunchMenu": [
-    {
-      "item": "Green curry & rice",
-      "weekday": "Mon"
-    },
-    {
-      "item": "Pad kra pao chicken",
-      "weekday": "Tue"
-    },
-    {
-      "item": "Spaghetti bolognese",
-      "weekday": "Wed"
-    },
-    {
-      "item": "Tom yum noodle soup",
-      "weekday": "Thu"
-    },
-    {
-      "item": "Fried rice & salad bar",
-      "weekday": "Fri"
-    }
+    { "item": "Green curry & rice", "weekday": "Mon" },
+    { "item": "Pad kra pao chicken", "weekday": "Tue" },
+    { "item": "Spaghetti bolognese", "weekday": "Wed" },
+    { "item": "Tom yum noodle soup", "weekday": "Thu" },
+    { "item": "Fried rice & salad bar", "weekday": "Fri" }
   ],
   "clubs": [
-    "Robotics",
-    "Debate",
-    "Art & Design",
-    "Basketball"
+    { "name": "Robotics", "description": "Design, build, and program competition robots.", "schedule": "Tue & Thu · 3:30–5:00 PM · STEM Lab", "advisor": "Mr. Anan", "signupUrl": "" },
+    { "name": "Debate", "description": "Practice argumentation and compete in regional tournaments.", "schedule": "Mon & Wed · 3:30–4:30 PM · Room 204", "advisor": "Ms. Preecha", "signupUrl": "" },
+    { "name": "Art & Design", "description": "Explore painting, digital art, and design fundamentals.", "schedule": "Fri · 3:30–5:00 PM · Art Studio", "advisor": "Ms. Kanya", "signupUrl": "" },
+    { "name": "Basketball", "description": "Open practice and inter-school friendlies.", "schedule": "Mon, Wed & Fri · 4:00–5:30 PM · Gym", "advisor": "Coach Somchai", "signupUrl": "" }
   ],
   "projects": [
-    {
-      "title": "Spirit Week Planning",
-      "percent": 70
-    },
-    {
-      "title": "Recycling Drive",
-      "percent": 35
-    }
+    { "title": "Spirit Week Planning", "percent": 70, "status": "On Track", "lead": "StuCo Events Team", "description": "Organizing daily themes, activities, and the closing pep rally." },
+    { "title": "Recycling Drive", "percent": 35, "status": "On Track", "lead": "StuCo Sustainability Team", "description": "Setting up recycling bins across campus and a collection schedule." }
   ],
   "quickLinks": [
-    {
-      "label": "Student Email",
-      "url": "#"
-    },
-    {
-      "label": "Library Catalog",
-      "url": "#"
-    },
-    {
-      "label": "Student Handbook",
-      "url": "#"
-    },
-    {
-      "label": "Print Center",
-      "url": "#"
-    }
+    { "label": "Student Email", "url": "#" },
+    { "label": "Library Catalog", "url": "#" },
+    { "label": "Student Handbook", "url": "#" },
+    { "label": "Print Center", "url": "#" }
   ],
   "council": [
-    {
-      "initials": "EM"
-    },
-    {
-      "initials": "RK"
-    },
-    {
-      "initials": "TS"
-    }
+    { "initials": "EM", "name": "Emma M.", "role": "StuCo President", "bio": "Grade 12 · Leads council meetings and represents the student body to school administration." },
+    { "initials": "RK", "name": "Ravi K.", "role": "Vice President", "bio": "Grade 11 · Coordinates council projects and supports committee leads." },
+    { "initials": "TS", "name": "Tida S.", "role": "Secretary", "bio": "Grade 11 · Keeps meeting notes and manages council communications." }
   ],
   "lunchSchedule": {
     "weekLabel": "",

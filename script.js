@@ -126,7 +126,7 @@ async function loadContent() {
 
     const clubsList = document.getElementById('clubs-list');
     if (clubsList) {
-      clubsList.innerHTML = content.clubs.map((c) => `<span class="club-chip">${escapeHtml(c)}</span>`).join('');
+      clubsList.innerHTML = content.clubs.map((c) => `<span class="club-chip">${escapeHtml(c.name)}</span>`).join('');
     }
 
     const projectsList = document.getElementById('projects-list');

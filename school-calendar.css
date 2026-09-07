@@ -1,0 +1,67 @@
+.voice-header {
+  margin-bottom: 4px;
+}
+.voice-header h1 {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+}
+.voice-header p {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.calendar-page-section {
+  margin-top: 4px;
+}
+.calendar-page-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.calendar-page-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 0;
+}
+.calendar-page-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  box-shadow: var(--shadow);
+}
+.calendar-page-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--primary-tint);
+  color: var(--primary);
+}
+.calendar-page-date .day {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.calendar-page-date .month {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.calendar-page-info h3 {
+  font-size: 15px;
+  margin: 0 0 4px 0;
+}
+.calendar-page-info p {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}

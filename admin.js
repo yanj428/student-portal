@@ -184,6 +184,8 @@ function fieldAttrs(section, index, field) {
   return `data-section="${section}" data-index="${index}" data-field="${field}"`;
 }
 
+let currentLunchSchedule = { weekLabel: '', imageUrl: '' };
+
 async function loadContent() {
   const res = await fetch('/api/admin/content');
   if (!res.ok) return;
@@ -192,6 +194,7 @@ async function loadContent() {
 }
 
 function renderContentForm(content) {
+  currentLunchSchedule = content.lunchSchedule || { weekLabel: '', imageUrl: '' };
   const slide = content.weeklySlide || { weekLabel: '', canvaEmbedUrl: '' };
   document.getElementById('slide-week-label').value = slide.weekLabel;
   document.getElementById('slide-embed-url').value = slide.canvaEmbedUrl;
@@ -233,9 +236,12 @@ function renderContentForm(content) {
   councilFields.innerHTML = content.council
     .map(
       (m, i) => `
-        <div class="content-row">
+        <div class="content-row stacked">
           <label class="row-label">Member ${i + 1}</label>
           <input class="field-input" ${fieldAttrs('council', i, 'initials')} value="${escapeHtml(m.initials)}" placeholder="Initials (e.g. EM)" maxlength="3" />
+          <input class="field-input" ${fieldAttrs('council', i, 'name')} value="${escapeHtml(m.name || '')}" placeholder="Full name" />
+          <input class="field-input" ${fieldAttrs('council', i, 'role')} value="${escapeHtml(m.role || '')}" placeholder="Role (e.g. StuCo President)" />
+          <textarea class="field-input" ${fieldAttrs('council', i, 'bio')} placeholder="Short bio">${escapeHtml(m.bio || '')}</textarea>
         </div>`
     )
     .join('');
@@ -243,9 +249,13 @@ function renderContentForm(content) {
   clubsFields.innerHTML = content.clubs
     .map(
       (c, i) => `
-        <div class="content-row">
+        <div class="content-row stacked">
           <label class="row-label">Club ${i + 1}</label>
-          <input class="field-input" data-section="clubs" data-index="${i}" value="${escapeHtml(c)}" placeholder="Club name" />
+          <input class="field-input" ${fieldAttrs('clubs', i, 'name')} value="${escapeHtml(c.name || '')}" placeholder="Club name" />
+          <textarea class="field-input" ${fieldAttrs('clubs', i, 'description')} placeholder="Description">${escapeHtml(c.description || '')}</textarea>
+          <input class="field-input" ${fieldAttrs('clubs', i, 'schedule')} value="${escapeHtml(c.schedule || '')}" placeholder="Meeting schedule (day, time, location)" />
+          <input class="field-input" ${fieldAttrs('clubs', i, 'advisor')} value="${escapeHtml(c.advisor || '')}" placeholder="Advisor" />
+          <input class="field-input" ${fieldAttrs('clubs', i, 'signupUrl')} value="${escapeHtml(c.signupUrl || '')}" placeholder="Sign-up link (optional)" />
         </div>`
     )
     .join('');
@@ -253,8 +263,16 @@ function renderContentForm(content) {
   projectsFields.innerHTML = content.projects
     .map(
       (p, i) => `
-        <div class="content-row project-row">
+        <div class="content-row stacked">
+          <label class="row-label">Project ${i + 1}</label>
           <input class="field-input" ${fieldAttrs('projects', i, 'title')} value="${escapeHtml(p.title)}" placeholder="Project title" />
+          <textarea class="field-input" ${fieldAttrs('projects', i, 'description')} placeholder="Description">${escapeHtml(p.description || '')}</textarea>
+          <input class="field-input" ${fieldAttrs('projects', i, 'lead')} value="${escapeHtml(p.lead || '')}" placeholder="Team / lead" />
+          <select class="field-input" ${fieldAttrs('projects', i, 'status')}>
+            ${['On Track', 'At Risk', 'Complete']
+              .map((s) => `<option value="${s}" ${p.status === s ? 'selected' : ''}>${s}</option>`)
+              .join('')}
+          </select>
           <input class="field-input" type="number" min="0" max="100" ${fieldAttrs('projects', i, 'percent')} value="${p.percent}" placeholder="%" />
         </div>`
     )
@@ -275,6 +293,7 @@ function renderContentForm(content) {
 function collectContentFromForm() {
   const content = {
     weeklySlide: { weekLabel: '', canvaEmbedUrl: '' },
+    lunchSchedule: currentLunchSchedule,
     announcements: [],
     calendarEvents: [],
     lunchMenu: [],
@@ -295,13 +314,8 @@ function collectContentFromForm() {
     }
 
     const index = Number(el.dataset.index);
-    if (!content[section][index]) content[section][index] = section === 'clubs' ? '' : {};
-
-    if (section === 'clubs') {
-      content[section][index] = value;
-    } else {
-      content[section][index][field] = value;
-    }
+    if (!content[section][index]) content[section][index] = {};
+    content[section][index][field] = value;
   });
 
   return content;

@@ -1,0 +1,72 @@
+.voice-header {
+  margin-bottom: 4px;
+}
+.voice-header h1 {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+}
+.voice-header p {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.clubs-page-section {
+  margin-top: 4px;
+}
+.clubs-page-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+.clubs-page-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 0;
+  grid-column: 1 / -1;
+}
+.club-page-card {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+}
+.club-page-card h3 {
+  font-size: 15px;
+  margin: 0 0 6px 0;
+}
+.club-page-card p.club-page-desc {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin: 0 0 12px 0;
+}
+.club-page-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.club-page-meta span strong {
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+.club-page-signup {
+  display: inline-block;
+  background: var(--primary);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 999px;
+  text-decoration: none;
+}
+.club-page-signup:hover { background: var(--primary-dark); }
+
+@media (max-width: 700px) {
+  .clubs-page-list { grid-template-columns: 1fr; }
+}

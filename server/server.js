@@ -172,7 +172,9 @@ function validateContent(content) {
     if (typeof l.weekday !== 'string' || typeof l.item !== 'string') return 'Each lunch entry needs a weekday and item.';
   }
   for (const c of content.clubs) {
-    if (typeof c !== 'string') return 'Each club must be text.';
+    if (typeof c !== 'object' || c === null || typeof c.name !== 'string' || !c.name.trim()) {
+      return 'Each club needs a name.';
+    }
   }
   for (const p of content.projects) {
     if (typeof p.title !== 'string' || typeof p.percent !== 'number' || p.percent < 0 || p.percent > 100) {

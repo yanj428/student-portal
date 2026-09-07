@@ -4,6 +4,7 @@ const path = require('path');
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const STUDENTS_FILE = path.join(DATA_DIR, 'students.json');
 const CONTENT_FILE = path.join(DATA_DIR, 'content.json');
+const VOICE_FILE = path.join(DATA_DIR, 'voice-posts.json');
 
 // Text shown on the homepage. Admins edit these values; the page layout itself is fixed.
 const DEFAULT_CONTENT = {
@@ -46,6 +47,7 @@ function ensureStore() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
   if (!fs.existsSync(STUDENTS_FILE)) fs.writeFileSync(STUDENTS_FILE, '[]\n');
   if (!fs.existsSync(CONTENT_FILE)) fs.writeFileSync(CONTENT_FILE, JSON.stringify(DEFAULT_CONTENT, null, 2) + '\n');
+  if (!fs.existsSync(VOICE_FILE)) fs.writeFileSync(VOICE_FILE, '[]\n');
 }
 
 function readStudents() {
@@ -101,6 +103,21 @@ function writeContent(content) {
   fs.writeFileSync(CONTENT_FILE, JSON.stringify(content, null, 2) + '\n');
 }
 
+function readVoicePosts() {
+  ensureStore();
+  const raw = fs.readFileSync(VOICE_FILE, 'utf8');
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+function writeVoicePosts(posts) {
+  ensureStore();
+  fs.writeFileSync(VOICE_FILE, JSON.stringify(posts, null, 2) + '\n');
+}
+
 module.exports = {
   readStudents,
   writeStudents,
@@ -110,5 +127,7 @@ module.exports = {
   removeStudent,
   readContent,
   writeContent,
+  readVoicePosts,
+  writeVoicePosts,
   DEFAULT_CONTENT,
 };

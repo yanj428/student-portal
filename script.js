@@ -1,6 +1,8 @@
-// Sidebar navigation (visual state only — pages beyond Dashboard are not built yet)
+// Sidebar navigation — real links (Home, Student Voice) navigate normally;
+// placeholder "#" links for pages that don't exist yet just toggle active state.
 document.querySelectorAll('.nav-item[data-page]').forEach((item) => {
   if (item.id === 'logout-link') return;
+  if (item.getAttribute('href') !== '#') return;
   item.addEventListener('click', (e) => {
     e.preventDefault();
     document.querySelectorAll('.nav-item').forEach((i) => i.classList.remove('active'));
@@ -34,11 +36,15 @@ async function loadCurrentStudent() {
     }
     const { student } = await res.json();
 
-    document.getElementById('user-name').textContent = `${student.firstName} ${student.lastName}`;
-    document.getElementById('user-grade').textContent = student.grade;
-    document.getElementById('user-avatar').textContent =
-      (student.firstName[0] || '') + (student.lastName[0] || '');
-    document.getElementById('welcome-heading').textContent = `Welcome back, ${student.firstName}!`;
+    const setText = (id, text) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    };
+
+    setText('user-name', `${student.firstName} ${student.lastName}`);
+    setText('user-grade', student.grade);
+    setText('user-avatar', (student.firstName[0] || '') + (student.lastName[0] || ''));
+    setText('welcome-heading', `Welcome back, ${student.firstName}!`);
   } catch {
     window.location.href = 'login.html';
   }

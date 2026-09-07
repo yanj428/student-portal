@@ -121,10 +121,25 @@
       </section>
 
       <section class="panel">
-        <h2>Homepage content</h2>
-        <p class="panel-hint">Edit the text shown on the student homepage. The layout and number of items are fixed — only the wording changes.</p>
+        <h2>Homepage &amp; Announcements content</h2>
+        <p class="panel-hint">Edit the text shown on the student homepage and Announcements page. The layout and number of items are fixed — only the wording changes.</p>
 
         <form id="content-form" class="content-form">
+          <div class="content-section">
+            <h3>This Week's Canva Slide (Announcements page)</h3>
+            <div class="content-rows">
+              <div class="content-row stacked">
+                <label class="row-label">Week label</label>
+                <input class="field-input" data-section="weeklySlide" data-field="weekLabel" id="slide-week-label" placeholder="e.g. Week of Sep 8" />
+              </div>
+              <div class="content-row stacked">
+                <label class="row-label">Canva embed URL</label>
+                <input class="field-input" data-section="weeklySlide" data-field="canvaEmbedUrl" id="slide-embed-url" placeholder="Paste the Canva 'Embed' share link" />
+                <p class="field-hint">In Canva: Share &rarr; Embed &rarr; copy the link (ends in /view or similar). Leave blank to show no slide.</p>
+              </div>
+            </div>
+          </div>
+
           <div class="content-section">
             <h3>Latest Announcements</h3>
             <div class="content-rows" id="announcements-fields"></div>
@@ -164,6 +179,42 @@
           <p class="field-success" id="content-success" hidden></p>
           <button type="submit" class="btn primary" id="content-save">Save content</button>
         </form>
+      </section>
+
+      <section class="panel">
+        <h2>Slide archive</h2>
+        <p class="panel-hint">Move a past week's Canva slide here once you replace it above, so students can still find it.</p>
+
+        <form id="archive-form" class="archive-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="archive-week-label">Week label</label>
+              <input class="field-input" type="text" id="archive-week-label" placeholder="e.g. Week of Sep 1" required />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="archive-embed-url">Canva embed URL</label>
+              <input class="field-input" type="text" id="archive-embed-url" placeholder="Paste the Canva link" required />
+            </div>
+          </div>
+          <p class="field-error" id="archive-error" hidden></p>
+          <button type="submit" class="btn primary" id="archive-submit">Add to archive</button>
+        </form>
+
+        <div class="table-wrap archive-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Week</th>
+                <th>Link</th>
+                <th>Archived</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="archive-rows">
+              <tr class="empty-row" id="archive-empty-row"><td colspan="4">No archived slides yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section class="panel">

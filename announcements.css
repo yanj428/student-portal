@@ -1,0 +1,138 @@
+.voice-header {
+  margin-bottom: 4px;
+}
+.voice-header h1 {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+}
+.voice-header p {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Weekly Canva slide */
+.slide-card {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+.slide-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.slide-card-head h2 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+}
+.week-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-tint);
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.week-label[hidden] { display: none; }
+
+.slide-embed-wrap {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.slide-embed-wrap[hidden] { display: none; }
+.slide-embed-wrap iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.slide-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13.5px;
+  padding: 40px 20px;
+  margin: 0;
+  background: #FAF7F6;
+  border-radius: var(--radius-sm);
+}
+.slide-empty[hidden] { display: none; }
+
+/* Archive */
+.archive-heading {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+}
+.archive-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.archive-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 0;
+}
+.archive-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  box-shadow: var(--shadow);
+}
+.archive-item-label {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.archive-item-date {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-left: 8px;
+}
+.archive-view-link {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.archive-view-link:hover { text-decoration: underline; }
+
+/* Announcements list */
+.announcements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.announcement-card {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+}
+.announcement-card h3 {
+  font-size: 15px;
+  margin: 0 0 6px 0;
+}
+.announcement-card p {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin: 0;
+}

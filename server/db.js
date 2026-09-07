@@ -5,6 +5,7 @@ const DATA_DIR = path.join(__dirname, '..', 'data');
 const STUDENTS_FILE = path.join(DATA_DIR, 'students.json');
 const CONTENT_FILE = path.join(DATA_DIR, 'content.json');
 const VOICE_FILE = path.join(DATA_DIR, 'voice-posts.json');
+const SLIDE_ARCHIVE_FILE = path.join(DATA_DIR, 'slide-archive.json');
 
 // Text shown on the homepage. Admins edit these values; the page layout itself is fixed.
 const DEFAULT_CONTENT = {
@@ -41,6 +42,10 @@ const DEFAULT_CONTENT = {
     { initials: 'RK' },
     { initials: 'TS' },
   ],
+  weeklySlide: {
+    weekLabel: '',
+    canvaEmbedUrl: '',
+  },
 };
 
 function ensureStore() {
@@ -48,6 +53,7 @@ function ensureStore() {
   if (!fs.existsSync(STUDENTS_FILE)) fs.writeFileSync(STUDENTS_FILE, '[]\n');
   if (!fs.existsSync(CONTENT_FILE)) fs.writeFileSync(CONTENT_FILE, JSON.stringify(DEFAULT_CONTENT, null, 2) + '\n');
   if (!fs.existsSync(VOICE_FILE)) fs.writeFileSync(VOICE_FILE, '[]\n');
+  if (!fs.existsSync(SLIDE_ARCHIVE_FILE)) fs.writeFileSync(SLIDE_ARCHIVE_FILE, '[]\n');
 }
 
 function readStudents() {
@@ -91,11 +97,18 @@ function removeStudent(id) {
 function readContent() {
   ensureStore();
   const raw = fs.readFileSync(CONTENT_FILE, 'utf8');
+  let content;
   try {
-    return JSON.parse(raw);
+    content = JSON.parse(raw);
   } catch {
     return DEFAULT_CONTENT;
   }
+
+  // Backfill keys added to DEFAULT_CONTENT after this file was first written.
+  for (const key of Object.keys(DEFAULT_CONTENT)) {
+    if (!(key in content)) content[key] = DEFAULT_CONTENT[key];
+  }
+  return content;
 }
 
 function writeContent(content) {
@@ -118,6 +131,21 @@ function writeVoicePosts(posts) {
   fs.writeFileSync(VOICE_FILE, JSON.stringify(posts, null, 2) + '\n');
 }
 
+function readSlideArchive() {
+  ensureStore();
+  const raw = fs.readFileSync(SLIDE_ARCHIVE_FILE, 'utf8');
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+function writeSlideArchive(slides) {
+  ensureStore();
+  fs.writeFileSync(SLIDE_ARCHIVE_FILE, JSON.stringify(slides, null, 2) + '\n');
+}
+
 module.exports = {
   readStudents,
   writeStudents,
@@ -129,5 +157,7 @@ module.exports = {
   writeContent,
   readVoicePosts,
   writeVoicePosts,
+  readSlideArchive,
+  writeSlideArchive,
   DEFAULT_CONTENT,
 };

@@ -122,9 +122,17 @@ function validateContent(content) {
   if (!content || typeof content !== 'object') return 'Invalid content.';
 
   for (const key of Object.keys(shape)) {
-    if (!Array.isArray(content[key]) || content[key].length !== shape[key].length) {
-      return `"${key}" must be a list of exactly ${shape[key].length} item(s).`;
+    if (Array.isArray(shape[key])) {
+      if (!Array.isArray(content[key]) || content[key].length !== shape[key].length) {
+        return `"${key}" must be a list of exactly ${shape[key].length} item(s).`;
+      }
+    } else if (typeof content[key] !== 'object' || content[key] === null || Array.isArray(content[key])) {
+      return `"${key}" is invalid.`;
     }
+  }
+
+  if (typeof content.weeklySlide.weekLabel !== 'string' || typeof content.weeklySlide.canvaEmbedUrl !== 'string') {
+    return 'Weekly slide needs a week label and a Canva embed URL (both can be blank).';
   }
 
   for (const a of content.announcements) {
@@ -171,6 +179,57 @@ app.put('/api/admin/content', requireAdmin, (req, res) => {
 
   db.writeContent(content);
   res.json({ content });
+});
+
+// ---- Slide archive (older weekly Canva slides) ----
+function publicSlide(slide) {
+  return { id: slide.id, weekLabel: slide.weekLabel, canvaEmbedUrl: slide.canvaEmbedUrl, archivedAt: slide.archivedAt };
+}
+
+app.get('/api/slide-archive', requireStudent, (req, res) => {
+  const slides = db
+    .readSlideArchive()
+    .sort((a, b) => new Date(b.archivedAt) - new Date(a.archivedAt))
+    .map(publicSlide);
+  res.json({ slides });
+});
+
+app.get('/api/admin/slide-archive', requireAdmin, (req, res) => {
+  const slides = db
+    .readSlideArchive()
+    .sort((a, b) => new Date(b.archivedAt) - new Date(a.archivedAt))
+    .map(publicSlide);
+  res.json({ slides });
+});
+
+app.post('/api/admin/slide-archive', requireAdmin, (req, res) => {
+  const { weekLabel, canvaEmbedUrl } = req.body || {};
+  if (typeof weekLabel !== 'string' || !weekLabel.trim()) {
+    return res.status(400).json({ error: 'Week label is required.' });
+  }
+  if (typeof canvaEmbedUrl !== 'string' || !canvaEmbedUrl.trim()) {
+    return res.status(400).json({ error: 'Canva embed URL is required.' });
+  }
+
+  const slides = db.readSlideArchive();
+  const slide = {
+    id: crypto.randomUUID(),
+    weekLabel: weekLabel.trim(),
+    canvaEmbedUrl: canvaEmbedUrl.trim(),
+    archivedAt: new Date().toISOString(),
+  };
+  slides.push(slide);
+  db.writeSlideArchive(slides);
+
+  res.status(201).json({ slide: publicSlide(slide) });
+});
+
+app.delete('/api/admin/slide-archive/:id', requireAdmin, (req, res) => {
+  const slides = db.readSlideArchive();
+  const next = slides.filter((s) => s.id !== req.params.id);
+  if (next.length === slides.length) return res.status(404).json({ error: 'Slide not found.' });
+  db.writeSlideArchive(next);
+  res.json({ ok: true });
 });
 
 // ---- Student Voice (form-style posts — every post and reply needs admin approval) ----

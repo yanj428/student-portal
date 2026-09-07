@@ -22,6 +22,7 @@ function showAdminPanel() {
   loadStudents();
   loadContent();
   loadVoicePending();
+  loadSlideArchive();
 }
 
 function showGate() {
@@ -188,6 +189,10 @@ async function loadContent() {
 }
 
 function renderContentForm(content) {
+  const slide = content.weeklySlide || { weekLabel: '', canvaEmbedUrl: '' };
+  document.getElementById('slide-week-label').value = slide.weekLabel;
+  document.getElementById('slide-embed-url').value = slide.canvaEmbedUrl;
+
   announcementsFields.innerHTML = content.announcements
     .map(
       (a, i) => `
@@ -266,6 +271,7 @@ function renderContentForm(content) {
 
 function collectContentFromForm() {
   const content = {
+    weeklySlide: { weekLabel: '', canvaEmbedUrl: '' },
     announcements: [],
     calendarEvents: [],
     lunchMenu: [],
@@ -277,10 +283,15 @@ function collectContentFromForm() {
 
   contentForm.querySelectorAll('[data-section]').forEach((el) => {
     const section = el.dataset.section;
-    const index = Number(el.dataset.index);
     const field = el.dataset.field;
     const value = el.type === 'number' ? Number(el.value) : el.value;
 
+    if (section === 'weeklySlide') {
+      content.weeklySlide[field] = value;
+      return;
+    }
+
+    const index = Number(el.dataset.index);
     if (!content[section][index]) content[section][index] = section === 'clubs' ? '' : {};
 
     if (section === 'clubs') {
@@ -388,5 +399,82 @@ function renderVoicePending(items) {
     voicePendingList.appendChild(div);
   });
 }
+
+// ---- Slide archive ----
+const archiveForm = document.getElementById('archive-form');
+const archiveWeekLabelInput = document.getElementById('archive-week-label');
+const archiveEmbedUrlInput = document.getElementById('archive-embed-url');
+const archiveError = document.getElementById('archive-error');
+const archiveSubmit = document.getElementById('archive-submit');
+const archiveRows = document.getElementById('archive-rows');
+const archiveEmptyRow = document.getElementById('archive-empty-row');
+
+async function loadSlideArchive() {
+  const res = await fetch('/api/admin/slide-archive');
+  if (!res.ok) return;
+  const { slides } = await res.json();
+  renderSlideArchive(slides);
+}
+
+function renderSlideArchive(slides) {
+  archiveRows.querySelectorAll('tr:not(#archive-empty-row)').forEach((el) => el.remove());
+
+  if (slides.length === 0) {
+    archiveRows.appendChild(archiveEmptyRow);
+    return;
+  }
+  archiveEmptyRow.remove();
+
+  slides.forEach((slide) => {
+    const tr = document.createElement('tr');
+    const archived = new Date(slide.archivedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    tr.innerHTML = `
+      <td>${escapeHtml(slide.weekLabel)}</td>
+      <td><a href="${escapeHtml(slide.canvaEmbedUrl)}" target="_blank" rel="noopener">View</a></td>
+      <td>${archived}</td>
+      <td><button class="delete-btn" data-id="${slide.id}" aria-label="Remove from archive"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7H20M9 7V4C9 3.4 9.4 3 10 3H14C14.6 3 15 3.4 15 4V7M18 7L17.3 19C17.2 19.6 16.7 20 16.1 20H7.9C7.3 20 6.8 19.6 6.7 19L6 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button></td>
+    `;
+    tr.querySelector('.delete-btn').addEventListener('click', async () => {
+      if (!confirm('Remove this slide from the archive?')) return;
+      await fetch(`/api/admin/slide-archive/${slide.id}`, { method: 'DELETE' });
+      loadSlideArchive();
+    });
+    archiveRows.appendChild(tr);
+  });
+}
+
+archiveForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  archiveError.hidden = true;
+  archiveSubmit.disabled = true;
+  archiveSubmit.textContent = 'Adding…';
+
+  try {
+    const res = await fetch('/api/admin/slide-archive', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        weekLabel: archiveWeekLabelInput.value.trim(),
+        canvaEmbedUrl: archiveEmbedUrlInput.value.trim(),
+      }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      archiveError.textContent = data.error || 'Could not add to archive.';
+      archiveError.hidden = false;
+      return;
+    }
+
+    archiveForm.reset();
+    loadSlideArchive();
+  } catch {
+    archiveError.textContent = 'Could not reach the server. Please try again.';
+    archiveError.hidden = false;
+  } finally {
+    archiveSubmit.disabled = false;
+    archiveSubmit.textContent = 'Add to archive';
+  }
+});
 
 checkSession();

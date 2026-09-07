@@ -119,14 +119,6 @@ if (form) {
 const profileModal = document.getElementById('profile-modal');
 const profileForm = document.getElementById('profile-form');
 const firstNameInput = document.getElementById('first-name');
-const lastNameInput = document.getElementById('last-name');
-const nicknameInput = document.getElementById('nickname');
-const gradeSelect = document.getElementById('grade');
-
-const previewAvatar = document.getElementById('preview-avatar');
-const previewName = document.getElementById('preview-name');
-const previewNickname = document.getElementById('preview-nickname');
-const previewGrade = document.getElementById('preview-grade');
 
 function openProfileModal() {
   profileModal.hidden = false;
@@ -138,29 +130,6 @@ function closeProfileModal() {
   profileModal.hidden = true;
   document.body.style.overflow = '';
 }
-
-function updatePreview() {
-  const first = firstNameInput.value.trim();
-  const last = lastNameInput.value.trim();
-  const nickname = nicknameInput.value.trim();
-  const grade = gradeSelect.value;
-
-  const fullName = [first, last].filter(Boolean).join(' ');
-  previewName.textContent = fullName || 'Your name';
-  previewAvatar.textContent = ((first[0] || '') + (last[0] || '')).toUpperCase() || '?';
-  previewNickname.textContent = nickname ? `"${nickname}"` : 'Nickname';
-
-  if (grade) {
-    previewGrade.hidden = false;
-    previewGrade.querySelector('span').textContent = grade;
-  } else {
-    previewGrade.hidden = true;
-  }
-}
-
-[firstNameInput, lastNameInput, nicknameInput, gradeSelect].forEach((el) => {
-  if (el) el.addEventListener('input', updatePreview);
-});
 
 const profileModalClose = document.getElementById('profile-modal-close');
 const profileModalCancel = document.getElementById('profile-modal-cancel');

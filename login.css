@@ -15,6 +15,8 @@
 html, body {
   margin: 0;
   padding: 0;
+  height: 100%;
+  overflow: hidden;
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: var(--text);
   background-color: #F4F1EF;
@@ -25,17 +27,18 @@ html, body {
 }
 
 .login-page {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+  padding: 24px;
 }
 
 .login-card {
   width: 100%;
   max-width: 1140px;
-  min-height: 720px;
+  height: 100%;
+  max-height: 680px;
   background: #fff;
   border-radius: var(--radius-lg);
   display: grid;
@@ -49,7 +52,9 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 48px 40px;
+  padding: 32px 40px;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .login-left-inner {

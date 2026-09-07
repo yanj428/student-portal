@@ -96,6 +96,22 @@ html, body {
   text-decoration: none;
 }
 
+.forgot-note {
+  margin: -2px 0 12px 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--primary-tint);
+  color: var(--text);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.forgot-note[hidden] { display: none; }
+.forgot-note a {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
 .field-input {
   width: 100%;
   padding: 13px 16px;

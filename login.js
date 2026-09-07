@@ -4,6 +4,16 @@ const loginError = document.getElementById('login-error');
 const submitBtn = document.getElementById('submit-btn');
 const form = document.getElementById('login-form');
 
+// "Forgot password?" has no reset flow — point students at Student Council instead
+const forgotLink = document.getElementById('forgot-link');
+const forgotNote = document.getElementById('forgot-note');
+if (forgotLink && forgotNote) {
+  forgotLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    forgotNote.hidden = !forgotNote.hidden;
+  });
+}
+
 // Show/hide password
 const pwToggle = document.querySelector('.toggle-pw');
 if (passwordInput && pwToggle) {

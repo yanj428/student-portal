@@ -8,14 +8,20 @@ document.querySelectorAll('.nav-item[data-page]').forEach((item) => {
   });
 });
 
-// Today's date in the welcome banner
+// Today's date in the welcome banner — re-checked periodically so it rolls
+// over to the new day on its own if the portal is left open past midnight.
 const dateEl = document.getElementById('today-date');
 if (dateEl) {
-  dateEl.textContent = new Date().toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  const formatToday = () =>
+    new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const updateDate = () => {
+    const formatted = formatToday();
+    if (dateEl.textContent !== formatted) dateEl.textContent = formatted;
+  };
+
+  updateDate();
+  setInterval(updateDate, 60 * 1000);
 }
 
 // Require login: pull the signed-in student from the session, or bounce to login.html

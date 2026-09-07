@@ -118,12 +118,27 @@ if (form) {
 // Complete-profile modal (shown right after a successful sign up)
 const profileModal = document.getElementById('profile-modal');
 const profileForm = document.getElementById('profile-form');
-const firstNameInput = document.getElementById('first-name');
+const nameDisplay = document.getElementById('name-display');
+const gradeSelect = document.getElementById('grade');
+
+// Best-effort: derive a display name from the school email's local part,
+// e.g. "danial.aliaskarov@kpis.ac.th" -> "Danial Aliaskarov". There's no
+// real identity provider wired up yet, so this is just a friendly guess.
+function deriveNameFromEmail(email) {
+  const localPart = email.split('@')[0] || '';
+  const parts = localPart.split(/[._-]+/).filter(Boolean);
+  if (parts.length === 0) return 'Your name';
+  return parts
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(' ');
+}
 
 function openProfileModal() {
+  nameDisplay.textContent = deriveNameFromEmail(emailInput.value.trim());
+  gradeSelect.value = '';
   profileModal.hidden = false;
   document.body.style.overflow = 'hidden';
-  firstNameInput.focus();
+  gradeSelect.focus();
 }
 
 function closeProfileModal() {

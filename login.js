@@ -12,9 +12,21 @@ const welcomeHeading = document.getElementById('welcome-heading');
 const welcomeSubtitle = document.getElementById('welcome-subtitle');
 const submitBtn = document.getElementById('submit-btn');
 const forgotLink = document.getElementById('forgot-link');
+const passwordInput = document.getElementById('password');
+const passwordHint = document.getElementById('password-hint');
+const passwordError = document.getElementById('password-error');
 const confirmPasswordField = document.getElementById('confirm-password-field');
 const confirmPasswordInput = document.getElementById('confirm-password');
 const confirmPasswordError = document.getElementById('confirm-password-error');
+
+// Signup password rules: 8+ chars, 1+ uppercase, 4+ digits, 1+ special character.
+function isPasswordValid(pw) {
+  if (pw.length < 8) return false;
+  if (!/[A-Z]/.test(pw)) return false;
+  if ((pw.match(/[0-9]/g) || []).length < 4) return false;
+  if (!/[^A-Za-z0-9]/.test(pw)) return false;
+  return true;
+}
 
 function setMode(nextMode) {
   mode = nextMode;
@@ -29,6 +41,7 @@ function setMode(nextMode) {
     submitBtn.textContent = 'Sign Up';
     forgotLink.hidden = true;
     confirmPasswordField.hidden = false;
+    passwordHint.hidden = false;
   } else {
     welcomeHeading.textContent = 'Welcome!';
     welcomeSubtitle.textContent = 'Please enter your details to login.';
@@ -36,9 +49,11 @@ function setMode(nextMode) {
     submitBtn.textContent = 'Log In';
     forgotLink.hidden = false;
     confirmPasswordField.hidden = true;
+    passwordHint.hidden = true;
   }
 
   clearEmailError();
+  clearPasswordError();
   clearConfirmPasswordError();
 }
 
@@ -50,6 +65,16 @@ function clearEmailError() {
 function showEmailError() {
   emailError.hidden = false;
   emailInput.classList.add('invalid');
+}
+
+function clearPasswordError() {
+  passwordError.hidden = true;
+  passwordInput.classList.remove('invalid');
+}
+
+function showPasswordError() {
+  passwordError.hidden = false;
+  passwordInput.classList.add('invalid');
 }
 
 function clearConfirmPasswordError() {
@@ -75,6 +100,7 @@ if (signupLink) {
 }
 
 emailInput.addEventListener('input', clearEmailError);
+passwordInput.addEventListener('input', clearPasswordError);
 confirmPasswordInput.addEventListener('input', clearConfirmPasswordError);
 
 // Show/hide password — wire every password field to its own toggle button
@@ -89,8 +115,6 @@ document.querySelectorAll('.password-wrap').forEach((wrap) => {
   });
 });
 
-const pwInput = document.getElementById('password');
-
 const form = document.getElementById('login-form');
 if (form) {
   form.addEventListener('submit', (e) => {
@@ -102,7 +126,12 @@ if (form) {
         emailInput.focus();
         return;
       }
-      if (confirmPasswordInput.value !== pwInput.value) {
+      if (!isPasswordValid(passwordInput.value)) {
+        showPasswordError();
+        passwordInput.focus();
+        return;
+      }
+      if (confirmPasswordInput.value !== passwordInput.value) {
         showConfirmPasswordError();
         confirmPasswordInput.focus();
         return;

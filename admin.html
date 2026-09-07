@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KPIS International School | Admin</title>
+  <link rel="stylesheet" href="admin.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Admin password gate -->
+  <div class="gate" id="gate">
+    <form class="gate-card" id="gate-form">
+      <h1>Admin access</h1>
+      <p>Enter the admin password to manage student accounts.</p>
+      <input class="field-input" type="password" id="admin-password" placeholder="Admin password" autocomplete="current-password" />
+      <p class="field-error" id="gate-error" hidden>Incorrect password.</p>
+      <button type="submit" class="btn primary">Continue</button>
+    </form>
+  </div>
+
+  <!-- Admin panel -->
+  <div class="admin-page" id="admin-page" hidden>
+    <header class="admin-header">
+      <div class="admin-brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 3L1 8.5L12 14L21 9.9V16.5H23V8.5L12 3Z" fill="currentColor"/><path d="M5 10.7V15.5C5 15.5 7.5 18 12 18C16.5 18 19 15.5 19 15.5V10.7L12 14L5 10.7Z" fill="currentColor"/></svg>
+        </div>
+        <div>
+          <div class="admin-title">KPIS Admin</div>
+          <div class="admin-subtitle">Student account management</div>
+        </div>
+      </div>
+      <button class="btn ghost" id="admin-logout">Log out</button>
+    </header>
+
+    <main class="admin-main">
+      <section class="panel">
+        <h2>Create a student account</h2>
+        <p class="panel-hint">Accounts must use a @kpis.ac.th email address. Give the student their temporary password directly — it isn't shown here again.</p>
+
+        <form id="create-form" class="create-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="first-name">First name</label>
+              <input class="field-input" type="text" id="first-name" required />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="last-name">Last name</label>
+              <input class="field-input" type="text" id="last-name" required />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="student-email">School email</label>
+              <input class="field-input" type="email" id="student-email" placeholder="firstname.lastname@kpis.ac.th" required />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="grade">Grade</label>
+              <select class="field-input" id="grade" required>
+                <option value="" disabled selected>Select grade</option>
+                <option>Grade 1</option>
+                <option>Grade 2</option>
+                <option>Grade 3</option>
+                <option>Grade 4</option>
+                <option>Grade 5</option>
+                <option>Grade 6</option>
+                <option>Grade 7</option>
+                <option>Grade 8</option>
+                <option>Grade 9</option>
+                <option>Grade 10</option>
+                <option>Grade 11</option>
+                <option>Grade 12</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="temp-password">Temporary password</label>
+              <div class="password-row">
+                <input class="field-input" type="text" id="temp-password" placeholder="At least 8 characters" required />
+                <button type="button" class="btn ghost small" id="generate-password">Generate</button>
+              </div>
+            </div>
+          </div>
+
+          <p class="field-error" id="create-error" hidden></p>
+          <p class="field-success" id="create-success" hidden></p>
+
+          <button type="submit" class="btn primary" id="create-submit">Create account</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Student accounts</h2>
+          <span class="count-badge" id="student-count">0</span>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Grade</th>
+                <th>Created</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="student-rows">
+              <tr class="empty-row" id="empty-row"><td colspan="5">No student accounts yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

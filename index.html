@@ -89,7 +89,7 @@
         </a>
       </nav>
 
-      <a href="#" class="nav-item logout" data-page="logout">
+      <a href="#" class="nav-item logout" data-page="logout" id="logout-link">
         <span class="nav-icon">
           <svg viewBox="0 0 24 24" fill="none"><path d="M9 21H5C4.4 21 4 20.6 4 20V4C4 3.4 4.4 3 5 3H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16 17L21 12L16 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         </span>
@@ -106,10 +106,10 @@
         </div>
         <div class="user-block">
           <div class="user-info">
-            <span class="user-name">John Doe</span>
-            <span class="user-meta">3rd year</span>
+            <span class="user-name" id="user-name">Loading…</span>
+            <span class="user-meta" id="user-grade"></span>
           </div>
-          <div class="avatar">JD</div>
+          <div class="avatar" id="user-avatar">?</div>
           <button class="bell" aria-label="Notifications">
             <svg viewBox="0 0 24 24" fill="none"><path d="M18 8C18 6.4 17.4 4.9 16.2 3.8C15.1 2.6 13.6 2 12 2C10.4 2 8.9 2.6 7.8 3.8C6.6 4.9 6 6.4 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13.7 21C13.5 21.3 13.3 21.6 12.9 21.7C12.6 21.9 12.3 22 12 22C11.7 22 11.4 21.9 11.1 21.7C10.7 21.6 10.5 21.3 10.3 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
             <span class="bell-dot"></span>
@@ -120,7 +120,7 @@
       <section class="banner">
         <div class="banner-text">
           <span class="banner-date" id="today-date"></span>
-          <h1>Welcome back, John!</h1>
+          <h1 id="welcome-heading">Welcome back!</h1>
           <p>Always stay updated in your KPIS student portal</p>
         </div>
         <div class="banner-art">

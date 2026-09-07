@@ -15,28 +15,16 @@
       <!-- Left panel -->
       <div class="login-left">
         <div class="login-left-inner">
-          <div class="tabs">
-            <button class="tab active" data-tab="login" type="button">
-              <svg viewBox="0 0 24 24" fill="none"><path d="M15 3H19C19.6 3 20 3.4 20 4V20C20 20.6 19.6 21 19 21H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 17L15 12L10 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 12H4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-              Login
-            </button>
-            <button class="tab" data-tab="signup" type="button">
-              <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M2 21C2 16.6 5.1 13 9 13C11.1 13 13 14 14.3 15.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M18 8V14M15 11H21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-              Sign Up
-            </button>
-          </div>
-
-          <h1 class="welcome" id="welcome-heading">Welcome!</h1>
-          <p class="subtitle" id="welcome-subtitle">Please enter your details to login.</p>
+          <h1 class="welcome">Welcome!</h1>
+          <p class="subtitle">Please enter your details to login.</p>
 
           <form id="login-form">
             <label class="field-label" for="email">Email address</label>
             <input class="field-input" type="email" id="email" placeholder="Enter your email address" autocomplete="username" />
-            <p class="field-error" id="email-error" hidden>Sign ups are only open to @kpis.ac.th school email addresses.</p>
 
             <div class="field-row">
               <label class="field-label" for="password">Password</label>
-              <a href="#" class="forgot" id="forgot-link">Forgot password?</a>
+              <a href="#" class="forgot">Forgot password?</a>
             </div>
             <div class="password-wrap">
               <input class="field-input" type="password" id="password" placeholder="Enter your password" autocomplete="current-password" />
@@ -44,24 +32,13 @@
                 <svg viewBox="0 0 24 24" fill="none"><path d="M2 12C2 12 5.5 5.5 12 5.5C18.5 5.5 22 12 22 12C22 12 18.5 18.5 12 18.5C5.5 18.5 2 12 2 12Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/></svg>
               </button>
             </div>
-            <p class="field-hint" id="password-hint" hidden>Must be at least 8 characters with 1 uppercase letter, 4 numbers, and 1 special character.</p>
-            <p class="field-error" id="password-error" hidden>Password doesn't meet the requirements above.</p>
 
-            <div class="confirm-password-field" id="confirm-password-field" hidden>
-              <label class="field-label" for="confirm-password">Confirm password</label>
-              <div class="password-wrap">
-                <input class="field-input" type="password" id="confirm-password" placeholder="Re-enter your password" autocomplete="new-password" />
-                <button type="button" class="toggle-pw" aria-label="Show confirm password" id="toggle-confirm-pw">
-                  <svg viewBox="0 0 24 24" fill="none"><path d="M2 12C2 12 5.5 5.5 12 5.5C18.5 5.5 22 12 22 12C22 12 18.5 18.5 12 18.5C5.5 18.5 2 12 2 12Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6"/></svg>
-                </button>
-              </div>
-              <p class="field-error" id="confirm-password-error" hidden>Passwords do not match.</p>
-            </div>
+            <p class="field-error" id="login-error" hidden>Incorrect email or password.</p>
 
             <button type="submit" class="login-btn" id="submit-btn">Log In</button>
           </form>
 
-          <p class="signup-line">Don't have an account yet? <a href="#">Sign up</a></p>
+          <p class="signup-line">Don't have an account? Ask your school admin to set one up for you.</p>
         </div>
       </div>
 
@@ -127,57 +104,6 @@
           </div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Complete profile modal (shown after a successful sign up) -->
-  <div class="modal-overlay" id="profile-modal" hidden>
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
-      <div class="modal-header">
-        <h2 id="profile-modal-title">Complete your profile</h2>
-        <button type="button" class="modal-close" id="profile-modal-close" aria-label="Close">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        </button>
-      </div>
-
-      <form id="profile-form">
-        <div class="modal-body">
-          <div class="modal-fields">
-            <div class="modal-field">
-              <span class="field-label">Name</span>
-              <div class="name-display" id="name-display">Your name</div>
-              <p class="field-hint">Taken from your KPIS email address.</p>
-            </div>
-
-            <div class="modal-field">
-              <label class="field-label" for="grade">Grade</label>
-              <select class="field-input" id="grade" required>
-                <option value="" disabled selected>Select your grade</option>
-                <option>Grade 1</option>
-                <option>Grade 2</option>
-                <option>Grade 3</option>
-                <option>Grade 4</option>
-                <option>Grade 5</option>
-                <option>Grade 6</option>
-                <option>Grade 7</option>
-                <option>Grade 8</option>
-                <option>Grade 9</option>
-                <option>Grade 10</option>
-                <option>Grade 11</option>
-                <option>Grade 12</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <span class="modal-hint">This information appears on your student profile.</span>
-          <div class="modal-actions">
-            <button type="button" class="modal-btn cancel" id="profile-modal-cancel">Cancel</button>
-            <button type="submit" class="modal-btn save">Save and continue</button>
-          </div>
-        </div>
-      </form>
     </div>
   </div>
 

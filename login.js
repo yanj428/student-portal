@@ -11,6 +11,10 @@ const emailError = document.getElementById('email-error');
 const welcomeHeading = document.getElementById('welcome-heading');
 const welcomeSubtitle = document.getElementById('welcome-subtitle');
 const submitBtn = document.getElementById('submit-btn');
+const forgotLink = document.getElementById('forgot-link');
+const confirmPasswordField = document.getElementById('confirm-password-field');
+const confirmPasswordInput = document.getElementById('confirm-password');
+const confirmPasswordError = document.getElementById('confirm-password-error');
 
 function setMode(nextMode) {
   mode = nextMode;
@@ -23,14 +27,19 @@ function setMode(nextMode) {
     welcomeSubtitle.textContent = 'Sign up with your KPIS school email.';
     emailInput.placeholder = 'yourname@kpis.ac.th';
     submitBtn.textContent = 'Sign Up';
+    forgotLink.hidden = true;
+    confirmPasswordField.hidden = false;
   } else {
     welcomeHeading.textContent = 'Welcome!';
     welcomeSubtitle.textContent = 'Please enter your details to login.';
     emailInput.placeholder = 'Enter your email address';
     submitBtn.textContent = 'Log In';
+    forgotLink.hidden = false;
+    confirmPasswordField.hidden = true;
   }
 
   clearEmailError();
+  clearConfirmPasswordError();
 }
 
 function clearEmailError() {
@@ -41,6 +50,16 @@ function clearEmailError() {
 function showEmailError() {
   emailError.hidden = false;
   emailInput.classList.add('invalid');
+}
+
+function clearConfirmPasswordError() {
+  confirmPasswordError.hidden = true;
+  confirmPasswordInput.classList.remove('invalid');
+}
+
+function showConfirmPasswordError() {
+  confirmPasswordError.hidden = false;
+  confirmPasswordInput.classList.add('invalid');
 }
 
 document.querySelectorAll('.tab').forEach((tab) => {
@@ -56,17 +75,21 @@ if (signupLink) {
 }
 
 emailInput.addEventListener('input', clearEmailError);
+confirmPasswordInput.addEventListener('input', clearConfirmPasswordError);
 
-// Show/hide password
-const pwInput = document.getElementById('password');
-const pwToggle = document.querySelector('.toggle-pw');
-if (pwInput && pwToggle) {
-  pwToggle.addEventListener('click', () => {
-    const showing = pwInput.type === 'text';
-    pwInput.type = showing ? 'password' : 'text';
-    pwToggle.classList.toggle('showing', !showing);
+// Show/hide password — wire every password field to its own toggle button
+document.querySelectorAll('.password-wrap').forEach((wrap) => {
+  const input = wrap.querySelector('input');
+  const toggle = wrap.querySelector('.toggle-pw');
+  if (!input || !toggle) return;
+  toggle.addEventListener('click', () => {
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    toggle.classList.toggle('showing', !showing);
   });
-}
+});
+
+const pwInput = document.getElementById('password');
 
 const form = document.getElementById('login-form');
 if (form) {
@@ -77,6 +100,11 @@ if (form) {
       if (!emailInput.value.trim().toLowerCase().endsWith(SCHOOL_DOMAIN)) {
         showEmailError();
         emailInput.focus();
+        return;
+      }
+      if (confirmPasswordInput.value !== pwInput.value) {
+        showConfirmPasswordError();
+        confirmPasswordInput.focus();
         return;
       }
       openProfileModal();

@@ -26,12 +26,13 @@
             </button>
           </div>
 
-          <h1 class="welcome">Welcome!</h1>
-          <p class="subtitle">Please enter your details to login.</p>
+          <h1 class="welcome" id="welcome-heading">Welcome!</h1>
+          <p class="subtitle" id="welcome-subtitle">Please enter your details to login.</p>
 
           <form id="login-form">
             <label class="field-label" for="email">Email address</label>
             <input class="field-input" type="email" id="email" placeholder="Enter your email address" autocomplete="username" />
+            <p class="field-error" id="email-error" hidden>Sign ups are only open to @kpis.ac.th school email addresses.</p>
 
             <div class="field-row">
               <label class="field-label" for="password">Password</label>
@@ -44,7 +45,7 @@
               </button>
             </div>
 
-            <button type="submit" class="login-btn">Log In</button>
+            <button type="submit" class="login-btn" id="submit-btn">Log In</button>
           </form>
 
           <div class="divider"><span>OR</span></div>

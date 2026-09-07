@@ -42,6 +42,8 @@ html, body {
   padding: 20px 16px;
   display: flex;
   flex-direction: column;
+  position: sticky;
+  top: 28px;
   height: calc(100vh - 56px);
   overflow-y: auto;
   scrollbar-width: thin;
@@ -441,6 +443,140 @@ html, body {
   text-decoration: none;
 }
 
+/* Upcoming calendar */
+.calendar-list {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.calendar-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 6px;
+  border-radius: var(--radius-sm);
+}
+.calendar-item:not(:last-child) { border-bottom: 1px solid var(--border); }
+
+.date-chip {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: var(--primary-tint);
+  color: var(--primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.date-day { font-size: 15px; font-weight: 800; line-height: 1.1; }
+.date-month { font-size: 10px; font-weight: 600; text-transform: uppercase; }
+
+.calendar-info h3 { font-size: 13.5px; margin: 0 0 2px 0; }
+.calendar-info p { font-size: 12px; color: var(--text-muted); margin: 0; }
+
+/* Lunch menu */
+.lunch-days {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+.lunch-day {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 14px 10px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+}
+.lunch-weekday {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.lunch-item {
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+/* Club chips */
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.club-chip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+}
+
+/* StuCo project tracker */
+.project-list {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.project-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.project-pct { color: var(--primary); }
+.progress-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--primary-tint);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+/* Quick links */
+.quicklinks-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.quicklink {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  box-shadow: var(--shadow);
+}
+.quicklink:hover { border-color: var(--primary-light); color: var(--primary); }
+
 /* Responsive */
 @media (max-width: 1100px) {
   .content-grid { grid-template-columns: 1fr; }
@@ -464,4 +600,6 @@ html, body {
   .banner { flex-direction: column; align-items: flex-start; text-align: left; }
   .finance-cards { grid-template-columns: 1fr; }
   .course-cards { grid-template-columns: 1fr; }
+  .lunch-days { grid-template-columns: repeat(2, 1fr); }
+  .quicklinks-grid { grid-template-columns: 1fr; }
 }

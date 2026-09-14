@@ -328,7 +328,8 @@ html {
 .overview-hint {
   font-size: 13.5px;
   color: var(--text-muted);
-  margin: 0;
+  line-height: 1.6;
+  margin: 20px 0 0 0;
 }
 
 .admin-page-section[hidden] { display: none; }

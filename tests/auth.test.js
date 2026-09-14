@@ -7,8 +7,12 @@ const dataDir = initTestEnv();
 
 const request = require('supertest');
 const app = require('../server/server');
+const db = require('../server/db');
 
-test.after(() => fs.rmSync(dataDir, { recursive: true, force: true }));
+test.after(() => {
+  db.close();
+  fs.rmSync(dataDir, { recursive: true, force: true });
+});
 
 let studentCounter = 0;
 

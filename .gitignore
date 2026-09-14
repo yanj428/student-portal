@@ -1,5 +1,6 @@
 node_modules/
 .env
-/data/students.json
+/data/portal.db
+/data/portal.db-*
 /uploads/
 *.log

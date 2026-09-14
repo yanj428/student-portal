@@ -62,6 +62,13 @@ html, body {
   max-width: 380px;
 }
 
+.login-logo {
+  height: 64px;
+  width: auto;
+  margin: 0 0 18px 0;
+  display: block;
+}
+
 .welcome {
   font-size: 30px;
   font-weight: 800;

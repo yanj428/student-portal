@@ -18,6 +18,26 @@
   margin: 0 0 14px 0;
 }
 
+.cs-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--primary-tint);
+  color: var(--primary);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.cs-notice svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.cs-notice strong { font-weight: 800; }
+
 /* Intro */
 .cs-intro {
   background: var(--surface);
@@ -114,9 +134,23 @@
   padding: 18px 20px;
   box-shadow: var(--shadow);
 }
+.cs-club-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.cs-club-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
 .cs-club-card h3 {
   font-size: 15px;
-  margin: 0 0 6px 0;
+  margin: 0;
 }
 .cs-club-card p {
   font-size: 13.5px;
@@ -125,6 +159,45 @@
   margin: 0;
   white-space: pre-wrap;
 }
+.cs-club-links {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+}
+.cs-club-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--primary);
+}
+.cs-club-link svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+.cs-club-link:hover { text-decoration: underline; }
+
+.cs-clubs-redirect {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  box-shadow: var(--shadow);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--primary);
+}
+.cs-clubs-redirect svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.cs-clubs-redirect:hover { background: var(--primary-tint); }
 
 /* Events & opportunities */
 .section-subhint {

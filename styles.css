@@ -3,7 +3,7 @@
   --primary-dark: #7A1719;
   --primary-light: #B94547;
   --primary-tint: #F7E9E9;
-  --bg: #EFE9E4;
+  --bg: #FFFFFF;
   --surface: #FFFFFF;
   --text: #2B2020;
   --text-muted: #8A7B7B;
@@ -195,7 +195,11 @@ html, body {
   font-weight: 700;
   font-size: 14px;
   box-shadow: var(--shadow);
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
 }
+.avatar:hover { background: var(--primary-dark); }
 
 .bell {
   width: 44px;

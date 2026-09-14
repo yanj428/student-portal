@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "id": "707909ee-43cd-40e0-a2c4-d482ffcba996",
+    "name": "Beach Cleanup Club",
+    "description": "Monthly beach cleanups — final edit test.",
+    "logoUrl": "",
+    "instagramUrl": "https://instagram.com/kpisbeach",
+    "applicationFormUrl": "https://forms.gle/test123",
+    "createdAt": "2026-09-11T15:25:41.353Z"
+  },
+  {
+    "id": "d7f9cb5d-1a9c-4967-9411-5f695baa9d64",
+    "name": "Robotics Club",
+    "description": "We build robots.",
+    "logoUrl": "/uploads/club-logos/1789140417983-bfb8682f3ab6.png",
+    "instagramUrl": "https://instagram.com/kpisrobotics",
+    "applicationFormUrl": "https://forms.gle/robotics",
+    "createdAt": "2026-09-11T15:26:57.986Z"
+  }
+]

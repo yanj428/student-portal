@@ -107,6 +107,41 @@ function removeStudent(id) {
   return next.length !== students.length;
 }
 
+function updateStudentPasswordHash(id, passwordHash, mustChangePassword = false) {
+  const students = readStudents();
+  const student = students.find((s) => s.id === id);
+  if (!student) return null;
+  student.passwordHash = passwordHash;
+  student.mustChangePassword = mustChangePassword;
+  student.failedLoginAttempts = 0;
+  student.locked = false;
+  writeStudents(students);
+  return student;
+}
+
+const MAX_FAILED_LOGIN_ATTEMPTS = 10;
+
+function recordFailedLogin(id) {
+  const students = readStudents();
+  const student = students.find((s) => s.id === id);
+  if (!student) return null;
+  student.failedLoginAttempts = (student.failedLoginAttempts || 0) + 1;
+  if (student.failedLoginAttempts >= MAX_FAILED_LOGIN_ATTEMPTS) {
+    student.locked = true;
+  }
+  writeStudents(students);
+  return student;
+}
+
+function clearFailedLogins(id) {
+  const students = readStudents();
+  const student = students.find((s) => s.id === id);
+  if (!student) return null;
+  student.failedLoginAttempts = 0;
+  writeStudents(students);
+  return student;
+}
+
 function readContent() {
   ensureStore();
   const raw = fs.readFileSync(CONTENT_FILE, 'utf8');
@@ -207,6 +242,9 @@ module.exports = {
   findById,
   addStudent,
   removeStudent,
+  updateStudentPasswordHash,
+  recordFailedLogin,
+  clearFailedLogins,
   readContent,
   writeContent,
   readVoicePosts,

@@ -24,23 +24,94 @@
 
   <!-- Admin panel -->
   <div class="admin-page" id="admin-page" hidden>
-    <header class="admin-header">
-      <div class="admin-brand">
-        <div class="brand-icon">
-          <img src="assets/kpis-logo.png" alt="KPIS International School crest" />
+    <div class="admin-shell">
+      <aside class="admin-sidebar">
+        <div class="sidebar-brand">
+          <div class="brand-icon">
+            <img src="assets/kpis-logo.png" alt="KPIS International School crest" />
+          </div>
+          <div>
+            <div class="admin-title">KPIS Admin</div>
+            <div class="admin-subtitle">Student portal</div>
+          </div>
         </div>
-        <div>
-          <div class="admin-title">KPIS Admin</div>
-          <div class="admin-subtitle">Student account management</div>
-        </div>
-      </div>
-      <button class="btn ghost" id="admin-logout">Log out</button>
-    </header>
 
-    <main class="admin-main">
+        <nav class="sidebar-nav" id="sidebar-nav">
+          <button class="nav-item active" data-page="overview" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M3 11L12 4L21 11V19C21 19.55 20.55 20 20 20H15V14H9V20H4C3.45 20 3 19.55 3 19V11Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+            <span>Overview</span>
+          </button>
+          <button class="nav-item" data-page="students" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 19C3.5 15.7 6 13.5 9 13.5C12 13.5 14.5 15.7 14.5 19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="17" cy="9" r="2.4" stroke="currentColor" stroke-width="1.7"/><path d="M15.2 13.7C17.7 13.9 19.7 15.9 19.7 19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <span>Student Accounts</span>
+          </button>
+          <button class="nav-item" data-page="lunch" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M7 3V11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M5 3V8C5 9.1 5.9 10 7 10C8.1 10 9 9.1 9 8V3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M7 11V21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M16.5 3C15 3 13.5 5 13.5 8C13.5 10 14.5 11 15.5 11.3V21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Lunch Schedule</span>
+          </button>
+          <button class="nav-item" data-page="archive" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4" width="17" height="4.5" rx="1.2" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 8.5V18C4.5 19.1 5.4 20 6.5 20H17.5C18.6 20 19.5 19.1 19.5 18V8.5" stroke="currentColor" stroke-width="1.7"/><path d="M10 12.5H14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <span>Announcements</span>
+          </button>
+          <button class="nav-item" data-page="community" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 20C12 20 4 15.5 4 9.8C4 7.2 6 5.2 8.5 5.2C10 5.2 11.3 5.9 12 7C12.7 5.9 14 5.2 15.5 5.2C18 5.2 20 7.2 20 9.8C20 15.5 12 20 12 20Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+            <span>Community Service</span>
+          </button>
+          <button class="nav-item" data-page="voice" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 5.5H20V15.5H9L5 19V15.5H4V5.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+            <span>Student Voice</span>
+            <span class="nav-badge" id="nav-voice-badge" hidden>0</span>
+          </button>
+        </nav>
+
+        <button class="btn ghost sidebar-logout" id="admin-logout">Log out</button>
+      </aside>
+
+      <main class="admin-content">
+        <header class="content-header">
+          <div>
+            <h1 class="content-title" id="page-title">Overview</h1>
+            <p class="content-date" id="content-date"></p>
+          </div>
+        </header>
+
+        <section class="admin-page-section" data-section="overview">
+          <div class="stat-grid">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 19C3.5 15.7 6 13.5 9 13.5C12 13.5 14.5 15.7 14.5 19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+              </div>
+              <div>
+                <div class="stat-label">Student accounts</div>
+                <div class="stat-value" id="stat-students">0</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M4 5.5H20V15.5H9L5 19V15.5H4V5.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+              </div>
+              <div>
+                <div class="stat-label">Pending Voice reviews</div>
+                <div class="stat-value" id="stat-voice">0</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4" width="17" height="4.5" rx="1.2" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 8.5V18C4.5 19.1 5.4 20 6.5 20H17.5C18.6 20 19.5 19.1 19.5 18V8.5" stroke="currentColor" stroke-width="1.7"/></svg>
+              </div>
+              <div>
+                <div class="stat-label">Archived slides</div>
+                <div class="stat-value" id="stat-archive">0</div>
+              </div>
+            </div>
+          </div>
+          <p class="overview-hint">Use the sidebar to manage student accounts, edit homepage content, update the lunch schedule, and moderate Student Voice.</p>
+        </section>
+
+      <section class="admin-page-section" data-section="students" hidden>
       <section class="panel">
         <h2>Create a student account</h2>
-        <p class="panel-hint">Accounts must use a @kpis.ac.th email address. Give the student their temporary password directly — it isn't shown here again.</p>
+        <p class="panel-hint">Accounts must use a @kpis.ac.th email address.</p>
 
         <form id="create-form" class="create-form">
           <div class="form-row">
@@ -63,11 +134,6 @@
               <label class="field-label" for="grade">Grade</label>
               <select class="field-input" id="grade" required>
                 <option value="" disabled selected>Select grade</option>
-                <option>Grade 1</option>
-                <option>Grade 2</option>
-                <option>Grade 3</option>
-                <option>Grade 4</option>
-                <option>Grade 5</option>
                 <option>Grade 6</option>
                 <option>Grade 7</option>
                 <option>Grade 8</option>
@@ -79,15 +145,7 @@
             </div>
           </div>
 
-          <div class="form-row">
-            <div class="form-field">
-              <label class="field-label" for="temp-password">Temporary password</label>
-              <div class="password-row">
-                <input class="field-input" type="text" id="temp-password" placeholder="At least 8 characters" required />
-                <button type="button" class="btn ghost small" id="generate-password">Generate</button>
-              </div>
-            </div>
-          </div>
+          <p class="field-hint">New accounts are created with the default password <strong>keerapat</strong>.</p>
 
           <p class="field-error" id="create-error" hidden></p>
           <p class="field-success" id="create-success" hidden></p>
@@ -111,76 +169,18 @@
                 <th>Grade</th>
                 <th>Created</th>
                 <th></th>
+                <th></th>
               </tr>
             </thead>
             <tbody id="student-rows">
-              <tr class="empty-row" id="empty-row"><td colspan="5">No student accounts yet.</td></tr>
+              <tr class="empty-row" id="empty-row"><td colspan="6">No student accounts yet.</td></tr>
             </tbody>
           </table>
         </div>
       </section>
-
-      <section class="panel">
-        <h2>Homepage &amp; Announcements content</h2>
-        <p class="panel-hint">Edit the text shown on the student homepage and Announcements page. The layout and number of items are fixed — only the wording changes.</p>
-
-        <form id="content-form" class="content-form">
-          <div class="content-section">
-            <h3>This Week's Canva Slide (Announcements page)</h3>
-            <div class="content-rows">
-              <div class="content-row stacked">
-                <label class="row-label">Week label</label>
-                <input class="field-input" data-section="weeklySlide" data-field="weekLabel" id="slide-week-label" placeholder="e.g. Week of Sep 8" />
-              </div>
-              <div class="content-row stacked">
-                <label class="row-label">Canva embed URL</label>
-                <input class="field-input" data-section="weeklySlide" data-field="canvaEmbedUrl" id="slide-embed-url" placeholder="Paste the Canva 'Embed' share link" />
-                <p class="field-hint">In Canva: Share &rarr; Embed &rarr; copy the link (ends in /view or similar). Leave blank to show no slide.</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="content-section">
-            <h3>Latest Announcements</h3>
-            <div class="content-rows" id="announcements-fields"></div>
-          </div>
-
-          <div class="content-section">
-            <h3>Upcoming on the Calendar</h3>
-            <div class="content-rows" id="calendar-fields"></div>
-          </div>
-
-          <div class="content-section">
-            <h3>This Week's Lunch Menu</h3>
-            <div class="content-rows" id="lunch-fields"></div>
-          </div>
-
-          <div class="content-section">
-            <h3>Meet Your Council</h3>
-            <div class="content-rows" id="council-fields"></div>
-          </div>
-
-          <div class="content-section">
-            <h3>Active After School Clubs</h3>
-            <div class="content-rows" id="clubs-fields"></div>
-          </div>
-
-          <div class="content-section">
-            <h3>StuCo Project Tracker</h3>
-            <div class="content-rows" id="projects-fields"></div>
-          </div>
-
-          <div class="content-section">
-            <h3>Quick Links</h3>
-            <div class="content-rows" id="quicklinks-fields"></div>
-          </div>
-
-          <p class="field-error" id="content-error" hidden></p>
-          <p class="field-success" id="content-success" hidden></p>
-          <button type="submit" class="btn primary" id="content-save">Save content</button>
-        </form>
       </section>
 
+      <section class="admin-page-section" data-section="lunch" hidden>
       <section class="panel">
         <h2>Lunch schedule</h2>
         <p class="panel-hint">Upload this week's lunch menu picture. Uploading a new one replaces the current image.</p>
@@ -208,10 +208,38 @@
           <button type="submit" class="btn primary" id="lunch-upload-submit">Upload menu</button>
         </form>
       </section>
+      </section>
+
+      <section class="admin-page-section" data-section="archive" hidden>
+      <section class="panel">
+        <h2>This Week's Slide</h2>
+        <p class="panel-hint">The Canva slide currently shown at the top of the student Announcements page.</p>
+
+        <form id="current-slide-form" class="archive-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="current-slide-week-label">Week label</label>
+              <input class="field-input" type="text" id="current-slide-week-label" placeholder="e.g. Week of Sep 8" />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="current-slide-embed-url">Canva embed URL</label>
+              <input class="field-input" type="text" id="current-slide-embed-url" placeholder="Paste the Canva 'Embed' share link" />
+            </div>
+          </div>
+          <p class="field-hint">In Canva: Share &rarr; Embed &rarr; copy the link (ends in /view or similar).</p>
+          <p class="field-error" id="current-slide-error" hidden></p>
+          <p class="field-success" id="current-slide-success" hidden></p>
+          <div class="form-actions">
+            <button type="submit" class="btn primary" id="current-slide-save">Save</button>
+            <button type="button" class="btn ghost" id="current-slide-to-archive">Archive this slide</button>
+            <button type="button" class="btn reject" id="current-slide-clear">Delete current slide</button>
+          </div>
+        </form>
+      </section>
 
       <section class="panel">
-        <h2>Slide archive</h2>
-        <p class="panel-hint">Move a past week's Canva slide here once you replace it above, so students can still find it.</p>
+        <h2>Archived Slides</h2>
+        <p class="panel-hint">Use "Archive this slide" above to move the current slide here, or paste a link manually below.</p>
 
         <form id="archive-form" class="archive-form">
           <div class="form-row">
@@ -244,7 +272,9 @@
           </table>
         </div>
       </section>
+      </section>
 
+      <section class="admin-page-section" data-section="community" hidden>
       <section class="panel">
         <h2>Community Service clubs</h2>
         <p class="panel-hint">Write about each community service club — students see these on the Community Service page.</p>
@@ -255,13 +285,30 @@
               <label class="field-label" for="cs-club-name">Club name</label>
               <input class="field-input" type="text" id="cs-club-name" placeholder="e.g. Beach Cleanup Club" required />
             </div>
+            <div class="form-field">
+              <label class="field-label" for="cs-club-logo">Logo</label>
+              <input class="field-input" type="file" id="cs-club-logo" accept="image/png,image/jpeg,image/webp,image/gif" />
+            </div>
           </div>
           <div class="form-field">
             <label class="field-label" for="cs-club-description">Description</label>
             <textarea class="field-input" id="cs-club-description" rows="3" placeholder="What does this club do, and how can students get involved?" required></textarea>
           </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="cs-club-instagram">Instagram link</label>
+              <input class="field-input" type="text" id="cs-club-instagram" placeholder="https://instagram.com/..." />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="cs-club-application">Application form link</label>
+              <input class="field-input" type="text" id="cs-club-application" placeholder="Google Form, sheet, etc." />
+            </div>
+          </div>
           <p class="field-error" id="cs-club-error" hidden></p>
-          <button type="submit" class="btn primary" id="cs-club-submit">Add club</button>
+          <div class="form-actions">
+            <button type="submit" class="btn primary" id="cs-club-submit">Add club</button>
+            <button type="button" class="btn ghost" id="cs-club-cancel-edit" hidden>Cancel edit</button>
+          </div>
         </form>
 
         <div class="cs-club-admin-list" id="cs-club-admin-list">
@@ -306,7 +353,9 @@
           <p class="empty-hint" id="cs-event-empty-hint">No events or opportunities posted yet.</p>
         </div>
       </section>
+      </section>
 
+      <section class="admin-page-section" data-section="voice" hidden>
       <section class="panel">
         <div class="panel-header">
           <h2>Student Voice moderation</h2>
@@ -318,7 +367,9 @@
           <p class="empty-hint" id="voice-pending-empty">Nothing waiting for review.</p>
         </div>
       </section>
-    </main>
+      </section>
+      </main>
+    </div>
   </div>
 
   <script src="admin.js"></script>

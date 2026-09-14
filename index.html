@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    document.documentElement.style.visibility = 'hidden';
+    setTimeout(function () { document.documentElement.style.visibility = 'visible'; }, 2000);
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>KPIS International School | Student Portal</title>
@@ -61,11 +65,11 @@
           </span>
           <span>School Calendar</span>
         </a>
-        <a href="after-school-clubs.html" class="nav-item" data-page="after-school-clubs">
+        <a href="clubs.html" class="nav-item" data-page="clubs">
           <span class="nav-icon">
             <svg viewBox="0 0 24 24" fill="none"><path d="M12 3L14.5 8.5L20.5 9.2L16 13.2L17.3 19.2L12 16L6.7 19.2L8 13.2L3.5 9.2L9.5 8.5L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
           </span>
-          <span>After School Clubs</span>
+          <span>Clubs</span>
         </a>
         <a href="stuco-tracker.html" class="nav-item" data-page="stuco-tracker">
           <span class="nav-icon">
@@ -162,7 +166,7 @@
 
           <div class="section-header">
             <h2 class="section-title">Active After School Clubs</h2>
-            <a href="after-school-clubs.html" class="see-all">See all</a>
+            <a href="clubs.html#after-school-clubs" class="see-all">See all</a>
           </div>
           <div class="chip-list" id="clubs-list"></div>
 

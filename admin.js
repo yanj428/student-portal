@@ -9,8 +9,6 @@ const createForm = document.getElementById('create-form');
 const createError = document.getElementById('create-error');
 const createSuccess = document.getElementById('create-success');
 const createSubmit = document.getElementById('create-submit');
-const generatePasswordBtn = document.getElementById('generate-password');
-const tempPasswordInput = document.getElementById('temp-password');
 
 const studentRows = document.getElementById('student-rows');
 const emptyRow = document.getElementById('empty-row');
@@ -20,8 +18,8 @@ function showAdminPanel() {
   gate.hidden = true;
   adminPage.hidden = false;
   loadStudents();
-  loadContent();
   loadVoicePending();
+  loadCurrentSlide();
   loadSlideArchive();
   loadCsClubs();
   loadCsEvents();
@@ -63,18 +61,6 @@ adminLogout.addEventListener('click', async () => {
   showGate();
 });
 
-generatePasswordBtn.addEventListener('click', () => {
-  const specials = '!@#$%^&*';
-  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-  const lower = 'abcdefghijkmnpqrstuvwxyz';
-  const digits = '23456789';
-  const pick = (chars, n) => Array.from({ length: n }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-
-  const raw = pick(upper, 1) + pick(lower, 4) + pick(digits, 4) + pick(specials, 1);
-  tempPasswordInput.value = raw.split('').sort(() => Math.random() - 0.5).join('');
-  tempPasswordInput.type = 'text';
-});
-
 async function loadStudents() {
   const res = await fetch('/api/admin/students');
   if (!res.ok) return;
@@ -84,6 +70,8 @@ async function loadStudents() {
 
 function renderStudents(students) {
   studentCount.textContent = students.length;
+  const statStudents = document.getElementById('stat-students');
+  if (statStudents) statStudents.textContent = students.length;
   studentRows.innerHTML = '';
 
   if (students.length === 0) {
@@ -98,10 +86,11 @@ function renderStudents(students) {
       const tr = document.createElement('tr');
       const created = new Date(student.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
       tr.innerHTML = `
-        <td>${escapeHtml(student.firstName)} ${escapeHtml(student.lastName)}</td>
+        <td>${escapeHtml(student.firstName)} ${escapeHtml(student.lastName)}${student.locked ? ' <span class="lock-badge">Locked</span>' : ''}</td>
         <td>${escapeHtml(student.email)}</td>
         <td><span class="grade-pill">${escapeHtml(student.grade)}</span></td>
         <td>${created}</td>
+        <td><button class="reset-btn" data-id="${student.id}" data-name="${escapeHtml(student.firstName)} ${escapeHtml(student.lastName)}" aria-label="Reset password">Reset password</button></td>
         <td><button class="delete-btn" data-id="${student.id}" aria-label="Remove account"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7H20M9 7V4C9 3.4 9.4 3 10 3H14C14.6 3 15 3.4 15 4V7M18 7L17.3 19C17.2 19.6 16.7 20 16.1 20H7.9C7.3 20 6.8 19.6 6.7 19L6 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button></td>
       `;
       studentRows.appendChild(tr);
@@ -110,6 +99,21 @@ function renderStudents(students) {
   document.querySelectorAll('.delete-btn').forEach((btn) => {
     btn.addEventListener('click', () => deleteStudent(btn.dataset.id));
   });
+  document.querySelectorAll('.reset-btn').forEach((btn) => {
+    btn.addEventListener('click', () => resetStudentPassword(btn.dataset.id, btn.dataset.name));
+  });
+}
+
+async function resetStudentPassword(id, name) {
+  if (!confirm(`Reset ${name}'s password to the default password? This will also unlock the account if it's locked.`)) return;
+  const res = await fetch(`/api/admin/students/${id}/reset-password`, { method: 'POST' });
+  const data = await res.json();
+  if (!res.ok) {
+    alert(data.error || 'Could not reset password.');
+    return;
+  }
+  alert(`${name}'s password has been reset to: ${data.password}`);
+  loadStudents();
 }
 
 function escapeHtml(str) {
@@ -136,7 +140,6 @@ createForm.addEventListener('submit', async (e) => {
     lastName: document.getElementById('last-name').value.trim(),
     email: document.getElementById('student-email').value.trim(),
     grade: document.getElementById('grade').value,
-    password: tempPasswordInput.value,
   };
 
   try {
@@ -153,7 +156,7 @@ createForm.addEventListener('submit', async (e) => {
       return;
     }
 
-    createSuccess.textContent = `Account created for ${data.student.firstName} ${data.student.lastName}. Share the temporary password with them directly.`;
+    createSuccess.textContent = `Account created for ${data.student.firstName} ${data.student.lastName}. Default password: ${data.password}`;
     createSuccess.hidden = false;
     createForm.reset();
     loadStudents();
@@ -163,194 +166,6 @@ createForm.addEventListener('submit', async (e) => {
   } finally {
     createSubmit.disabled = false;
     createSubmit.textContent = 'Create account';
-  }
-});
-
-// ---- Homepage content editor ----
-const contentForm = document.getElementById('content-form');
-const contentError = document.getElementById('content-error');
-const contentSuccess = document.getElementById('content-success');
-const contentSave = document.getElementById('content-save');
-
-const announcementsFields = document.getElementById('announcements-fields');
-const calendarFields = document.getElementById('calendar-fields');
-const lunchFields = document.getElementById('lunch-fields');
-const councilFields = document.getElementById('council-fields');
-const clubsFields = document.getElementById('clubs-fields');
-const projectsFields = document.getElementById('projects-fields');
-const quicklinksFields = document.getElementById('quicklinks-fields');
-
-function fieldAttrs(section, index, field) {
-  return `data-section="${section}" data-index="${index}" data-field="${field}"`;
-}
-
-let currentLunchSchedule = { weekLabel: '', imageUrl: '' };
-
-async function loadContent() {
-  const res = await fetch('/api/admin/content');
-  if (!res.ok) return;
-  const { content } = await res.json();
-  renderContentForm(content);
-}
-
-function renderContentForm(content) {
-  currentLunchSchedule = content.lunchSchedule || { weekLabel: '', imageUrl: '' };
-  const slide = content.weeklySlide || { weekLabel: '', canvaEmbedUrl: '' };
-  document.getElementById('slide-week-label').value = slide.weekLabel;
-  document.getElementById('slide-embed-url').value = slide.canvaEmbedUrl;
-
-  announcementsFields.innerHTML = content.announcements
-    .map(
-      (a, i) => `
-        <div class="content-row stacked">
-          <label class="row-label">Announcement ${i + 1}</label>
-          <input class="field-input" ${fieldAttrs('announcements', i, 'title')} value="${escapeHtml(a.title)}" placeholder="Title" />
-          <textarea class="field-input" ${fieldAttrs('announcements', i, 'body')} placeholder="Body">${escapeHtml(a.body)}</textarea>
-        </div>`
-    )
-    .join('');
-
-  calendarFields.innerHTML = content.calendarEvents
-    .map(
-      (e, i) => `
-        <div class="content-row calendar-row">
-          <input class="field-input" ${fieldAttrs('calendarEvents', i, 'day')} value="${escapeHtml(e.day)}" placeholder="Day" />
-          <input class="field-input" ${fieldAttrs('calendarEvents', i, 'month')} value="${escapeHtml(e.month)}" placeholder="Month" />
-          <input class="field-input" ${fieldAttrs('calendarEvents', i, 'title')} value="${escapeHtml(e.title)}" placeholder="Event title" />
-          <input class="field-input" ${fieldAttrs('calendarEvents', i, 'subtitle')} value="${escapeHtml(e.subtitle)}" placeholder="Subtitle" />
-        </div>`
-    )
-    .join('');
-
-  lunchFields.innerHTML = content.lunchMenu
-    .map(
-      (l, i) => `
-        <div class="content-row">
-          <span class="row-label">${escapeHtml(l.weekday)}</span>
-          <input class="field-input" ${fieldAttrs('lunchMenu', i, 'item')} value="${escapeHtml(l.item)}" placeholder="Menu item" />
-          <input type="hidden" ${fieldAttrs('lunchMenu', i, 'weekday')} value="${escapeHtml(l.weekday)}" />
-        </div>`
-    )
-    .join('');
-
-  councilFields.innerHTML = content.council
-    .map(
-      (m, i) => `
-        <div class="content-row stacked">
-          <label class="row-label">Member ${i + 1}</label>
-          <input class="field-input" ${fieldAttrs('council', i, 'initials')} value="${escapeHtml(m.initials)}" placeholder="Initials (e.g. EM)" maxlength="3" />
-          <input class="field-input" ${fieldAttrs('council', i, 'name')} value="${escapeHtml(m.name || '')}" placeholder="Full name" />
-          <input class="field-input" ${fieldAttrs('council', i, 'role')} value="${escapeHtml(m.role || '')}" placeholder="Role (e.g. StuCo President)" />
-          <textarea class="field-input" ${fieldAttrs('council', i, 'bio')} placeholder="Short bio">${escapeHtml(m.bio || '')}</textarea>
-        </div>`
-    )
-    .join('');
-
-  clubsFields.innerHTML = content.clubs
-    .map(
-      (c, i) => `
-        <div class="content-row stacked">
-          <label class="row-label">Club ${i + 1}</label>
-          <input class="field-input" ${fieldAttrs('clubs', i, 'name')} value="${escapeHtml(c.name || '')}" placeholder="Club name" />
-          <textarea class="field-input" ${fieldAttrs('clubs', i, 'description')} placeholder="Description">${escapeHtml(c.description || '')}</textarea>
-          <input class="field-input" ${fieldAttrs('clubs', i, 'schedule')} value="${escapeHtml(c.schedule || '')}" placeholder="Meeting schedule (day, time, location)" />
-          <input class="field-input" ${fieldAttrs('clubs', i, 'advisor')} value="${escapeHtml(c.advisor || '')}" placeholder="Advisor" />
-          <input class="field-input" ${fieldAttrs('clubs', i, 'signupUrl')} value="${escapeHtml(c.signupUrl || '')}" placeholder="Sign-up link (optional)" />
-        </div>`
-    )
-    .join('');
-
-  projectsFields.innerHTML = content.projects
-    .map(
-      (p, i) => `
-        <div class="content-row stacked">
-          <label class="row-label">Project ${i + 1}</label>
-          <input class="field-input" ${fieldAttrs('projects', i, 'title')} value="${escapeHtml(p.title)}" placeholder="Project title" />
-          <textarea class="field-input" ${fieldAttrs('projects', i, 'description')} placeholder="Description">${escapeHtml(p.description || '')}</textarea>
-          <input class="field-input" ${fieldAttrs('projects', i, 'lead')} value="${escapeHtml(p.lead || '')}" placeholder="Team / lead" />
-          <select class="field-input" ${fieldAttrs('projects', i, 'status')}>
-            ${['On Track', 'At Risk', 'Complete']
-              .map((s) => `<option value="${s}" ${p.status === s ? 'selected' : ''}>${s}</option>`)
-              .join('')}
-          </select>
-          <input class="field-input" type="number" min="0" max="100" ${fieldAttrs('projects', i, 'percent')} value="${p.percent}" placeholder="%" />
-        </div>`
-    )
-    .join('');
-
-  quicklinksFields.innerHTML = content.quickLinks
-    .map(
-      (q, i) => `
-        <div class="content-row two-col">
-          <label class="row-label">Link ${i + 1}</label>
-          <input class="field-input" ${fieldAttrs('quickLinks', i, 'label')} value="${escapeHtml(q.label)}" placeholder="Label" />
-          <input class="field-input" ${fieldAttrs('quickLinks', i, 'url')} value="${escapeHtml(q.url)}" placeholder="URL" />
-        </div>`
-    )
-    .join('');
-}
-
-function collectContentFromForm() {
-  const content = {
-    weeklySlide: { weekLabel: '', canvaEmbedUrl: '' },
-    lunchSchedule: currentLunchSchedule,
-    announcements: [],
-    calendarEvents: [],
-    lunchMenu: [],
-    clubs: [],
-    projects: [],
-    quickLinks: [],
-    council: [],
-  };
-
-  contentForm.querySelectorAll('[data-section]').forEach((el) => {
-    const section = el.dataset.section;
-    const field = el.dataset.field;
-    const value = el.type === 'number' ? Number(el.value) : el.value;
-
-    if (section === 'weeklySlide') {
-      content.weeklySlide[field] = value;
-      return;
-    }
-
-    const index = Number(el.dataset.index);
-    if (!content[section][index]) content[section][index] = {};
-    content[section][index][field] = value;
-  });
-
-  return content;
-}
-
-contentForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  contentError.hidden = true;
-  contentSuccess.hidden = true;
-  contentSave.disabled = true;
-  contentSave.textContent = 'Saving…';
-
-  try {
-    const res = await fetch('/api/admin/content', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: collectContentFromForm() }),
-    });
-    const data = await res.json();
-
-    if (!res.ok) {
-      contentError.textContent = data.error || 'Could not save content.';
-      contentError.hidden = false;
-      return;
-    }
-
-    contentSuccess.textContent = 'Homepage content updated.';
-    contentSuccess.hidden = false;
-    renderContentForm(data.content);
-  } catch {
-    contentError.textContent = 'Could not reach the server. Please try again.';
-    contentError.hidden = false;
-  } finally {
-    contentSave.disabled = false;
-    contentSave.textContent = 'Save content';
   }
 });
 
@@ -368,6 +183,13 @@ async function loadVoicePending() {
 
 function renderVoicePending(items) {
   voicePendingCount.textContent = items.length;
+  const statVoice = document.getElementById('stat-voice');
+  if (statVoice) statVoice.textContent = items.length;
+  const navVoiceBadge = document.getElementById('nav-voice-badge');
+  if (navVoiceBadge) {
+    navVoiceBadge.textContent = items.length;
+    navVoiceBadge.hidden = items.length === 0;
+  }
   voicePendingList.querySelectorAll('.mod-item').forEach((el) => el.remove());
   voicePendingEmpty.hidden = items.length > 0;
 
@@ -417,6 +239,118 @@ function renderVoicePending(items) {
   });
 }
 
+// ---- This week's slide ----
+const currentSlideForm = document.getElementById('current-slide-form');
+const currentSlideWeekLabelInput = document.getElementById('current-slide-week-label');
+const currentSlideEmbedUrlInput = document.getElementById('current-slide-embed-url');
+const currentSlideError = document.getElementById('current-slide-error');
+const currentSlideSuccess = document.getElementById('current-slide-success');
+const currentSlideSave = document.getElementById('current-slide-save');
+const currentSlideClear = document.getElementById('current-slide-clear');
+const currentSlideToArchive = document.getElementById('current-slide-to-archive');
+
+async function loadCurrentSlide() {
+  const res = await fetch('/api/admin/content');
+  if (!res.ok) return;
+  const { content } = await res.json();
+  const slide = content.weeklySlide || { weekLabel: '', canvaEmbedUrl: '' };
+  currentSlideWeekLabelInput.value = slide.weekLabel || '';
+  currentSlideEmbedUrlInput.value = slide.canvaEmbedUrl || '';
+}
+
+async function saveCurrentSlide(weekLabel, canvaEmbedUrl) {
+  currentSlideError.hidden = true;
+  currentSlideSuccess.hidden = true;
+
+  const res = await fetch('/api/admin/content');
+  if (!res.ok) {
+    currentSlideError.textContent = 'Could not reach the server. Please try again.';
+    currentSlideError.hidden = false;
+    return false;
+  }
+  const { content } = await res.json();
+  content.weeklySlide = { weekLabel, canvaEmbedUrl };
+
+  const putRes = await fetch('/api/admin/content', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content }),
+  });
+  const data = await putRes.json();
+
+  if (!putRes.ok) {
+    currentSlideError.textContent = data.error || 'Could not save the slide.';
+    currentSlideError.hidden = false;
+    return false;
+  }
+
+  currentSlideSuccess.textContent = 'This week\'s slide updated.';
+  currentSlideSuccess.hidden = false;
+  return true;
+}
+
+currentSlideForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  currentSlideSave.disabled = true;
+  currentSlideSave.textContent = 'Saving…';
+  await saveCurrentSlide(currentSlideWeekLabelInput.value.trim(), currentSlideEmbedUrlInput.value.trim());
+  currentSlideSave.disabled = false;
+  currentSlideSave.textContent = 'Save';
+});
+
+currentSlideClear.addEventListener('click', async () => {
+  if (!confirm('Delete the current slide? It will stop showing on the Announcements page.')) return;
+  currentSlideClear.disabled = true;
+  const ok = await saveCurrentSlide('', '');
+  currentSlideClear.disabled = false;
+  if (ok) {
+    currentSlideWeekLabelInput.value = '';
+    currentSlideEmbedUrlInput.value = '';
+  }
+});
+
+currentSlideToArchive.addEventListener('click', async () => {
+  currentSlideError.hidden = true;
+  currentSlideSuccess.hidden = true;
+
+  const weekLabel = currentSlideWeekLabelInput.value.trim();
+  const canvaEmbedUrl = currentSlideEmbedUrlInput.value.trim();
+
+  if (!weekLabel || !canvaEmbedUrl) {
+    currentSlideError.textContent = 'Set a week label and Canva embed URL before archiving.';
+    currentSlideError.hidden = false;
+    return;
+  }
+  if (!confirm(`Move "${weekLabel}" to the archive and clear the current slide?`)) return;
+
+  currentSlideToArchive.disabled = true;
+  try {
+    const archiveRes = await fetch('/api/admin/slide-archive', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ weekLabel, canvaEmbedUrl }),
+    });
+    const archiveData = await archiveRes.json();
+
+    if (!archiveRes.ok) {
+      currentSlideError.textContent = archiveData.error || 'Could not archive this slide.';
+      currentSlideError.hidden = false;
+      return;
+    }
+
+    const cleared = await saveCurrentSlide('', '');
+    if (cleared) {
+      currentSlideWeekLabelInput.value = '';
+      currentSlideEmbedUrlInput.value = '';
+      currentSlideSuccess.textContent = 'Slide moved to the archive.';
+      currentSlideSuccess.hidden = false;
+    }
+    loadSlideArchive();
+  } finally {
+    currentSlideToArchive.disabled = false;
+  }
+});
+
 // ---- Slide archive ----
 const archiveForm = document.getElementById('archive-form');
 const archiveWeekLabelInput = document.getElementById('archive-week-label');
@@ -434,6 +368,8 @@ async function loadSlideArchive() {
 }
 
 function renderSlideArchive(slides) {
+  const statArchive = document.getElementById('stat-archive');
+  if (statArchive) statArchive.textContent = slides.length;
   archiveRows.querySelectorAll('tr:not(#archive-empty-row)').forEach((el) => el.remove());
 
   if (slides.length === 0) {
@@ -497,11 +433,24 @@ archiveForm.addEventListener('submit', async (e) => {
 // ---- Community Service clubs ----
 const csClubForm = document.getElementById('cs-club-form');
 const csClubNameInput = document.getElementById('cs-club-name');
+const csClubLogoInput = document.getElementById('cs-club-logo');
 const csClubDescriptionInput = document.getElementById('cs-club-description');
+const csClubInstagramInput = document.getElementById('cs-club-instagram');
+const csClubApplicationInput = document.getElementById('cs-club-application');
 const csClubError = document.getElementById('cs-club-error');
 const csClubSubmit = document.getElementById('cs-club-submit');
+const csClubCancelEdit = document.getElementById('cs-club-cancel-edit');
 const csClubAdminList = document.getElementById('cs-club-admin-list');
 const csClubEmptyHint = document.getElementById('cs-club-empty-hint');
+
+let editingClubId = null;
+
+function resetCsClubForm() {
+  editingClubId = null;
+  csClubForm.reset();
+  csClubSubmit.textContent = 'Add club';
+  csClubCancelEdit.hidden = true;
+}
 
 async function loadCsClubs() {
   const res = await fetch('/api/admin/cs-clubs');
@@ -519,51 +468,78 @@ function renderCsClubsAdmin(clubs) {
     div.className = 'cs-club-item';
     div.innerHTML = `
       <div class="cs-club-item-head">
-        <span class="cs-club-item-name">${escapeHtml(club.name)}</span>
-        <button class="delete-btn" aria-label="Remove club"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7H20M9 7V4C9 3.4 9.4 3 10 3H14C14.6 3 15 3.4 15 4V7M18 7L17.3 19C17.2 19.6 16.7 20 16.1 20H7.9C7.3 20 6.8 19.6 6.7 19L6 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="cs-club-item-identity">
+          ${club.logoUrl ? `<img class="cs-club-item-logo" src="${escapeHtml(club.logoUrl)}" alt="" />` : ''}
+          <span class="cs-club-item-name">${escapeHtml(club.name)}</span>
+        </div>
+        <div class="cs-club-item-actions">
+          <button class="edit-btn" aria-label="Edit club">Edit</button>
+          <button class="delete-btn" aria-label="Remove club"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7H20M9 7V4C9 3.4 9.4 3 10 3H14C14.6 3 15 3.4 15 4V7M18 7L17.3 19C17.2 19.6 16.7 20 16.1 20H7.9C7.3 20 6.8 19.6 6.7 19L6 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
       </div>
       <p class="cs-club-item-body">${escapeHtml(club.description)}</p>
+      ${club.instagramUrl || club.applicationFormUrl ? `
+        <div class="cs-club-item-links">
+          ${club.instagramUrl ? `<a href="${escapeHtml(club.instagramUrl)}" target="_blank" rel="noopener">Instagram</a>` : ''}
+          ${club.applicationFormUrl ? `<a href="${escapeHtml(club.applicationFormUrl)}" target="_blank" rel="noopener">Application form</a>` : ''}
+        </div>` : ''}
     `;
+    div.querySelector('.edit-btn').addEventListener('click', () => {
+      editingClubId = club.id;
+      csClubNameInput.value = club.name;
+      csClubDescriptionInput.value = club.description;
+      csClubInstagramInput.value = club.instagramUrl || '';
+      csClubApplicationInput.value = club.applicationFormUrl || '';
+      csClubLogoInput.value = '';
+      csClubError.hidden = true;
+      csClubSubmit.textContent = 'Save changes';
+      csClubCancelEdit.hidden = false;
+      csClubForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
     div.querySelector('.delete-btn').addEventListener('click', async () => {
       if (!confirm(`Remove "${club.name}" from the Community Service page?`)) return;
       await fetch(`/api/admin/cs-clubs/${club.id}`, { method: 'DELETE' });
+      if (editingClubId === club.id) resetCsClubForm();
       loadCsClubs();
     });
     csClubAdminList.appendChild(div);
   });
 }
 
+csClubCancelEdit.addEventListener('click', () => resetCsClubForm());
+
 csClubForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   csClubError.hidden = true;
   csClubSubmit.disabled = true;
-  csClubSubmit.textContent = 'Adding…';
+  csClubSubmit.textContent = editingClubId ? 'Saving…' : 'Adding…';
 
   try {
-    const res = await fetch('/api/admin/cs-clubs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: csClubNameInput.value.trim(),
-        description: csClubDescriptionInput.value.trim(),
-      }),
-    });
+    const formData = new FormData();
+    formData.append('name', csClubNameInput.value.trim());
+    formData.append('description', csClubDescriptionInput.value.trim());
+    formData.append('instagramUrl', csClubInstagramInput.value.trim());
+    formData.append('applicationFormUrl', csClubApplicationInput.value.trim());
+    if (csClubLogoInput.files[0]) formData.append('logo', csClubLogoInput.files[0]);
+
+    const url = editingClubId ? `/api/admin/cs-clubs/${editingClubId}` : '/api/admin/cs-clubs';
+    const res = await fetch(url, { method: editingClubId ? 'PUT' : 'POST', body: formData });
     const data = await res.json();
 
     if (!res.ok) {
-      csClubError.textContent = data.error || 'Could not add club.';
+      csClubError.textContent = data.error || 'Could not save club.';
       csClubError.hidden = false;
       return;
     }
 
-    csClubForm.reset();
+    resetCsClubForm();
     loadCsClubs();
   } catch {
     csClubError.textContent = 'Could not reach the server. Please try again.';
     csClubError.hidden = false;
   } finally {
     csClubSubmit.disabled = false;
-    csClubSubmit.textContent = 'Add club';
+    csClubSubmit.textContent = editingClubId ? 'Save changes' : 'Add club';
   }
 });
 
@@ -721,5 +697,38 @@ lunchUploadForm.addEventListener('submit', async (e) => {
     lunchUploadSubmit.textContent = 'Upload menu';
   }
 });
+
+// ---- Sidebar navigation ----
+const pageTitles = {
+  overview: 'Overview',
+  students: 'Student Accounts',
+  lunch: 'Lunch Schedule',
+  archive: 'Announcements',
+  community: 'Community Service',
+  voice: 'Student Voice',
+};
+
+const navItems = document.querySelectorAll('.nav-item[data-page]');
+const pageSections = document.querySelectorAll('.admin-page-section[data-section]');
+const pageTitleEl = document.getElementById('page-title');
+
+navItems.forEach((item) => {
+  item.addEventListener('click', () => {
+    const page = item.dataset.page;
+
+    navItems.forEach((n) => n.classList.toggle('active', n === item));
+    pageSections.forEach((section) => {
+      section.hidden = section.dataset.section !== page;
+    });
+    pageTitleEl.textContent = pageTitles[page] || 'Overview';
+  });
+});
+
+const contentDateEl = document.getElementById('content-date');
+if (contentDateEl) {
+  contentDateEl.textContent = new Date().toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+  });
+}
 
 checkSession();

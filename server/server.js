@@ -12,7 +12,9 @@ const db = require('./db');
 
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
 const LUNCH_UPLOADS_DIR = path.join(UPLOADS_DIR, 'lunch');
+const CLUB_LOGO_UPLOADS_DIR = path.join(UPLOADS_DIR, 'club-logos');
 fs.mkdirSync(LUNCH_UPLOADS_DIR, { recursive: true });
+fs.mkdirSync(CLUB_LOGO_UPLOADS_DIR, { recursive: true });
 
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 const lunchImageUpload = multer({
@@ -24,6 +26,21 @@ const lunchImageUpload = multer({
     },
   }),
   limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!ALLOWED_IMAGE_TYPES.has(file.mimetype)) return cb(new Error('Only JPEG, PNG, WEBP, or GIF images are allowed.'));
+    cb(null, true);
+  },
+});
+
+const clubLogoUpload = multer({
+  storage: multer.diskStorage({
+    destination: CLUB_LOGO_UPLOADS_DIR,
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+      cb(null, `${Date.now()}-${crypto.randomBytes(6).toString('hex')}${ext}`);
+    },
+  }),
+  limits: { fileSize: 4 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (!ALLOWED_IMAGE_TYPES.has(file.mimetype)) return cb(new Error('Only JPEG, PNG, WEBP, or GIF images are allowed.'));
     cb(null, true);
@@ -68,7 +85,10 @@ function requireStudent(req, res, next) {
   return res.status(401).json({ error: 'Not logged in.' });
 }
 
+const DEFAULT_STUDENT_PASSWORD = 'keerapat';
+
 function publicStudent(student) {
+  const stillDefaultPassword = bcrypt.compareSync(DEFAULT_STUDENT_PASSWORD, student.passwordHash);
   return {
     id: student.id,
     firstName: student.firstName,
@@ -76,6 +96,8 @@ function publicStudent(student) {
     email: student.email,
     grade: student.grade,
     createdAt: student.createdAt,
+    mustChangePassword: !!student.mustChangePassword || stillDefaultPassword,
+    locked: !!student.locked,
   };
 }
 
@@ -104,16 +126,13 @@ app.get('/api/admin/students', requireAdmin, (req, res) => {
 });
 
 app.post('/api/admin/students', requireAdmin, (req, res) => {
-  const { firstName, lastName, email, grade, password } = req.body || {};
+  const { firstName, lastName, email, grade } = req.body || {};
 
-  if (!firstName || !lastName || !email || !grade || !password) {
+  if (!firstName || !lastName || !email || !grade) {
     return res.status(400).json({ error: 'All fields are required.' });
   }
   if (!isValidSchoolEmail(email)) {
     return res.status(400).json({ error: `Email must end with ${SCHOOL_DOMAIN}.` });
-  }
-  if (password.length < 8) {
-    return res.status(400).json({ error: 'Temporary password must be at least 8 characters.' });
   }
   if (db.findByEmail(email)) {
     return res.status(409).json({ error: 'An account with this email already exists.' });
@@ -125,17 +144,25 @@ app.post('/api/admin/students', requireAdmin, (req, res) => {
     lastName: lastName.trim(),
     email: email.trim().toLowerCase(),
     grade,
-    passwordHash: bcrypt.hashSync(password, 10),
+    passwordHash: bcrypt.hashSync(DEFAULT_STUDENT_PASSWORD, 10),
+    mustChangePassword: true,
     createdAt: new Date().toISOString(),
   };
   db.addStudent(student);
-  res.status(201).json({ student: publicStudent(student) });
+  res.status(201).json({ student: publicStudent(student), password: DEFAULT_STUDENT_PASSWORD });
 });
 
 app.delete('/api/admin/students/:id', requireAdmin, (req, res) => {
   const removed = db.removeStudent(req.params.id);
   if (!removed) return res.status(404).json({ error: 'Student not found.' });
   res.json({ ok: true });
+});
+
+app.post('/api/admin/students/:id/reset-password', requireAdmin, (req, res) => {
+  const passwordHash = bcrypt.hashSync(DEFAULT_STUDENT_PASSWORD, 10);
+  const student = db.updateStudentPasswordHash(req.params.id, passwordHash, true);
+  if (!student) return res.status(404).json({ error: 'Student not found.' });
+  res.json({ ok: true, password: DEFAULT_STUDENT_PASSWORD });
 });
 
 // ---- Homepage content (text only — the layout/section list is fixed) ----
@@ -298,7 +325,15 @@ app.delete('/api/admin/slide-archive/:id', requireAdmin, (req, res) => {
 
 // ---- Community Service clubs (write-ups admins add/remove) ----
 function publicCsClub(club) {
-  return { id: club.id, name: club.name, description: club.description, createdAt: club.createdAt };
+  return {
+    id: club.id,
+    name: club.name,
+    description: club.description,
+    logoUrl: club.logoUrl || '',
+    instagramUrl: club.instagramUrl || '',
+    applicationFormUrl: club.applicationFormUrl || '',
+    createdAt: club.createdAt,
+  };
 }
 
 app.get('/api/cs-clubs', requireStudent, (req, res) => {
@@ -318,52 +353,81 @@ app.get('/api/admin/cs-clubs', requireAdmin, (req, res) => {
 });
 
 app.post('/api/admin/cs-clubs', requireAdmin, (req, res) => {
-  const { name, description } = req.body || {};
-  if (typeof name !== 'string' || !name.trim()) {
-    return res.status(400).json({ error: 'Club name is required.' });
-  }
-  if (typeof description !== 'string' || !description.trim()) {
-    return res.status(400).json({ error: 'Description is required.' });
-  }
+  clubLogoUpload.single('logo')(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message || 'Could not upload logo.' });
 
-  const clubs = db.readCsClubs();
-  const club = {
-    id: crypto.randomUUID(),
-    name: name.trim(),
-    description: description.trim(),
-    createdAt: new Date().toISOString(),
-  };
-  clubs.push(club);
-  db.writeCsClubs(clubs);
+    const { name, description, instagramUrl, applicationFormUrl } = req.body || {};
+    if (typeof name !== 'string' || !name.trim()) {
+      return res.status(400).json({ error: 'Club name is required.' });
+    }
+    if (typeof description !== 'string' || !description.trim()) {
+      return res.status(400).json({ error: 'Description is required.' });
+    }
 
-  res.status(201).json({ club: publicCsClub(club) });
+    const clubs = db.readCsClubs();
+    const club = {
+      id: crypto.randomUUID(),
+      name: name.trim(),
+      description: description.trim(),
+      logoUrl: req.file ? `/uploads/club-logos/${req.file.filename}` : '',
+      instagramUrl: typeof instagramUrl === 'string' ? instagramUrl.trim() : '',
+      applicationFormUrl: typeof applicationFormUrl === 'string' ? applicationFormUrl.trim() : '',
+      createdAt: new Date().toISOString(),
+    };
+    clubs.push(club);
+    db.writeCsClubs(clubs);
+
+    res.status(201).json({ club: publicCsClub(club) });
+  });
 });
 
 app.put('/api/admin/cs-clubs/:id', requireAdmin, (req, res) => {
-  const { name, description } = req.body || {};
-  if (typeof name !== 'string' || !name.trim()) {
-    return res.status(400).json({ error: 'Club name is required.' });
-  }
-  if (typeof description !== 'string' || !description.trim()) {
-    return res.status(400).json({ error: 'Description is required.' });
-  }
+  clubLogoUpload.single('logo')(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message || 'Could not upload logo.' });
 
-  const clubs = db.readCsClubs();
-  const club = clubs.find((c) => c.id === req.params.id);
-  if (!club) return res.status(404).json({ error: 'Club not found.' });
+    const { name, description, instagramUrl, applicationFormUrl } = req.body || {};
+    if (typeof name !== 'string' || !name.trim()) {
+      return res.status(400).json({ error: 'Club name is required.' });
+    }
+    if (typeof description !== 'string' || !description.trim()) {
+      return res.status(400).json({ error: 'Description is required.' });
+    }
 
-  club.name = name.trim();
-  club.description = description.trim();
-  db.writeCsClubs(clubs);
+    const clubs = db.readCsClubs();
+    const club = clubs.find((c) => c.id === req.params.id);
+    if (!club) return res.status(404).json({ error: 'Club not found.' });
 
-  res.json({ club: publicCsClub(club) });
+    const previousLogoUrl = club.logoUrl;
+
+    club.name = name.trim();
+    club.description = description.trim();
+    club.instagramUrl = typeof instagramUrl === 'string' ? instagramUrl.trim() : '';
+    club.applicationFormUrl = typeof applicationFormUrl === 'string' ? applicationFormUrl.trim() : '';
+    if (req.file) {
+      club.logoUrl = `/uploads/club-logos/${req.file.filename}`;
+    }
+    db.writeCsClubs(clubs);
+
+    if (req.file && previousLogoUrl && previousLogoUrl.startsWith('/uploads/club-logos/')) {
+      fs.unlink(path.join(UPLOADS_DIR, 'club-logos', path.basename(previousLogoUrl)), () => {});
+    }
+
+    res.json({ club: publicCsClub(club) });
+  });
 });
 
 app.delete('/api/admin/cs-clubs/:id', requireAdmin, (req, res) => {
   const clubs = db.readCsClubs();
+  const club = clubs.find((c) => c.id === req.params.id);
+  if (!club) return res.status(404).json({ error: 'Club not found.' });
+
   const next = clubs.filter((c) => c.id !== req.params.id);
-  if (next.length === clubs.length) return res.status(404).json({ error: 'Club not found.' });
   db.writeCsClubs(next);
+
+  if (club.logoUrl && club.logoUrl.startsWith('/uploads/club-logos/')) {
+    fs.unlink(path.join(UPLOADS_DIR, 'club-logos', path.basename(club.logoUrl)), () => {});
+  }
+
   res.json({ ok: true });
 });
 
@@ -656,6 +720,8 @@ app.post('/api/admin/voice/posts/:postId/replies/:replyId/reject', requireAdmin,
 });
 
 // ---- Student auth ----
+const ACCOUNT_LOCKED_MESSAGE = 'This account has been locked after too many failed login attempts. Please contact the Student Council to regain access.';
+
 app.post('/api/login', (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) {
@@ -663,10 +729,22 @@ app.post('/api/login', (req, res) => {
   }
 
   const student = db.findByEmail(email);
-  if (!student || !bcrypt.compareSync(password, student.passwordHash)) {
+  if (!student) {
+    return res.status(401).json({ error: 'Incorrect email or password.' });
+  }
+  if (student.locked) {
+    return res.status(403).json({ error: ACCOUNT_LOCKED_MESSAGE, locked: true });
+  }
+
+  if (!bcrypt.compareSync(password, student.passwordHash)) {
+    const updated = db.recordFailedLogin(student.id);
+    if (updated && updated.locked) {
+      return res.status(403).json({ error: ACCOUNT_LOCKED_MESSAGE, locked: true });
+    }
     return res.status(401).json({ error: 'Incorrect email or password.' });
   }
 
+  db.clearFailedLogins(student.id);
   req.session.studentId = student.id;
   res.json({ student: publicStudent(student) });
 });
@@ -682,6 +760,32 @@ app.get('/api/me', requireStudent, (req, res) => {
   const student = db.findById(req.session.studentId);
   if (!student) return res.status(401).json({ error: 'Not logged in.' });
   res.json({ student: publicStudent(student) });
+});
+
+app.post('/api/change-password', requireStudent, (req, res) => {
+  const { currentPassword, newPassword } = req.body || {};
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Current and new password are required.' });
+  }
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: 'New password must be at least 8 characters.' });
+  }
+  if (newPassword === DEFAULT_STUDENT_PASSWORD) {
+    return res.status(400).json({ error: 'You can\'t use the default password. Please choose a different password.' });
+  }
+
+  const student = db.findById(req.session.studentId);
+  if (!student) return res.status(401).json({ error: 'Not logged in.' });
+
+  if (!bcrypt.compareSync(currentPassword, student.passwordHash)) {
+    return res.status(401).json({ error: 'Current password is incorrect.' });
+  }
+  if (bcrypt.compareSync(newPassword, student.passwordHash)) {
+    return res.status(400).json({ error: 'New password must be different from your current password.' });
+  }
+
+  db.updateStudentPasswordHash(student.id, bcrypt.hashSync(newPassword, 10));
+  res.json({ ok: true });
 });
 
 // ---- Static site ----

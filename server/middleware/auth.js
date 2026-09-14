@@ -74,6 +74,21 @@ function requireAdmin(req, res, next) {
   return next();
 }
 
+// requireAdmin, plus refuses access unless the admin's role is 'owner' —
+// used for admin-account management and the Security tab, which an
+// 'editor' admin (who otherwise has full access to student/content data)
+// doesn't get: those affect who has access to the portal at all, not the
+// portal's content.
+function requireOwnerAdmin(req, res, next) {
+  requireAdmin(req, res, (err) => {
+    if (err) return next(err);
+    if (req.admin.role !== 'owner') {
+      return res.status(403).json({ error: 'Only an owner admin can do this.' });
+    }
+    next();
+  });
+}
+
 // A student's `mustChangePassword` is a plain stored flag (set true on
 // account creation and admin reset, false on a successful self-service
 // change) rather than recomputed by hashing the default password against
@@ -97,6 +112,7 @@ function publicStudent(student) {
 module.exports = {
   isValidSchoolEmail,
   requireAdmin,
+  requireOwnerAdmin,
   requireStudent,
   requireActiveStudent,
   publicStudent,

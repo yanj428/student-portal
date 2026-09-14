@@ -13,13 +13,8 @@ const adminListEmpty = document.getElementById('admin-list-empty');
 const adminCreateForm = document.getElementById('admin-create-form');
 const newAdminEmail = document.getElementById('new-admin-email');
 const newAdminPassword = document.getElementById('new-admin-password');
+const newAdminRole = document.getElementById('new-admin-role');
 const adminCreateError = document.getElementById('admin-create-error');
-
-const adminPasswordForm = document.getElementById('admin-password-form');
-const adminCurrentPassword = document.getElementById('admin-current-password');
-const adminNewPassword = document.getElementById('admin-new-password');
-const adminPasswordError = document.getElementById('admin-password-error');
-const adminPasswordSuccess = document.getElementById('admin-password-success');
 
 const auditLogBody = document.getElementById('audit-log-body');
 
@@ -126,16 +121,28 @@ function renderAdmins(admins) {
 
   admins.forEach((admin) => {
     const isSelf = admin.id === currentAdminId;
+    const toggleRole = admin.role === 'owner' ? 'editor' : 'owner';
     const div = document.createElement('div');
     div.className = 'simple-item';
     div.innerHTML = `
       <div class="simple-item-head">
         <span class="simple-item-title">${escapeHtml(admin.email)}${isSelf ? ' (you)' : ''}</span>
         <div class="simple-item-actions">
+          <button class="edit-btn role-toggle-btn">Make ${toggleRole}</button>
           ${isSelf ? '' : '<button class="delete-btn" aria-label="Remove admin"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7H20M9 7V4C9 3.4 9.4 3 10 3H14C14.6 3 15 3.4 15 4V7M18 7L17.3 19C17.2 19.6 16.7 20 16.1 20H7.9C7.3 20 6.8 19.6 6.7 19L6 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'}
         </div>
       </div>
+      <p class="simple-item-body">${admin.role === 'owner' ? 'Owner' : 'Editor'} &middot; 2FA ${admin.totpEnabled ? 'on' : 'off'}</p>
     `;
+    div.querySelector('.role-toggle-btn').addEventListener('click', async () => {
+      if (!confirm(`Make ${admin.email} ${toggleRole === 'owner' ? 'an owner' : 'an editor'}?`)) return;
+      const { ok, data } = await sendJSON(`/api/admin/admins/${admin.id}/role`, 'PATCH', { role: toggleRole });
+      if (!ok) {
+        alert(data.error || 'Could not change this admin’s role.');
+        return;
+      }
+      loadAdmins();
+    });
     if (!isSelf) {
       div.querySelector('.delete-btn').addEventListener('click', async () => {
         if (!confirm(`Remove admin access for ${admin.email}?`)) return;
@@ -158,6 +165,7 @@ adminCreateForm.addEventListener('submit', async (e) => {
   const { ok, data } = await sendJSON('/api/admin/admins', 'POST', {
     email: newAdminEmail.value.trim(),
     password: newAdminPassword.value,
+    role: newAdminRole.value,
   });
 
   if (!ok) {
@@ -168,26 +176,6 @@ adminCreateForm.addEventListener('submit', async (e) => {
 
   adminCreateForm.reset();
   loadAdmins();
-});
-
-adminPasswordForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  adminPasswordError.hidden = true;
-  adminPasswordSuccess.hidden = true;
-
-  const { ok, data } = await sendJSON('/api/admin/change-password', 'POST', {
-    currentPassword: adminCurrentPassword.value,
-    newPassword: adminNewPassword.value,
-  });
-
-  if (!ok) {
-    adminPasswordError.textContent = data.error || 'Could not change your password.';
-    adminPasswordError.hidden = false;
-    return;
-  }
-
-  adminPasswordForm.reset();
-  adminPasswordSuccess.hidden = false;
 });
 
 async function loadAuditLog() {

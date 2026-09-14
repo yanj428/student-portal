@@ -21,6 +21,15 @@
       <p class="field-error" id="gate-error" hidden>Incorrect email or password.</p>
       <button type="submit" class="btn primary">Continue</button>
     </form>
+
+    <form class="gate-card" id="totp-form" hidden>
+      <h1>Verification code</h1>
+      <p>Enter the 6-digit code from your authenticator app, or a recovery code.</p>
+      <input class="field-input" type="text" id="totp-code" placeholder="123456 or a recovery code" autocomplete="one-time-code" />
+      <p class="field-error" id="totp-error" hidden>Incorrect code.</p>
+      <button type="submit" class="btn primary">Verify</button>
+      <button type="button" class="btn ghost" id="totp-cancel">Back</button>
+    </form>
   </div>
 
   <!-- Admin panel -->
@@ -83,9 +92,13 @@
             <span>Student Voice</span>
             <span class="nav-badge" id="nav-voice-badge" hidden>0</span>
           </button>
-          <button class="nav-item" data-page="security" type="button">
+          <button class="nav-item" data-page="security" id="nav-security" type="button">
             <svg viewBox="0 0 24 24" fill="none"><path d="M12 3L19 6V11C19 15.4 16 19.4 12 21C8 19.4 5 15.4 5 11V6L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 11.5L11 13.5L15 9.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span>Security</span>
+          </button>
+          <button class="nav-item" data-page="account" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M5 20C5 16 8 13.5 12 13.5C16 13.5 19 16 19 20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <span>My Account</span>
           </button>
         </nav>
 
@@ -651,7 +664,7 @@
           <h2>Admin accounts</h2>
           <span class="count-badge" id="admin-count">0</span>
         </div>
-        <p class="panel-hint">Everyone listed here can manage the whole portal — there is no separate limited role yet.</p>
+        <p class="panel-hint">Owners can manage other admin accounts and see this Security tab; editors manage students and content only.</p>
 
         <form id="admin-create-form" class="create-form">
           <div class="form-row">
@@ -664,6 +677,15 @@
               <input class="field-input" type="text" id="new-admin-password" required minlength="8" />
             </div>
           </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="new-admin-role">Role</label>
+              <select class="field-input" id="new-admin-role">
+                <option value="editor" selected>Editor — students and content</option>
+                <option value="owner">Owner — full access, including admin accounts</option>
+              </select>
+            </div>
+          </div>
           <p class="field-error" id="admin-create-error" hidden></p>
           <button type="submit" class="btn primary">Add admin</button>
         </form>
@@ -673,6 +695,28 @@
         </div>
       </section>
 
+      <section class="panel">
+        <h2>Audit log</h2>
+        <p class="panel-hint">Security-relevant admin actions: student and admin account changes, unlocks.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Admin</th>
+                <th>Action</th>
+                <th>Details</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="audit-log-body">
+              <tr class="empty-row"><td colspan="4">No audit log entries yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      </section>
+
+      <section class="admin-page-section" data-section="account" hidden>
       <section class="panel">
         <h2>Change your password</h2>
         <form id="admin-password-form" class="create-form">
@@ -693,22 +737,58 @@
       </section>
 
       <section class="panel">
-        <h2>Audit log</h2>
-        <p class="panel-hint">Security-relevant admin actions: student and admin account changes, unlocks.</p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Admin</th>
-                <th>Action</th>
-                <th>Details</th>
-                <th>Time</th>
-              </tr>
-            </thead>
-            <tbody id="audit-log-body">
-              <tr class="empty-row"><td colspan="4">No audit log entries yet.</td></tr>
-            </tbody>
-          </table>
+        <h2>Two-factor authentication</h2>
+        <p class="panel-hint" id="twofa-status">Checking status…</p>
+
+        <div id="twofa-disabled-view">
+          <button type="button" class="btn primary" id="twofa-start-setup">Turn on two-factor authentication</button>
+
+          <div id="twofa-setup-panel" hidden>
+            <p class="field-hint">Add this key to an authenticator app (Google Authenticator, Authy, etc.), then enter the 6-digit code it shows.</p>
+            <p class="totp-secret" id="twofa-secret"></p>
+            <div class="form-row">
+              <div class="form-field">
+                <label class="field-label" for="twofa-enable-code">6-digit code</label>
+                <input class="field-input" type="text" id="twofa-enable-code" autocomplete="one-time-code" />
+              </div>
+            </div>
+            <p class="field-error" id="twofa-enable-error" hidden></p>
+            <button type="button" class="btn primary" id="twofa-confirm-enable">Confirm and turn on</button>
+          </div>
+
+          <div id="twofa-recovery-codes-panel" hidden>
+            <p class="field-hint"><strong>Save these recovery codes now.</strong> Each one can be used once to log in if you lose access to your authenticator app. They won't be shown again.</p>
+            <pre class="recovery-codes" id="twofa-recovery-codes"></pre>
+          </div>
+        </div>
+
+        <div id="twofa-enabled-view" hidden>
+          <form id="twofa-disable-form" class="create-form">
+            <div class="form-row">
+              <div class="form-field">
+                <label class="field-label" for="twofa-disable-password">Current password</label>
+                <input class="field-input" type="password" id="twofa-disable-password" autocomplete="current-password" />
+              </div>
+            </div>
+            <p class="field-error" id="twofa-disable-error" hidden></p>
+            <button type="submit" class="btn ghost">Turn off two-factor authentication</button>
+          </form>
+
+          <form id="twofa-regen-form" class="create-form">
+            <div class="form-row">
+              <div class="form-field">
+                <label class="field-label" for="twofa-regen-password">Current password</label>
+                <input class="field-input" type="password" id="twofa-regen-password" autocomplete="current-password" />
+              </div>
+            </div>
+            <p class="field-error" id="twofa-regen-error" hidden></p>
+            <button type="submit" class="btn primary">Generate new recovery codes</button>
+          </form>
+
+          <div id="twofa-new-recovery-codes-panel" hidden>
+            <p class="field-hint"><strong>Save these recovery codes now.</strong> The old ones no longer work.</p>
+            <pre class="recovery-codes" id="twofa-new-recovery-codes"></pre>
+          </div>
         </div>
       </section>
       </section>

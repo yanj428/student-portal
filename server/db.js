@@ -110,6 +110,9 @@ db.exec(`
     id TEXT PRIMARY KEY,
     email TEXT NOT NULL UNIQUE,
     passwordHash TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'editor',
+    totpSecret TEXT,
+    totpEnabled INTEGER NOT NULL DEFAULT 0,
     createdAt TEXT NOT NULL
   );
 
@@ -121,7 +124,45 @@ db.exec(`
     createdAt TEXT NOT NULL
   );
   CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created ON admin_audit_log (createdAt);
+
+  -- One-time-use codes for an admin who enables 2FA and later loses their
+  -- authenticator device — without these, losing the device would mean
+  -- permanently losing access to that account (and, for the sole owner,
+  -- to admin account management entirely).
+  CREATE TABLE IF NOT EXISTS admin_recovery_codes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    adminId TEXT NOT NULL,
+    codeHash TEXT NOT NULL,
+    used INTEGER NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_admin_recovery_codes_admin ON admin_recovery_codes (adminId);
 `);
+
+// Adds a column to an existing table if it's missing — needed because the
+// CREATE TABLE above only applies to a brand-new database; a database
+// created before role/totpSecret/totpEnabled existed needs them added in
+// place, without losing its existing admin rows.
+// Returns true if the column had to be added (i.e. this is an existing
+// database created before it existed), false if it was already there.
+function ensureColumn(table, column, ddl) {
+  const existing = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (existing.some((col) => col.name === column)) return false;
+  db.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`);
+  return true;
+}
+const roleColumnJustAdded = ensureColumn('admins', 'role', "role TEXT NOT NULL DEFAULT 'editor'");
+ensureColumn('admins', 'totpSecret', 'totpSecret TEXT');
+ensureColumn('admins', 'totpEnabled', 'totpEnabled INTEGER NOT NULL DEFAULT 0');
+
+// Every admin that already existed before roles did becomes an owner (not
+// silently downgraded to the new, more limited 'editor' default) — running
+// with fewer admin permissions than before would be a surprising side
+// effect of an unrelated feature update, not a deliberate choice. Only
+// runs the one time the role column itself is being added.
+if (roleColumnJustAdded) {
+  db.prepare("UPDATE admins SET role = 'owner'").run();
+}
 
 // The very first time this runs against a database with no admin accounts
 // yet, create one from ADMIN_PASSWORD so the existing single-password
@@ -130,7 +171,9 @@ db.exec(`
 (function ensureAdminsBootstrap() {
   const { c } = db.prepare('SELECT COUNT(*) AS c FROM admins').get();
   if (c > 0) return;
-  db.prepare('INSERT INTO admins (id, email, passwordHash, createdAt) VALUES (?, ?, ?, ?)').run(
+  // Always 'owner' — the very first admin has to be, since there'd
+  // otherwise be no owner at all to create one.
+  db.prepare("INSERT INTO admins (id, email, passwordHash, role, createdAt) VALUES (?, ?, ?, 'owner', ?)").run(
     crypto.randomUUID(),
     ADMIN_BOOTSTRAP_EMAIL.toLowerCase(),
     bcrypt.hashSync(ADMIN_PASSWORD, 10),
@@ -528,21 +571,71 @@ module.exports = {
     return db.prepare('SELECT * FROM admins WHERE id = ?').get(id) || null;
   },
   listAdmins() {
-    return db.prepare('SELECT id, email, createdAt FROM admins ORDER BY createdAt').all();
+    return db.prepare('SELECT id, email, role, totpEnabled, createdAt FROM admins ORDER BY createdAt').all();
   },
   adminCount() {
     return db.prepare('SELECT COUNT(*) AS c FROM admins').get().c;
   },
-  createAdmin({ email, passwordHash }) {
-    const admin = { id: crypto.randomUUID(), email: email.trim().toLowerCase(), passwordHash, createdAt: new Date().toISOString() };
-    db.prepare('INSERT INTO admins (id, email, passwordHash, createdAt) VALUES (@id, @email, @passwordHash, @createdAt)').run(admin);
+  ownerCount() {
+    return db.prepare("SELECT COUNT(*) AS c FROM admins WHERE role = 'owner'").get().c;
+  },
+  createAdmin({ email, passwordHash, role }) {
+    const admin = {
+      id: crypto.randomUUID(),
+      email: email.trim().toLowerCase(),
+      passwordHash,
+      role: role === 'owner' ? 'owner' : 'editor',
+      createdAt: new Date().toISOString(),
+    };
+    db.prepare('INSERT INTO admins (id, email, passwordHash, role, createdAt) VALUES (@id, @email, @passwordHash, @role, @createdAt)').run(admin);
     return admin;
   },
   updateAdminPasswordHash(id, passwordHash) {
     return db.prepare('UPDATE admins SET passwordHash = ? WHERE id = ?').run(passwordHash, id).changes > 0;
   },
+  updateAdminRole(id, role) {
+    return db.prepare('UPDATE admins SET role = ? WHERE id = ?').run(role === 'owner' ? 'owner' : 'editor', id).changes > 0;
+  },
   deleteAdmin(id) {
     return db.prepare('DELETE FROM admins WHERE id = ?').run(id).changes > 0;
+  },
+
+  // ---- Admin two-factor authentication (TOTP) ----
+  // "Pending" setup: a secret generated but not yet confirmed with a code,
+  // so scanning the QR/entering the key doesn't turn on 2FA until the admin
+  // proves they actually saved it correctly.
+  setPendingTotpSecret(id, secret) {
+    db.prepare('UPDATE admins SET totpSecret = ?, totpEnabled = 0 WHERE id = ?').run(secret, id);
+  },
+  enableTotp(id) {
+    db.prepare('UPDATE admins SET totpEnabled = 1 WHERE id = ?').run(id);
+  },
+  disableTotp(id) {
+    db.prepare('UPDATE admins SET totpSecret = NULL, totpEnabled = 0 WHERE id = ?').run(id);
+    db.prepare('DELETE FROM admin_recovery_codes WHERE adminId = ?').run(id);
+  },
+  replaceRecoveryCodes(adminId, codeHashes) {
+    const del = db.prepare('DELETE FROM admin_recovery_codes WHERE adminId = ?');
+    const insert = db.prepare('INSERT INTO admin_recovery_codes (adminId, codeHash, createdAt) VALUES (?, ?, ?)');
+    const tx = db.transaction((hashes) => {
+      del.run(adminId);
+      const createdAt = new Date().toISOString();
+      for (const hash of hashes) insert.run(adminId, hash, createdAt);
+    });
+    tx(codeHashes);
+  },
+  // Marks a matching, unused recovery code as used and returns true — or
+  // returns false without changing anything if no unused code matches.
+  consumeRecoveryCode(adminId, codeHash) {
+    const row = db
+      .prepare('SELECT id FROM admin_recovery_codes WHERE adminId = ? AND codeHash = ? AND used = 0')
+      .get(adminId, codeHash);
+    if (!row) return false;
+    db.prepare('UPDATE admin_recovery_codes SET used = 1 WHERE id = ?').run(row.id);
+    return true;
+  },
+  countUnusedRecoveryCodes(adminId) {
+    return db.prepare('SELECT COUNT(*) AS c FROM admin_recovery_codes WHERE adminId = ? AND used = 0').get(adminId).c;
   },
 
   // ---- Admin audit log ----

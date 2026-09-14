@@ -24,13 +24,14 @@ html, body {
   color: var(--text);
 }
 
+/* The sidebar is pinned to the left edge of the actual browser viewport
+   (not just its own scrolling container), and .main fills every pixel to
+   its right, so the layout scales with the window instead of sitting
+   centered inside a fixed-width, capped column with dead space on either
+   side on a wide monitor. */
 .app {
   display: flex;
   min-height: 100vh;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 28px;
-  gap: 24px;
 }
 
 /* Sidebar */
@@ -38,17 +39,16 @@ html, body {
   width: 230px;
   flex-shrink: 0;
   background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
-  border-radius: var(--radius-lg);
   padding: 20px 16px;
   display: flex;
   flex-direction: column;
-  position: sticky;
-  top: 28px;
-  height: calc(100vh - 56px);
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.3) transparent;
-  box-shadow: var(--shadow);
 }
 .sidebar::-webkit-scrollbar { width: 5px; }
 .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 4px; }
@@ -129,13 +129,17 @@ html, body {
   margin-top: 8px;
 }
 
-/* Main */
+/* Main — offset by the fixed sidebar's width and left to grow with
+   whatever space remains, instead of being capped at a fixed max-width. */
 .main {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 22px;
+  margin-left: 230px;
+  padding: 28px;
+  max-width: 1600px;
 }
 
 .topbar {
@@ -587,9 +591,12 @@ html, body {
 }
 
 @media (max-width: 900px) {
-  .app { flex-direction: column; padding: 16px; }
+  .app { flex-direction: column; }
+  .main { margin-left: 0; max-width: none; padding: 16px; }
   .sidebar {
+    position: static;
     width: 100%;
+    height: auto;
     flex-direction: row;
     align-items: center;
     padding: 14px 16px;

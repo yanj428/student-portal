@@ -37,7 +37,7 @@ app.use(
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         imgSrc: ["'self'", 'data:'],
         connectSrc: ["'self'"],
-        frameSrc: ['https://www.canva.com', 'https://canva.com'],
+        frameSrc: ['https://www.canva.com', 'https://canva.com', 'https://canva.link'],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
         frameAncestors: ["'none'"],

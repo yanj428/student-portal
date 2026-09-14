@@ -35,7 +35,7 @@ router.post('/api/admin/slide-archive', requireAdmin, (req, res) => {
   if (typeof canvaEmbedUrl !== 'string' || !canvaEmbedUrl.trim()) {
     return res.status(400).json({ error: 'Canva embed URL is required.' });
   }
-  const urlError = validateOptionalUrl(canvaEmbedUrl, { fieldName: 'Canva embed URL', allowedHosts: ['canva.com'] });
+  const urlError = validateOptionalUrl(canvaEmbedUrl, { fieldName: 'Canva embed URL', allowedHosts: ['canva.com', 'canva.link'] });
   if (urlError) return res.status(400).json({ error: urlError });
 
   const slides = db.readSlideArchive();

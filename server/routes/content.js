@@ -39,7 +39,7 @@ function validateContent(content) {
   }
   const canvaError = validateOptionalUrl(content.weeklySlide.canvaEmbedUrl, {
     fieldName: 'Canva embed URL',
-    allowedHosts: ['canva.com'],
+    allowedHosts: ['canva.com', 'canva.link'],
   });
   if (canvaError) return canvaError;
   if (typeof content.lunchSchedule.weekLabel !== 'string' || typeof content.lunchSchedule.imageUrl !== 'string') {

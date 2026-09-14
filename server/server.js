@@ -6,6 +6,9 @@ const { PORT, SESSION_SECRET } = require('./config');
 const { UPLOADS_DIR } = require('./uploads');
 
 const app = express();
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, '..', 'views'));
+
 app.use(express.json());
 app.use(
   session({
@@ -26,6 +29,12 @@ app.use(require('./routes/csClubs'));
 app.use(require('./routes/csEvents'));
 app.use(require('./routes/voice'));
 app.use(require('./routes/studentAuth'));
+
+// Rendered student pages (server-side login/password-change gating) take
+// priority over the static handler below, which now only serves assets:
+// css, client-side js, images, and the standalone login/admin/change-password
+// pages that aren't part of the shared sidebar layout.
+app.use(require('./routes/pages'));
 
 // ---- Static site ----
 // Only public/ is served over HTTP. Everything sensitive — data/ (password

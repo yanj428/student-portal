@@ -26,39 +26,10 @@ if (dateEl) {
   setInterval(updateDate, 60 * 1000);
 }
 
-// Require login: pull the signed-in student from the session, or bounce to login.html.
-// The page starts hidden (see the inline script in <head>) so a student who needs to
-// log in or change their password never sees a flash of this page's content first.
-async function loadCurrentStudent() {
-  try {
-    const res = await fetch('/api/me');
-    if (!res.ok) {
-      window.location.href = 'login.html';
-      return;
-    }
-    const { student } = await res.json();
-
-    if (student.mustChangePassword) {
-      window.location.href = 'change-password.html';
-      return;
-    }
-
-    const setText = (id, text) => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = text;
-    };
-
-    setText('user-name', `${student.firstName} ${student.lastName}`);
-    setText('user-grade', student.grade);
-    setText('user-avatar', (student.firstName[0] || '') + (student.lastName[0] || ''));
-    setText('welcome-heading', `Welcome back, ${student.firstName}!`);
-
-    document.documentElement.style.visibility = 'visible';
-  } catch {
-    window.location.href = 'login.html';
-  }
-}
-loadCurrentStudent();
+// Login and the forced password-change redirect are handled server-side
+// before this page is even rendered (see server/middleware/pageAuth.js),
+// so there's no client-side auth check or flash-prevention needed here —
+// the user info in the topbar is already filled in by the server.
 
 const logoutLink = document.getElementById('logout-link');
 if (logoutLink) {

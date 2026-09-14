@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('../partials/head-links', { pageTitle: 'Student Portal' }) %>
+</head>
+<body>
+  <div class="app">
+<%- include('../partials/sidebar', { activePage: 'home' }) %>
+    <main class="main">
+<%- include('../partials/topbar', { student }) %>
+
+      <section class="banner">
+        <div class="banner-text">
+          <span class="banner-date" id="today-date"></span>
+          <h1 id="welcome-heading">Welcome back, <%= student.firstName %>!</h1>
+          <p>Always stay updated in your KPIS student portal</p>
+        </div>
+        <div class="banner-art">
+          <svg viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="100" cy="80" r="70" fill="rgba(255,255,255,0.08)"/>
+            <path d="M100 40L30 65L100 90L170 65L100 40Z" fill="#fff"/>
+            <path d="M55 75V105C55 105 75 122 100 122C125 122 145 105 145 105V75" stroke="#fff" stroke-width="4" fill="none"/>
+            <line x1="170" y1="65" x2="170" y2="100" stroke="#fff" stroke-width="4"/>
+            <circle cx="170" cy="103" r="4" fill="#fff"/>
+          </svg>
+        </div>
+      </section>
+
+      <section class="content-grid">
+        <div class="content-left">
+          <div class="section-header">
+            <h2 class="section-title">Latest Announcements</h2>
+            <a href="announcements.html" class="see-all">See all</a>
+          </div>
+          <div class="notice-card" id="announcements-list"></div>
+
+          <div class="section-header">
+            <h2 class="section-title">Upcoming on the Calendar</h2>
+            <a href="school-calendar.html" class="see-all">See all</a>
+          </div>
+          <div class="calendar-list" id="calendar-list"></div>
+
+          <div class="section-header">
+            <h2 class="section-title">This Week's Lunch Menu</h2>
+            <a href="lunch-schedule.html" class="see-all">See all</a>
+          </div>
+          <div class="lunch-days" id="lunch-list"></div>
+        </div>
+
+        <div class="content-right">
+          <div class="section-header">
+            <h2 class="section-title">Meet Your Council</h2>
+            <a href="meet-council.html" class="see-all">See all</a>
+          </div>
+          <div class="instructors" id="council-list"></div>
+
+          <div class="section-header">
+            <h2 class="section-title">Active After School Clubs</h2>
+            <a href="clubs.html#after-school-clubs" class="see-all">See all</a>
+          </div>
+          <div class="chip-list" id="clubs-list"></div>
+
+          <div class="section-header">
+            <h2 class="section-title">StuCo Project Tracker</h2>
+            <a href="stuco-tracker.html" class="see-all">See all</a>
+          </div>
+          <div class="project-list" id="projects-list"></div>
+
+          <div class="section-header">
+            <h2 class="section-title">Quick Links</h2>
+          </div>
+          <div class="quicklinks-grid" id="quicklinks-list"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

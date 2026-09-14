@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('../partials/head-links', { pageTitle: 'Meet Your Council', pageCss: 'meet-council.css' }) %>
+</head>
+<body>
+  <div class="app">
+<%- include('../partials/sidebar', { activePage: 'meet-council' }) %>
+    <main class="main">
+<%- include('../partials/topbar', { student }) %>
+
+
+      <section class="voice-header">
+        <h1>Meet Your Council</h1>
+        <p>Get to know the students representing you on Student Council.</p>
+      </section>
+
+      <section class="council-page-section">
+        <div class="council-page-grid" id="council-page-grid">
+          <p class="council-page-empty" id="council-page-empty">Council members haven't been added yet — check back soon.</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="meet-council.js"></script>
+</body>
+</html>

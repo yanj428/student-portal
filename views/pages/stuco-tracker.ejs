@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('../partials/head-links', { pageTitle: 'StuCo Project Tracker', pageCss: 'stuco-tracker.css' }) %>
+</head>
+<body>
+  <div class="app">
+<%- include('../partials/sidebar', { activePage: 'stuco-tracker' }) %>
+    <main class="main">
+<%- include('../partials/topbar', { student }) %>
+
+
+      <section class="voice-header">
+        <h1>StuCo Project Tracker</h1>
+        <p>See what Student Council is working on and how each project is progressing.</p>
+      </section>
+
+      <section class="projects-page-section">
+        <div class="projects-page-list" id="projects-page-list">
+          <p class="projects-page-empty" id="projects-page-empty">No StuCo projects posted right now — check back soon.</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="stuco-tracker.js"></script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('../partials/head-links', { pageTitle: 'Announcements', pageCss: 'announcements.css' }) %>
+</head>
+<body>
+  <div class="app">
+<%- include('../partials/sidebar', { activePage: 'announcements' }) %>
+    <main class="main">
+<%- include('../partials/topbar', { student }) %>
+
+
+      <section class="voice-header">
+        <h1>Announcements</h1>
+        <p>This week's shared slide from Student Council, plus older ones in the archive.</p>
+      </section>
+
+      <section class="slide-card">
+        <div class="slide-card-head">
+          <h2>This Week's Slide</h2>
+          <span class="week-label" id="week-label" hidden></span>
+        </div>
+        <div class="slide-embed-wrap" id="slide-embed-wrap" hidden>
+          <iframe id="slide-embed" src="" loading="lazy" allow="fullscreen" allowfullscreen></iframe>
+        </div>
+        <p class="slide-empty" id="slide-empty">No slide has been shared yet this week — check back soon.</p>
+      </section>
+
+      <section class="archive-section">
+        <h2 class="archive-heading">Archived Slides</h2>
+        <div class="archive-list" id="archive-list">
+          <p class="archive-empty" id="archive-empty">No older slides yet.</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="announcements.js"></script>
+</body>
+</html>

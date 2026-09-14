@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('../partials/head-links', { pageTitle: 'School Calendar', pageCss: 'school-calendar.css' }) %>
+</head>
+<body>
+  <div class="app">
+<%- include('../partials/sidebar', { activePage: 'school-calendar' }) %>
+    <main class="main">
+<%- include('../partials/topbar', { student }) %>
+
+
+      <section class="voice-header">
+        <h1>School Calendar</h1>
+        <p>Everything coming up at KPIS — exams, StuCo events, and school-wide days.</p>
+      </section>
+
+      <section class="calendar-page-section">
+        <div class="calendar-page-list" id="calendar-page-list">
+          <p class="calendar-page-empty" id="calendar-page-empty">No upcoming events posted right now — check back soon.</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="school-calendar.js"></script>
+</body>
+</html>

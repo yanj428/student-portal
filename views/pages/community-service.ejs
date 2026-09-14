@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('../partials/head-links', { pageTitle: 'Community Service', pageCss: 'community-service.css' }) %>
+</head>
+<body>
+  <div class="app">
+<%- include('../partials/sidebar', { activePage: 'community-service' }) %>
+    <main class="main">
+<%- include('../partials/topbar', { student }) %>
+
+
+      <section class="voice-header">
+        <h1>Community Service</h1>
+        <p>What is the need in our community, and how can we help?</p>
+      </section>
+
+      <div class="cs-notice">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 8V13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.2" r="1" fill="currentColor"/></svg>
+        <span>This graduation requirement and the clubs/opportunities below are for <strong>high school students (Grades 9–12)</strong> only.</span>
+      </div>
+
+      <section class="cs-intro">
+        <p>
+          Community service is a contribution of a student's time in volunteer activities that serve a local,
+          regional, national, or global community in a meaningful way. You're encouraged to find opportunities
+          you're genuinely passionate about — through direct action (with), indirect action (for), or advocacy
+          (about).
+        </p>
+        <p>
+          Use the <a href="https://www.un.org/sustainabledevelopment/" target="_blank" rel="noopener">UN Sustainable Development Goals</a>
+          as a guide to understand an issue, collaborate with relevant participants, and contribute to your community.
+        </p>
+      </section>
+
+      <section class="ipar-section">
+        <h2 class="section-heading">The Process</h2>
+        <div class="ipar-grid">
+          <div class="ipar-step">
+            <span class="ipar-number">1</span>
+            <h3>Investigate</h3>
+            <p>Identify a need in your community and research the issue.</p>
+          </div>
+          <div class="ipar-step">
+            <span class="ipar-number">2</span>
+            <h3>Plan</h3>
+            <p>Design a project or find an organization that addresses that need.</p>
+          </div>
+          <div class="ipar-step">
+            <span class="ipar-number">3</span>
+            <h3>Act</h3>
+            <p>Carry out your service project or volunteer work.</p>
+          </div>
+          <div class="ipar-step">
+            <span class="ipar-number">4</span>
+            <h3>Reflect</h3>
+            <p>Reflect on the impact of your service and what you learned.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="cs-resources">
+        <h2 class="section-heading">Resources</h2>
+        <div class="resource-list">
+          <a class="resource-link" href="https://drive.google.com/file/d/1RPMj-o6DTyChbQo3NS_cy1ap-ux9FNws/view?usp=sharing" target="_blank" rel="noopener">
+            <span>Community Service Graduation Requirement</span>
+            <svg viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="resource-link" href="https://docs.google.com/presentation/d/1ngQhffVHjNJEwxqflLvJFHYbAnNwHgMUcTil5ItpVjk/edit?usp=sharing" target="_blank" rel="noopener">
+            <span>Process Slides Summary</span>
+            <svg viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="resource-link" href="https://docs.google.com/document/d/1g2i9S0nWOXvtIZdQy22v6b3N-eokPe49mBfWUNXdkRk/edit?usp=sharing" target="_blank" rel="noopener">
+            <span>Proposal Form Template</span>
+            <svg viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="resource-link" href="https://docs.google.com/document/d/1jVvXJ2AypF27KLk3fcAaf8EkrO9eCSprBaeduGbWeS4/edit?usp=sharing" target="_blank" rel="noopener">
+            <span>Project Report Template</span>
+            <svg viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="resource-link" href="https://docs.google.com/forms/d/e/1FAIpQLSfIrDAQIR-Eeu-oERg4Qo6DSINCOdzxzqR6uZ8y33b2Mk9Vhw/viewform?usp=publish-editor" target="_blank" rel="noopener">
+            <span>Submit Your Proposal or Project</span>
+            <svg viewBox="0 0 24 24" fill="none"><path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+        </div>
+      </section>
+
+      <section class="cs-clubs-section">
+        <h2 class="section-heading">Community Service Clubs</h2>
+        <a class="cs-clubs-redirect" href="clubs.html#community-service-clubs">
+          <span>Browse community service clubs, their Instagram pages, and application forms on the Clubs page.</span>
+          <svg viewBox="0 0 24 24" fill="none"><path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </section>
+
+      <section class="cs-events-section">
+        <h2 class="section-heading">Events &amp; Opportunities</h2>
+        <p class="section-subhint">Clubs post volunteer opportunities here — sign up to help out.</p>
+        <div class="cs-events-list" id="cs-events-list">
+          <p class="cs-events-empty" id="cs-events-empty">No events or opportunities posted right now — check back soon.</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="community-service.js"></script>
+</body>
+</html>

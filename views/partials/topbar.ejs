@@ -1,0 +1,17 @@
+      <header class="topbar">
+        <div class="search">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M20 20L16.5 16.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <input type="text" placeholder="Search" />
+        </div>
+        <div class="user-block">
+          <div class="user-info">
+            <span class="user-name" id="user-name"><%= student.firstName %> <%= student.lastName %></span>
+            <span class="user-meta" id="user-grade"><%= student.grade %></span>
+          </div>
+          <div class="avatar" id="user-avatar"><%= (student.firstName[0] || '') + (student.lastName[0] || '') %></div>
+          <button class="bell" aria-label="Notifications">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M18 8C18 6.4 17.4 4.9 16.2 3.8C15.1 2.6 13.6 2 12 2C10.4 2 8.9 2.6 7.8 3.8C6.6 4.9 6 6.4 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13.7 21C13.5 21.3 13.3 21.6 12.9 21.7C12.6 21.9 12.3 22 12 22C11.7 22 11.4 21.9 11.1 21.7C10.7 21.6 10.5 21.3 10.3 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span class="bell-dot"></span>
+          </button>
+        </div>
+      </header>

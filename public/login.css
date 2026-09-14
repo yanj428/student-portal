@@ -12,12 +12,41 @@
 
 * { box-sizing: border-box; }
 
+@font-face {
+  font-family: 'DINOT';
+  src: url('assets/fonts/dinot-regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DINOT';
+  src: url('assets/fonts/dinot-medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DINOT';
+  src: url('assets/fonts/dinot-bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'DINOT';
+  src: url('assets/fonts/dinot-black.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
   overflow: hidden;
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'DINOT', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: var(--text);
   background-color: #FFFFFF;
   background-image:

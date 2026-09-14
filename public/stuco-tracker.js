@@ -11,10 +11,9 @@ function stStatusClass(status) {
 }
 
 async function loadProjectsPage() {
-  const res = await fetch('/api/content');
+  const res = await fetch('/api/projects');
   if (!res.ok) return;
-  const { content } = await res.json();
-  const projects = content.projects || [];
+  const { projects } = await res.json();
 
   const listEl = document.getElementById('projects-page-list');
   const emptyEl = document.getElementById('projects-page-empty');

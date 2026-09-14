@@ -5,7 +5,10 @@ const { requireAdmin, requireStudent } = require('../middleware/auth');
 
 const router = express.Router();
 
-// ---- Homepage content (text only — the layout/section list is fixed) ----
+// ---- Homepage content: the weekly slide, lunch menu, and lunch schedule
+// image. Everything else that used to live here (announcements, calendar
+// events, clubs, council, projects, quick links) is now its own collection
+// with full admin add/edit/delete — see the other route files.
 function validateContent(content) {
   const shape = db.DEFAULT_CONTENT;
   if (!content || typeof content !== 'object') return 'Invalid content.';
@@ -26,33 +29,8 @@ function validateContent(content) {
   if (typeof content.lunchSchedule.weekLabel !== 'string' || typeof content.lunchSchedule.imageUrl !== 'string') {
     return 'Lunch schedule needs a week label and image (both can be blank).';
   }
-
-  for (const a of content.announcements) {
-    if (typeof a.title !== 'string' || typeof a.body !== 'string') return 'Each announcement needs a title and body.';
-  }
-  for (const e of content.calendarEvents) {
-    if (![e.day, e.month, e.title, e.subtitle].every((v) => typeof v === 'string')) {
-      return 'Each calendar event needs day, month, title, and subtitle.';
-    }
-  }
   for (const l of content.lunchMenu) {
     if (typeof l.weekday !== 'string' || typeof l.item !== 'string') return 'Each lunch entry needs a weekday and item.';
-  }
-  for (const c of content.clubs) {
-    if (typeof c !== 'object' || c === null || typeof c.name !== 'string' || !c.name.trim()) {
-      return 'Each club needs a name.';
-    }
-  }
-  for (const p of content.projects) {
-    if (typeof p.title !== 'string' || typeof p.percent !== 'number' || p.percent < 0 || p.percent > 100) {
-      return 'Each project needs a title and a percent between 0 and 100.';
-    }
-  }
-  for (const q of content.quickLinks) {
-    if (typeof q.label !== 'string' || typeof q.url !== 'string') return 'Each quick link needs a label and URL.';
-  }
-  for (const m of content.council) {
-    if (typeof m.initials !== 'string') return 'Each council member needs initials.';
   }
 
   return null;

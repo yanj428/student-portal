@@ -1,0 +1,20 @@
+[
+  {
+    "id": "3006a65c-9670-44fd-84b2-471566a6ac6a",
+    "title": "Prelim payment due",
+    "body": "Please clear your prelim payment before the end of this week to avoid late fees.",
+    "createdAt": "2026-09-14T12:08:10.639Z"
+  },
+  {
+    "id": "5a41c7c1-abca-4149-9ec7-41956287f9a1",
+    "title": "Exam schedule posted",
+    "body": "The final exam schedule has been posted. Check your dashboard for your exact dates and rooms.",
+    "createdAt": "2026-09-14T12:08:10.639Z"
+  },
+  {
+    "id": "c0913a36-a4c7-4a4e-8dbd-6f9bce0f835c",
+    "title": "Community Service sign-ups open",
+    "body": "Sign up for this term's community service projects before spots fill up.",
+    "createdAt": "2026-09-14T12:08:10.639Z"
+  }
+]

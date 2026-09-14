@@ -5,10 +5,9 @@ function mcEscapeHtml(str) {
 }
 
 async function loadCouncilPage() {
-  const res = await fetch('/api/content');
+  const res = await fetch('/api/council');
   if (!res.ok) return;
-  const { content } = await res.json();
-  const council = content.council || [];
+  const { council } = await res.json();
 
   const gridEl = document.getElementById('council-page-grid');
   const emptyEl = document.getElementById('council-page-empty');

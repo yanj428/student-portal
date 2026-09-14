@@ -366,6 +366,7 @@ html, body {
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
+.form-row[hidden] { display: none; }
 .password-row {
   display: flex;
   gap: 8px;
@@ -620,6 +621,69 @@ tr:last-child td { border-bottom: none; }
   color: var(--text-muted);
   white-space: pre-wrap;
 }
+
+/* Generic simple-list CRUD panels (announcements, calendar events, council,
+   projects, quick links) */
+.simple-list-heading {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 24px 0 12px 0;
+}
+.simple-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+.simple-list:first-of-type { margin-top: 0; }
+.simple-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.simple-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.simple-item-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+.simple-item-body {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+}
+.simple-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Club type toggle */
+.radio-row {
+  display: flex;
+  gap: 20px;
+}
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.radio-option input { cursor: pointer; }
 
 /* Student Voice moderation */
 .voice-pending-list {

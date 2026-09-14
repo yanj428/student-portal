@@ -3,8 +3,13 @@ import { initNav } from './nav.js';
 import { loadStudents } from './students.js';
 import { loadVoicePending } from './voice.js';
 import { loadCurrentSlide, loadSlideArchive } from './slides.js';
-import { loadCsClubs } from './csClubs.js';
+import { loadClubs } from './clubs.js';
 import { loadCsEvents } from './csEvents.js';
+import { loadAnnouncements } from './announcements.js';
+import { loadCalendarEvents } from './calendarEvents.js';
+import { loadCouncil } from './council.js';
+import { loadProjects } from './projects.js';
+import { loadQuickLinks } from './quickLinks.js';
 import { loadLunchCurrent } from './lunch.js';
 
 initNav();
@@ -14,7 +19,12 @@ initAuth(() => {
   loadVoicePending();
   loadCurrentSlide();
   loadSlideArchive();
-  loadCsClubs();
+  loadClubs();
   loadCsEvents();
+  loadAnnouncements();
+  loadCalendarEvents();
+  loadCouncil();
+  loadProjects();
+  loadQuickLinks();
   loadLunchCurrent();
 });

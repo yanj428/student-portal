@@ -5,10 +5,9 @@ function scEscapeHtml(str) {
 }
 
 async function loadSchoolCalendar() {
-  const res = await fetch('/api/content');
+  const res = await fetch('/api/calendar-events');
   if (!res.ok) return;
-  const { content } = await res.json();
-  const events = content.calendarEvents || [];
+  const { calendarEvents: events } = await res.json();
 
   const listEl = document.getElementById('calendar-page-list');
   const emptyEl = document.getElementById('calendar-page-empty');

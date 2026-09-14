@@ -53,9 +53,29 @@
             <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4" width="17" height="4.5" rx="1.2" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 8.5V18C4.5 19.1 5.4 20 6.5 20H17.5C18.6 20 19.5 19.1 19.5 18V8.5" stroke="currentColor" stroke-width="1.7"/><path d="M10 12.5H14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
             <span>Announcements</span>
           </button>
+          <button class="nav-item" data-page="calendar" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4.5" width="17" height="16" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 9.5H20.5" stroke="currentColor" stroke-width="1.7"/><path d="M8 3V6M16 3V6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <span>School Calendar</span>
+          </button>
+          <button class="nav-item" data-page="clubs" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 3L14.5 8.5L20.5 9.2L16 13.2L17.3 19.2L12 16L6.7 19.2L8 13.2L3.5 9.2L9.5 8.5L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+            <span>Clubs</span>
+          </button>
           <button class="nav-item" data-page="community" type="button">
             <svg viewBox="0 0 24 24" fill="none"><path d="M12 20C12 20 4 15.5 4 9.8C4 7.2 6 5.2 8.5 5.2C10 5.2 11.3 5.9 12 7C12.7 5.9 14 5.2 15.5 5.2C18 5.2 20 7.2 20 9.8C20 15.5 12 20 12 20Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
             <span>Community Service</span>
+          </button>
+          <button class="nav-item" data-page="council" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="8.5" cy="8" r="3" stroke="currentColor" stroke-width="1.7"/><circle cx="17" cy="9.5" r="2.3" stroke="currentColor" stroke-width="1.7"/><path d="M3 20C3 16.7 5.5 14 8.5 14C11.5 14 14 16.7 14 20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M14.5 14.3C17.2 14.6 19.3 16.9 19.3 19.7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <span>Council</span>
+          </button>
+          <button class="nav-item" data-page="projects" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 8H16M8 12H16M8 16H12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <span>StuCo Projects</span>
+          </button>
+          <button class="nav-item" data-page="quicklinks" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M9.5 14.5L14.5 9.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M11 7.5L12.2 6.3C13.5 5 15.6 5 16.9 6.3C18.2 7.6 18.2 9.7 16.9 11L15.7 12.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M13 16.5L11.8 17.7C10.5 19 8.4 19 7.1 17.7C5.8 16.4 5.8 14.3 7.1 13L8.3 11.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <span>Quick Links</span>
           </button>
           <button class="nav-item" data-page="voice" type="button">
             <svg viewBox="0 0 24 24" fill="none"><path d="M4 5.5H20V15.5H9L5 19V15.5H4V5.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
@@ -272,50 +292,143 @@
           </table>
         </div>
       </section>
-      </section>
 
-      <section class="admin-page-section" data-section="community" hidden>
       <section class="panel">
-        <h2>Community Service clubs</h2>
-        <p class="panel-hint">Write about each community service club — students see these on the Community Service page.</p>
+        <h2>Announcement items</h2>
+        <p class="panel-hint">Shown in "Latest Announcements" on the homepage (most recent 3) and on the student Announcements page.</p>
 
-        <form id="cs-club-form" class="archive-form">
-          <div class="form-row">
-            <div class="form-field">
-              <label class="field-label" for="cs-club-name">Club name</label>
-              <input class="field-input" type="text" id="cs-club-name" placeholder="e.g. Beach Cleanup Club" required />
-            </div>
-            <div class="form-field">
-              <label class="field-label" for="cs-club-logo">Logo</label>
-              <input class="field-input" type="file" id="cs-club-logo" accept="image/png,image/jpeg,image/webp,image/gif" />
-            </div>
+        <form id="announcement-form" class="archive-form">
+          <div class="form-field">
+            <label class="field-label" for="announcement-title">Title</label>
+            <input class="field-input" type="text" id="announcement-title" placeholder="e.g. Prelim payment due" required />
           </div>
           <div class="form-field">
-            <label class="field-label" for="cs-club-description">Description</label>
-            <textarea class="field-input" id="cs-club-description" rows="3" placeholder="What does this club do, and how can students get involved?" required></textarea>
+            <label class="field-label" for="announcement-body">Body</label>
+            <textarea class="field-input" id="announcement-body" rows="3" placeholder="Details for students" required></textarea>
           </div>
-          <div class="form-row">
-            <div class="form-field">
-              <label class="field-label" for="cs-club-instagram">Instagram link</label>
-              <input class="field-input" type="text" id="cs-club-instagram" placeholder="https://instagram.com/..." />
-            </div>
-            <div class="form-field">
-              <label class="field-label" for="cs-club-application">Application form link</label>
-              <input class="field-input" type="text" id="cs-club-application" placeholder="Google Form, sheet, etc." />
-            </div>
-          </div>
-          <p class="field-error" id="cs-club-error" hidden></p>
+          <p class="field-error" id="announcement-error" hidden></p>
           <div class="form-actions">
-            <button type="submit" class="btn primary" id="cs-club-submit">Add club</button>
-            <button type="button" class="btn ghost" id="cs-club-cancel-edit" hidden>Cancel edit</button>
+            <button type="submit" class="btn primary" id="announcement-submit">Add announcement</button>
+            <button type="button" class="btn ghost" id="announcement-cancel-edit" hidden>Cancel edit</button>
           </div>
         </form>
 
-        <div class="cs-club-admin-list" id="cs-club-admin-list">
-          <p class="empty-hint" id="cs-club-empty-hint">No community service clubs added yet.</p>
+        <div class="simple-list" id="announcement-list">
+          <p class="empty-hint" id="announcement-empty-hint">No announcements yet.</p>
         </div>
       </section>
+      </section>
 
+      <section class="admin-page-section" data-section="calendar" hidden>
+      <section class="panel">
+        <h2>Calendar events</h2>
+        <p class="panel-hint">Shown in "Upcoming on the Calendar" on the homepage and on the School Calendar page.</p>
+
+        <form id="calendar-event-form" class="archive-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="calendar-event-day">Day</label>
+              <input class="field-input" type="text" id="calendar-event-day" placeholder="e.g. 12" required />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="calendar-event-month">Month</label>
+              <input class="field-input" type="text" id="calendar-event-month" placeholder="e.g. Sep" required />
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="calendar-event-title">Title</label>
+            <input class="field-input" type="text" id="calendar-event-title" placeholder="e.g. Midterm Exams Begin" required />
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="calendar-event-subtitle">Subtitle</label>
+            <input class="field-input" type="text" id="calendar-event-subtitle" placeholder="e.g. All grades · Main building" required />
+          </div>
+          <p class="field-error" id="calendar-event-error" hidden></p>
+          <div class="form-actions">
+            <button type="submit" class="btn primary" id="calendar-event-submit">Add event</button>
+            <button type="button" class="btn ghost" id="calendar-event-cancel-edit" hidden>Cancel edit</button>
+          </div>
+        </form>
+
+        <div class="simple-list" id="calendar-event-list">
+          <p class="empty-hint" id="calendar-event-empty-hint">No calendar events yet.</p>
+        </div>
+      </section>
+      </section>
+
+      <section class="admin-page-section" data-section="clubs" hidden>
+      <section class="panel">
+        <h2>Clubs</h2>
+        <p class="panel-hint">Community service clubs appear on the Clubs page and link to the Community Service page; after school clubs appear on the Clubs page and the homepage.</p>
+
+        <form id="club-form" class="archive-form">
+          <div class="form-field">
+            <label class="field-label">Type</label>
+            <div class="radio-row">
+              <label class="radio-option"><input type="radio" name="club-type" value="community-service" checked /> Community Service</label>
+              <label class="radio-option"><input type="radio" name="club-type" value="after-school" /> After School</label>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="club-name">Club name</label>
+              <input class="field-input" type="text" id="club-name" placeholder="e.g. Beach Cleanup Club" required />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="club-logo">Logo (optional)</label>
+              <input class="field-input" type="file" id="club-logo" accept="image/png,image/jpeg,image/webp,image/gif" />
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="club-description">Description</label>
+            <textarea class="field-input" id="club-description" rows="3" placeholder="What does this club do, and how can students get involved?" required></textarea>
+          </div>
+          <div class="form-row club-type-fields" data-for="community-service">
+            <div class="form-field">
+              <label class="field-label" for="club-instagram">Instagram link</label>
+              <input class="field-input" type="text" id="club-instagram" placeholder="https://instagram.com/..." />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="club-application">Application form link</label>
+              <input class="field-input" type="text" id="club-application" placeholder="Google Form, sheet, etc." />
+            </div>
+          </div>
+          <div class="form-row club-type-fields" data-for="after-school" hidden>
+            <div class="form-field">
+              <label class="field-label" for="club-schedule">Meeting schedule</label>
+              <input class="field-input" type="text" id="club-schedule" placeholder="e.g. Tue & Thu · 3:30–5:00 PM · STEM Lab" />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="club-advisor">Advisor</label>
+              <input class="field-input" type="text" id="club-advisor" placeholder="e.g. Mr. Anan" />
+            </div>
+          </div>
+          <div class="form-row club-type-fields" data-for="after-school" hidden>
+            <div class="form-field">
+              <label class="field-label" for="club-signup">Sign-up link (optional)</label>
+              <input class="field-input" type="text" id="club-signup" placeholder="Google Form, sheet, etc." />
+            </div>
+          </div>
+          <p class="field-error" id="club-error" hidden></p>
+          <div class="form-actions">
+            <button type="submit" class="btn primary" id="club-submit">Add club</button>
+            <button type="button" class="btn ghost" id="club-cancel-edit" hidden>Cancel edit</button>
+          </div>
+        </form>
+
+        <h3 class="simple-list-heading">Community Service Clubs</h3>
+        <div class="simple-list" id="club-list-community-service">
+          <p class="empty-hint" id="club-empty-community-service">No community service clubs added yet.</p>
+        </div>
+
+        <h3 class="simple-list-heading">After School Clubs</h3>
+        <div class="simple-list" id="club-list-after-school">
+          <p class="empty-hint" id="club-empty-after-school">No after school clubs added yet.</p>
+        </div>
+      </section>
+      </section>
+
+      <section class="admin-page-section" data-section="community" hidden>
       <section class="panel">
         <h2>Community Service events &amp; opportunities</h2>
         <p class="panel-hint">Post volunteer opportunities for clubs to recruit students — students see these on the Community Service page.</p>
@@ -351,6 +464,117 @@
 
         <div class="cs-event-admin-list" id="cs-event-admin-list">
           <p class="empty-hint" id="cs-event-empty-hint">No events or opportunities posted yet.</p>
+        </div>
+      </section>
+      </section>
+
+      <section class="admin-page-section" data-section="council" hidden>
+      <section class="panel">
+        <h2>Council members</h2>
+        <p class="panel-hint">Shown in "Meet Your Council" on the homepage and on the Meet Your Council page.</p>
+
+        <form id="council-form" class="archive-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="council-initials">Initials</label>
+              <input class="field-input" type="text" id="council-initials" maxlength="3" placeholder="e.g. EM" required />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="council-name">Full name</label>
+              <input class="field-input" type="text" id="council-name" placeholder="e.g. Emma M." required />
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="council-role">Role</label>
+            <input class="field-input" type="text" id="council-role" placeholder="e.g. StuCo President" required />
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="council-bio">Bio</label>
+            <textarea class="field-input" id="council-bio" rows="3" placeholder="Short bio" required></textarea>
+          </div>
+          <p class="field-error" id="council-error" hidden></p>
+          <div class="form-actions">
+            <button type="submit" class="btn primary" id="council-submit">Add member</button>
+            <button type="button" class="btn ghost" id="council-cancel-edit" hidden>Cancel edit</button>
+          </div>
+        </form>
+
+        <div class="simple-list" id="council-list">
+          <p class="empty-hint" id="council-empty-hint">No council members yet.</p>
+        </div>
+      </section>
+      </section>
+
+      <section class="admin-page-section" data-section="projects" hidden>
+      <section class="panel">
+        <h2>StuCo projects</h2>
+        <p class="panel-hint">Shown in "StuCo Project Tracker" on the homepage and on the StuCo Project Tracker page.</p>
+
+        <form id="project-form" class="archive-form">
+          <div class="form-field">
+            <label class="field-label" for="project-title">Title</label>
+            <input class="field-input" type="text" id="project-title" placeholder="e.g. Spirit Week Planning" required />
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="project-description">Description</label>
+            <textarea class="field-input" id="project-description" rows="3" placeholder="What is this project about?" required></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="project-lead">Team / lead</label>
+              <input class="field-input" type="text" id="project-lead" placeholder="e.g. StuCo Events Team" required />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="project-status">Status</label>
+              <select class="field-input" id="project-status" required>
+                <option value="On Track">On Track</option>
+                <option value="At Risk">At Risk</option>
+                <option value="Complete">Complete</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="project-percent">Progress (%)</label>
+            <input class="field-input" type="number" id="project-percent" min="0" max="100" value="0" required />
+          </div>
+          <p class="field-error" id="project-error" hidden></p>
+          <div class="form-actions">
+            <button type="submit" class="btn primary" id="project-submit">Add project</button>
+            <button type="button" class="btn ghost" id="project-cancel-edit" hidden>Cancel edit</button>
+          </div>
+        </form>
+
+        <div class="simple-list" id="project-list">
+          <p class="empty-hint" id="project-empty-hint">No projects yet.</p>
+        </div>
+      </section>
+      </section>
+
+      <section class="admin-page-section" data-section="quicklinks" hidden>
+      <section class="panel">
+        <h2>Quick links</h2>
+        <p class="panel-hint">Shown in "Quick Links" on the homepage and on the Quick Links page.</p>
+
+        <form id="quicklink-form" class="archive-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="quicklink-label">Label</label>
+              <input class="field-input" type="text" id="quicklink-label" placeholder="e.g. Student Email" required />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="quicklink-url">URL</label>
+              <input class="field-input" type="text" id="quicklink-url" placeholder="https://..." required />
+            </div>
+          </div>
+          <p class="field-error" id="quicklink-error" hidden></p>
+          <div class="form-actions">
+            <button type="submit" class="btn primary" id="quicklink-submit">Add link</button>
+            <button type="button" class="btn ghost" id="quicklink-cancel-edit" hidden>Cancel edit</button>
+          </div>
+        </form>
+
+        <div class="simple-list" id="quicklink-list">
+          <p class="empty-hint" id="quicklink-empty-hint">No quick links yet.</p>
         </div>
       </section>
       </section>

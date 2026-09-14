@@ -25,8 +25,13 @@ app.use(require('./routes/students'));
 app.use(require('./routes/content'));
 app.use(require('./routes/lunch'));
 app.use(require('./routes/slideArchive'));
-app.use(require('./routes/csClubs'));
+app.use(require('./routes/clubs'));
 app.use(require('./routes/csEvents'));
+app.use(require('./routes/announcements'));
+app.use(require('./routes/calendarEvents'));
+app.use(require('./routes/council'));
+app.use(require('./routes/projects'));
+app.use(require('./routes/quickLinks'));
 app.use(require('./routes/voice'));
 app.use(require('./routes/studentAuth'));
 

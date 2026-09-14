@@ -6,7 +6,12 @@ export function initNav() {
     students: 'Student Accounts',
     lunch: 'Lunch Schedule',
     archive: 'Announcements',
+    calendar: 'School Calendar',
+    clubs: 'Clubs',
     community: 'Community Service',
+    council: 'Council',
+    projects: 'StuCo Projects',
+    quicklinks: 'Quick Links',
     voice: 'Student Voice',
   };
 

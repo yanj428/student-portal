@@ -1,0 +1,80 @@
+[
+  {
+    "id": "707909ee-43cd-40e0-a2c4-d482ffcba996",
+    "type": "community-service",
+    "name": "Beach Cleanup Club",
+    "description": "Monthly beach cleanups — final edit test.",
+    "logoUrl": "",
+    "instagramUrl": "https://instagram.com/kpisbeach",
+    "applicationFormUrl": "https://forms.gle/test123",
+    "schedule": "",
+    "advisor": "",
+    "signupUrl": "",
+    "createdAt": "2026-09-11T15:25:41.353Z"
+  },
+  {
+    "id": "d7f9cb5d-1a9c-4967-9411-5f695baa9d64",
+    "type": "community-service",
+    "name": "Robotics Club",
+    "description": "We build robots.",
+    "logoUrl": "/uploads/club-logos/1789140417983-bfb8682f3ab6.png",
+    "instagramUrl": "https://instagram.com/kpisrobotics",
+    "applicationFormUrl": "https://forms.gle/robotics",
+    "schedule": "",
+    "advisor": "",
+    "signupUrl": "",
+    "createdAt": "2026-09-11T15:26:57.986Z"
+  },
+  {
+    "id": "a961ebb2-feaa-4c63-b9ac-1a9e958ce2d3",
+    "type": "after-school",
+    "name": "Robotics",
+    "description": "Design, build, and program competition robots.",
+    "logoUrl": "",
+    "instagramUrl": "",
+    "applicationFormUrl": "",
+    "schedule": "Tue & Thu · 3:30–5:00 PM · STEM Lab",
+    "advisor": "Mr. Anan",
+    "signupUrl": "",
+    "createdAt": "2026-09-14T12:08:10.638Z"
+  },
+  {
+    "id": "a90b3886-6703-43bf-9321-b7fcc934d440",
+    "type": "after-school",
+    "name": "Debate",
+    "description": "Practice argumentation and compete in regional tournaments.",
+    "logoUrl": "",
+    "instagramUrl": "",
+    "applicationFormUrl": "",
+    "schedule": "Mon & Wed · 3:30–4:30 PM · Room 204",
+    "advisor": "Ms. Preecha",
+    "signupUrl": "",
+    "createdAt": "2026-09-14T12:08:10.638Z"
+  },
+  {
+    "id": "364297a4-a172-4953-9277-fcacbe54c24a",
+    "type": "after-school",
+    "name": "Art & Design",
+    "description": "Explore painting, digital art, and design fundamentals.",
+    "logoUrl": "",
+    "instagramUrl": "",
+    "applicationFormUrl": "",
+    "schedule": "Fri · 3:30–5:00 PM · Art Studio",
+    "advisor": "Ms. Kanya",
+    "signupUrl": "",
+    "createdAt": "2026-09-14T12:08:10.638Z"
+  },
+  {
+    "id": "16c5efe8-8f4b-447f-aadf-47438c6def4b",
+    "type": "after-school",
+    "name": "Basketball",
+    "description": "Open practice and inter-school friendlies.",
+    "logoUrl": "",
+    "instagramUrl": "",
+    "applicationFormUrl": "",
+    "schedule": "Mon, Wed & Fri · 4:00–5:30 PM · Gym",
+    "advisor": "Coach Somchai",
+    "signupUrl": "",
+    "createdAt": "2026-09-14T12:08:10.638Z"
+  }
+]

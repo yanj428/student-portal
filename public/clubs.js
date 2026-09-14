@@ -5,7 +5,7 @@ function clubsEscapeHtml(str) {
 }
 
 async function loadCsClubsSection() {
-  const res = await fetch('/api/cs-clubs');
+  const res = await fetch('/api/clubs?type=community-service');
   if (!res.ok) return;
   const { clubs } = await res.json();
 
@@ -43,10 +43,9 @@ async function loadCsClubsSection() {
 }
 
 async function loadAfterSchoolClubsSection() {
-  const res = await fetch('/api/content');
+  const res = await fetch('/api/clubs?type=after-school');
   if (!res.ok) return;
-  const { content } = await res.json();
-  const clubs = content.clubs || [];
+  const { clubs } = await res.json();
 
   const listEl = document.getElementById('clubs-page-list');
   const emptyEl = document.getElementById('clubs-page-empty');

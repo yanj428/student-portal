@@ -4,50 +4,19 @@ const path = require('path');
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const STUDENTS_FILE = path.join(DATA_DIR, 'students.json');
 const CONTENT_FILE = path.join(DATA_DIR, 'content.json');
-const VOICE_FILE = path.join(DATA_DIR, 'voice-posts.json');
-const SLIDE_ARCHIVE_FILE = path.join(DATA_DIR, 'slide-archive.json');
-const CS_CLUBS_FILE = path.join(DATA_DIR, 'cs-clubs.json');
-const CS_EVENTS_FILE = path.join(DATA_DIR, 'cs-events.json');
 
-// Text shown on the homepage. Admins edit these values; the page layout itself is fixed.
+// Text shown on the homepage that isn't a manageable collection: the current
+// weekly slide, this week's lunch menu (fixed Mon–Fri shape), and the lunch
+// schedule image. Everything else that used to live here (announcements,
+// calendar events, clubs, council, projects, quick links) is its own
+// collection below, each with full admin add/edit/delete.
 const DEFAULT_CONTENT = {
-  announcements: [
-    { title: 'Prelim payment due', body: "Please clear your prelim payment before the end of this week to avoid late fees." },
-    { title: 'Exam schedule posted', body: 'The final exam schedule has been posted. Check your dashboard for your exact dates and rooms.' },
-    { title: 'Community Service sign-ups open', body: "Sign up for this term's community service projects before spots fill up." },
-  ],
-  calendarEvents: [
-    { day: '12', month: 'Sep', title: 'Midterm Exams Begin', subtitle: 'All grades · Main building' },
-    { day: '18', month: 'Sep', title: 'StuCo General Assembly', subtitle: 'Grades 9–12 · Auditorium' },
-    { day: '25', month: 'Sep', title: 'Community Service Day', subtitle: 'All grades · Off-campus' },
-  ],
   lunchMenu: [
-    { weekday: 'Mon', item: 'Green curry & rice' },
-    { weekday: 'Tue', item: 'Pad kra pao chicken' },
-    { weekday: 'Wed', item: 'Spaghetti bolognese' },
-    { weekday: 'Thu', item: 'Tom yum noodle soup' },
-    { weekday: 'Fri', item: 'Fried rice & salad bar' },
-  ],
-  clubs: [
-    { name: 'Robotics', description: 'Design, build, and program competition robots.', schedule: 'Tue & Thu · 3:30–5:00 PM · STEM Lab', advisor: 'Mr. Anan', signupUrl: '' },
-    { name: 'Debate', description: 'Practice argumentation and compete in regional tournaments.', schedule: 'Mon & Wed · 3:30–4:30 PM · Room 204', advisor: 'Ms. Preecha', signupUrl: '' },
-    { name: 'Art & Design', description: 'Explore painting, digital art, and design fundamentals.', schedule: 'Fri · 3:30–5:00 PM · Art Studio', advisor: 'Ms. Kanya', signupUrl: '' },
-    { name: 'Basketball', description: 'Open practice and inter-school friendlies.', schedule: 'Mon, Wed & Fri · 4:00–5:30 PM · Gym', advisor: 'Coach Somchai', signupUrl: '' },
-  ],
-  projects: [
-    { title: 'Spirit Week Planning', percent: 70, status: 'On Track', lead: 'StuCo Events Team', description: 'Organizing daily themes, activities, and the closing pep rally.' },
-    { title: 'Recycling Drive', percent: 35, status: 'On Track', lead: 'StuCo Sustainability Team', description: 'Setting up recycling bins across campus and a collection schedule.' },
-  ],
-  quickLinks: [
-    { label: 'Student Email', url: '#' },
-    { label: 'Library Catalog', url: '#' },
-    { label: 'Student Handbook', url: '#' },
-    { label: 'Print Center', url: '#' },
-  ],
-  council: [
-    { initials: 'EM', name: 'Emma M.', role: 'StuCo President', bio: 'Grade 12 · Leads council meetings and represents the student body to school administration.' },
-    { initials: 'RK', name: 'Ravi K.', role: 'Vice President', bio: 'Grade 11 · Coordinates council projects and supports committee leads.' },
-    { initials: 'TS', name: 'Tida S.', role: 'Secretary', bio: 'Grade 11 · Keeps meeting notes and manages council communications.' },
+    { weekday: 'Mon', item: '' },
+    { weekday: 'Tue', item: '' },
+    { weekday: 'Wed', item: '' },
+    { weekday: 'Thu', item: '' },
+    { weekday: 'Fri', item: '' },
   ],
   weeklySlide: {
     weekLabel: '',
@@ -63,10 +32,29 @@ function ensureStore() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
   if (!fs.existsSync(STUDENTS_FILE)) fs.writeFileSync(STUDENTS_FILE, '[]\n');
   if (!fs.existsSync(CONTENT_FILE)) fs.writeFileSync(CONTENT_FILE, JSON.stringify(DEFAULT_CONTENT, null, 2) + '\n');
-  if (!fs.existsSync(VOICE_FILE)) fs.writeFileSync(VOICE_FILE, '[]\n');
-  if (!fs.existsSync(SLIDE_ARCHIVE_FILE)) fs.writeFileSync(SLIDE_ARCHIVE_FILE, '[]\n');
-  if (!fs.existsSync(CS_CLUBS_FILE)) fs.writeFileSync(CS_CLUBS_FILE, '[]\n');
-  if (!fs.existsSync(CS_EVENTS_FILE)) fs.writeFileSync(CS_EVENTS_FILE, '[]\n');
+}
+
+// A small JSON-file-backed array collection: every admin-manageable list
+// (clubs, announcements, calendar events, council, projects, quick links,
+// CS events, slide archive, voice posts) follows the same read-array/
+// write-array shape, so it's defined once here instead of once per file.
+function jsonCollection(filename) {
+  const filePath = path.join(DATA_DIR, filename);
+  return {
+    read() {
+      ensureStore();
+      if (!fs.existsSync(filePath)) return [];
+      try {
+        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      } catch {
+        return [];
+      }
+    },
+    write(items) {
+      ensureStore();
+      fs.writeFileSync(filePath, JSON.stringify(items, null, 2) + '\n');
+    },
+  };
 }
 
 function readStudents() {
@@ -152,20 +140,9 @@ function readContent() {
     return DEFAULT_CONTENT;
   }
 
-  // Backfill keys added to DEFAULT_CONTENT after this file was first written.
   for (const key of Object.keys(DEFAULT_CONTENT)) {
     if (!(key in content)) content[key] = DEFAULT_CONTENT[key];
   }
-
-  // Migrate older shapes: clubs used to be plain strings, council members
-  // and projects used to carry fewer fields.
-  content.clubs = (content.clubs || []).map((c) =>
-    typeof c === 'string'
-      ? { name: c, description: '', schedule: '', advisor: '', signupUrl: '' }
-      : { description: '', schedule: '', advisor: '', signupUrl: '', ...c }
-  );
-  content.council = (content.council || []).map((m) => ({ name: '', role: '', bio: '', ...m }));
-  content.projects = (content.projects || []).map((p) => ({ status: 'On Track', lead: '', description: '', ...p }));
 
   return content;
 }
@@ -175,65 +152,15 @@ function writeContent(content) {
   fs.writeFileSync(CONTENT_FILE, JSON.stringify(content, null, 2) + '\n');
 }
 
-function readVoicePosts() {
-  ensureStore();
-  const raw = fs.readFileSync(VOICE_FILE, 'utf8');
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return [];
-  }
-}
-
-function writeVoicePosts(posts) {
-  ensureStore();
-  fs.writeFileSync(VOICE_FILE, JSON.stringify(posts, null, 2) + '\n');
-}
-
-function readSlideArchive() {
-  ensureStore();
-  const raw = fs.readFileSync(SLIDE_ARCHIVE_FILE, 'utf8');
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return [];
-  }
-}
-
-function writeSlideArchive(slides) {
-  ensureStore();
-  fs.writeFileSync(SLIDE_ARCHIVE_FILE, JSON.stringify(slides, null, 2) + '\n');
-}
-
-function readCsClubs() {
-  ensureStore();
-  const raw = fs.readFileSync(CS_CLUBS_FILE, 'utf8');
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return [];
-  }
-}
-
-function writeCsClubs(clubs) {
-  ensureStore();
-  fs.writeFileSync(CS_CLUBS_FILE, JSON.stringify(clubs, null, 2) + '\n');
-}
-
-function readCsEvents() {
-  ensureStore();
-  const raw = fs.readFileSync(CS_EVENTS_FILE, 'utf8');
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return [];
-  }
-}
-
-function writeCsEvents(events) {
-  ensureStore();
-  fs.writeFileSync(CS_EVENTS_FILE, JSON.stringify(events, null, 2) + '\n');
-}
+const voicePosts = jsonCollection('voice-posts.json');
+const slideArchive = jsonCollection('slide-archive.json');
+const clubs = jsonCollection('clubs.json');
+const csEvents = jsonCollection('cs-events.json');
+const announcements = jsonCollection('announcements.json');
+const calendarEvents = jsonCollection('calendar-events.json');
+const council = jsonCollection('council.json');
+const projects = jsonCollection('projects.json');
+const quickLinks = jsonCollection('quick-links.json');
 
 module.exports = {
   readStudents,
@@ -247,13 +174,33 @@ module.exports = {
   clearFailedLogins,
   readContent,
   writeContent,
-  readVoicePosts,
-  writeVoicePosts,
-  readSlideArchive,
-  writeSlideArchive,
-  readCsClubs,
-  writeCsClubs,
-  readCsEvents,
-  writeCsEvents,
+
+  readVoicePosts: voicePosts.read,
+  writeVoicePosts: voicePosts.write,
+
+  readSlideArchive: slideArchive.read,
+  writeSlideArchive: slideArchive.write,
+
+  readClubs: clubs.read,
+  writeClubs: clubs.write,
+
+  readCsEvents: csEvents.read,
+  writeCsEvents: csEvents.write,
+
+  readAnnouncements: announcements.read,
+  writeAnnouncements: announcements.write,
+
+  readCalendarEvents: calendarEvents.read,
+  writeCalendarEvents: calendarEvents.write,
+
+  readCouncil: council.read,
+  writeCouncil: council.write,
+
+  readProjects: projects.read,
+  writeProjects: projects.write,
+
+  readQuickLinks: quickLinks.read,
+  writeQuickLinks: quickLinks.write,
+
   DEFAULT_CONTENT,
 };

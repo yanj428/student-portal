@@ -5,10 +5,9 @@ function qlEscapeHtml(str) {
 }
 
 async function loadQuickLinksPage() {
-  const res = await fetch('/api/content');
+  const res = await fetch('/api/quick-links');
   if (!res.ok) return;
-  const { content } = await res.json();
-  const links = content.quickLinks || [];
+  const { quickLinks: links } = await res.json();
 
   const gridEl = document.getElementById('links-page-grid');
   const emptyEl = document.getElementById('links-page-empty');

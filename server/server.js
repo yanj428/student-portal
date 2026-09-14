@@ -1,22 +1,53 @@
 const path = require('path');
 const express = require('express');
 const session = require('express-session');
+const helmet = require('helmet');
 
-const { PORT, SESSION_SECRET } = require('./config');
+const { PORT, SESSION_SECRET, SESSION_COOKIE_SECURE, TRUST_PROXY } = require('./config');
 const { UPLOADS_DIR } = require('./uploads');
+const db = require('./db');
+const SqliteSessionStore = require('./sessionStore');
+const { csrfProtection } = require('./middleware/csrf');
 
 const app = express();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '..', 'views'));
+app.disable('x-powered-by');
 
-app.use(express.json());
+// Needed when the app sits behind a reverse proxy or tunnel (TRUST_PROXY=1
+// in .env) so req.ip/req.secure reflect the real client instead of the proxy.
+if (TRUST_PROXY) app.set('trust proxy', TRUST_PROXY === 'true' ? 1 : TRUST_PROXY);
+
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+        imgSrc: ["'self'", 'data:'],
+        connectSrc: ["'self'"],
+        frameSrc: ['https://www.canva.com', 'https://canva.com'],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        frameAncestors: ["'none'"],
+      },
+    },
+  })
+);
+
+app.use(express.json({ limit: '100kb' }));
+app.use(csrfProtection);
 app.use(
   session({
     name: 'kpis.sid',
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: { httpOnly: true, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 8 },
+    rolling: true, // resets the idle timeout (cookie.maxAge) on every request
+    store: new SqliteSessionStore(db.rawConnection),
+    cookie: { httpOnly: true, sameSite: 'lax', secure: SESSION_COOKIE_SECURE, maxAge: 1000 * 60 * 60 * 8 },
   })
 );
 
@@ -49,6 +80,15 @@ app.use(require('./routes/pages'));
 // blocklist is needed here.
 app.use('/uploads', express.static(UPLOADS_DIR));
 app.use(express.static(path.join(__dirname, '..', 'public'), { extensions: ['html'] }));
+
+// Catches everything above, including body-parser's SyntaxError on
+// malformed JSON — without this, Express's default handler sends back a
+// full stack trace with file paths (visible during earlier manual testing).
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  console.error(err);
+  res.status(err.status || 500).json({ error: 'Something went wrong. Please try again.' });
+});
 
 if (require.main === module) {
   app.listen(PORT, () => {

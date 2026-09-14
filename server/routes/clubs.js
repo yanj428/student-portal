@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const db = require('../db');
 const { requireAdmin, requireStudent } = require('../middleware/auth');
 const { UPLOADS_DIR, clubLogoUpload } = require('../uploads');
+const { validateOptionalUrl } = require('../utils/validateUrl');
 
 const router = express.Router();
 
@@ -56,6 +57,13 @@ function readClubFields(body) {
   if (typeof description !== 'string' || !description.trim()) {
     return { error: 'Description is required.' };
   }
+
+  const urlError =
+    validateOptionalUrl(instagramUrl, { fieldName: 'Instagram link', allowedHosts: ['instagram.com'] }) ||
+    validateOptionalUrl(applicationFormUrl, { fieldName: 'Application form link' }) ||
+    validateOptionalUrl(signupUrl, { fieldName: 'Signup link' });
+  if (urlError) return { error: urlError };
+
   return {
     fields: {
       type,

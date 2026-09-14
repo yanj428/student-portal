@@ -3,6 +3,7 @@ const crypto = require('crypto');
 
 const db = require('../db');
 const { requireAdmin, requireStudent } = require('../middleware/auth');
+const { validateOptionalUrl } = require('../utils/validateUrl');
 
 const router = express.Router();
 
@@ -22,7 +23,7 @@ function validateFields(body) {
   const { label, url } = body || {};
   if (typeof label !== 'string' || !label.trim()) return 'Label is required.';
   if (typeof url !== 'string' || !url.trim()) return 'URL is required.';
-  return null;
+  return validateOptionalUrl(url, { fieldName: 'URL' });
 }
 
 router.post('/api/admin/quick-links', requireAdmin, (req, res) => {

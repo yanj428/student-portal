@@ -2,6 +2,7 @@ const express = require('express');
 
 const db = require('../db');
 const { requireAdmin, requireStudent } = require('../middleware/auth');
+const { validateOptionalUrl } = require('../utils/validateUrl');
 
 const router = express.Router();
 
@@ -26,6 +27,11 @@ function validateContent(content) {
   if (typeof content.weeklySlide.weekLabel !== 'string' || typeof content.weeklySlide.canvaEmbedUrl !== 'string') {
     return 'Weekly slide needs a week label and a Canva embed URL (both can be blank).';
   }
+  const canvaError = validateOptionalUrl(content.weeklySlide.canvaEmbedUrl, {
+    fieldName: 'Canva embed URL',
+    allowedHosts: ['canva.com'],
+  });
+  if (canvaError) return canvaError;
   if (typeof content.lunchSchedule.weekLabel !== 'string' || typeof content.lunchSchedule.imageUrl !== 'string') {
     return 'Lunch schedule needs a week label and image (both can be blank).';
   }

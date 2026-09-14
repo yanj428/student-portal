@@ -58,6 +58,16 @@ test('quick links: rejects missing fields', async () => {
   assert.equal(res.status, 400);
 });
 
+test('quick links: rejects a javascript: URL and a non-https URL', async () => {
+  const admin = await loginAsAdmin();
+  const badScheme = await admin.post('/api/admin/quick-links').send({ label: 'Bad', url: 'javascript:alert(1)' });
+  assert.equal(badScheme.status, 400);
+  const plainHttp = await admin.post('/api/admin/quick-links').send({ label: 'Bad', url: 'http://example.com' });
+  assert.equal(plainHttp.status, 400);
+  const good = await admin.post('/api/admin/quick-links').send({ label: 'Good', url: 'https://example.com' });
+  assert.equal(good.status, 201);
+});
+
 test('clubs: create with type, filter by type, then delete', async () => {
   const admin = await loginAsAdmin();
 
@@ -88,6 +98,34 @@ test('clubs: rejects an invalid type', async () => {
   const admin = await loginAsAdmin();
   const res = await admin.post('/api/admin/clubs').send({ type: 'invalid', name: 'X', description: 'Y' });
   assert.equal(res.status, 400);
+});
+
+test('clubs: rejects a non-Instagram host for the Instagram link, and a non-https application link', async () => {
+  const admin = await loginAsAdmin();
+  const badInstagram = await admin.post('/api/admin/clubs').send({
+    type: 'community-service',
+    name: 'X',
+    description: 'Y',
+    instagramUrl: 'https://evil.example.com/fake',
+  });
+  assert.equal(badInstagram.status, 400);
+
+  const badForm = await admin.post('/api/admin/clubs').send({
+    type: 'community-service',
+    name: 'X',
+    description: 'Y',
+    applicationFormUrl: 'javascript:alert(1)',
+  });
+  assert.equal(badForm.status, 400);
+
+  const good = await admin.post('/api/admin/clubs').send({
+    type: 'community-service',
+    name: 'X',
+    description: 'Y',
+    instagramUrl: 'https://instagram.com/kpisclub',
+    applicationFormUrl: 'https://forms.gle/abc123',
+  });
+  assert.equal(good.status, 201);
 });
 
 test('students: create, list, delete round trip', async () => {

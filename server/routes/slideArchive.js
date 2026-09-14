@@ -3,6 +3,7 @@ const crypto = require('crypto');
 
 const db = require('../db');
 const { requireAdmin, requireStudent } = require('../middleware/auth');
+const { validateOptionalUrl } = require('../utils/validateUrl');
 
 const router = express.Router();
 
@@ -34,6 +35,8 @@ router.post('/api/admin/slide-archive', requireAdmin, (req, res) => {
   if (typeof canvaEmbedUrl !== 'string' || !canvaEmbedUrl.trim()) {
     return res.status(400).json({ error: 'Canva embed URL is required.' });
   }
+  const urlError = validateOptionalUrl(canvaEmbedUrl, { fieldName: 'Canva embed URL', allowedHosts: ['canva.com'] });
+  if (urlError) return res.status(400).json({ error: urlError });
 
   const slides = db.readSlideArchive();
   const slide = {

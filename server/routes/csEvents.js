@@ -3,6 +3,7 @@ const crypto = require('crypto');
 
 const db = require('../db');
 const { requireAdmin, requireStudent } = require('../middleware/auth');
+const { validateOptionalUrl } = require('../utils/validateUrl');
 
 const router = express.Router();
 
@@ -25,7 +26,7 @@ function validateCsEventFields(body) {
   if (typeof eventDate !== 'string' || !eventDate.trim()) return 'Date is required.';
   if (typeof description !== 'string' || !description.trim()) return 'Description is required.';
   if (signupUrl !== undefined && signupUrl !== '' && typeof signupUrl !== 'string') return 'Signup link must be text.';
-  return null;
+  return validateOptionalUrl(signupUrl, { fieldName: 'Signup link' });
 }
 
 router.get('/api/cs-events', requireStudent, (req, res) => {

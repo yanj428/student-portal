@@ -1,6 +1,6 @@
 const express = require('express');
 const crypto = require('crypto');
-const { ADMIN_PASSWORD } = require('../config');
+const { ADMIN_PASSWORD, ADMIN_SESSION_IDLE_MINUTES } = require('../config');
 const { adminLoginLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
@@ -25,6 +25,8 @@ router.post('/api/admin/login', adminLoginLimiter, (req, res) => {
   req.session.regenerate((err) => {
     if (err) return res.status(500).json({ error: 'Could not start a session.' });
     req.session.isAdmin = true;
+    req.session.loginAt = Date.now();
+    req.session.cookie.maxAge = ADMIN_SESSION_IDLE_MINUTES * 60 * 1000;
     res.json({ ok: true });
   });
 });

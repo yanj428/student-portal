@@ -479,4 +479,31 @@ module.exports = {
   // needed by tests that delete their temp data directory afterward
   // (Windows won't remove a directory containing an open file).
   close: () => db.close(),
+
+  // The raw connection, for things that need direct SQL and want to share
+  // this same portal.db file/connection rather than opening a second one —
+  // currently just the session store (server/sessionStore.js).
+  rawConnection: db,
+
+  // Logs a student out everywhere except (optionally) the session making
+  // this call, so a password change or an admin reset can't be undone by
+  // someone who already has an active session with the old password.
+  // Reads the sessions table the session store owns, so it's a no-op (not
+  // an error) before that table exists yet.
+  destroyOtherStudentSessions(studentId, exceptSid) {
+    let rows;
+    try {
+      rows = db.prepare('SELECT sid, data FROM sessions WHERE sid != ?').all(exceptSid || '');
+    } catch {
+      return; // sessions table doesn't exist yet (e.g. store not initialized)
+    }
+    const del = db.prepare('DELETE FROM sessions WHERE sid = ?');
+    for (const row of rows) {
+      try {
+        if (JSON.parse(row.data).studentId === studentId) del.run(row.sid);
+      } catch {
+        // malformed session data — leave it for the store's own pruning
+      }
+    }
+  },
 };

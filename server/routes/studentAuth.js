@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const db = require('../db');
 const { requireStudent, publicStudent } = require('../middleware/auth');
 const { studentLoginLimiter, passwordChangeLimiter } = require('../middleware/rateLimit');
-const { DEFAULT_STUDENT_PASSWORD, ACCOUNT_LOCKED_MESSAGE } = require('../config');
+const { DEFAULT_STUDENT_PASSWORD, ACCOUNT_LOCKED_MESSAGE, STUDENT_SESSION_IDLE_MINUTES } = require('../config');
 
 const router = express.Router();
 
@@ -55,6 +55,8 @@ router.post('/api/login', studentLoginLimiter, (req, res) => {
   req.session.regenerate((err) => {
     if (err) return res.status(500).json({ error: 'Could not start a session.' });
     req.session.studentId = student.id;
+    req.session.loginAt = Date.now();
+    req.session.cookie.maxAge = STUDENT_SESSION_IDLE_MINUTES * 60 * 1000;
     res.json({ student: publicStudent(student) });
   });
 });
@@ -95,6 +97,7 @@ router.post('/api/change-password', passwordChangeLimiter, requireStudent, (req,
   }
 
   db.updateStudentPasswordHash(student.id, bcrypt.hashSync(newPassword, 10));
+  db.destroyOtherStudentSessions(student.id, req.sessionID);
   res.json({ ok: true });
 });
 

@@ -18,6 +18,21 @@ const LOGIN_LOCKOUT_BASE_MINUTES = parseFloat(process.env.LOGIN_LOCKOUT_BASE_MIN
 const LOGIN_LOCKOUT_MAX_MINUTES = parseFloat(process.env.LOGIN_LOCKOUT_MAX_MINUTES) || 1440;
 const LOGIN_ATTEMPT_LOG_RETENTION_DAYS = parseInt(process.env.LOGIN_ATTEMPT_LOG_RETENTION_DAYS, 10) || 90;
 
+// Session lifetimes. "Idle" resets on every request (session.cookie.maxAge
+// with rolling:true); "absolute" is a hard cap tracked separately via
+// session.loginAt, since express-session's cookie maxAge alone can't express
+// "logged out 8 hours after login no matter what you do in between."
+const STUDENT_SESSION_IDLE_MINUTES = parseFloat(process.env.STUDENT_SESSION_IDLE_MINUTES) || 120;
+const STUDENT_SESSION_ABSOLUTE_MINUTES = parseFloat(process.env.STUDENT_SESSION_ABSOLUTE_MINUTES) || 480;
+const ADMIN_SESSION_IDLE_MINUTES = parseFloat(process.env.ADMIN_SESSION_IDLE_MINUTES) || 60;
+const ADMIN_SESSION_ABSOLUTE_MINUTES = parseFloat(process.env.ADMIN_SESSION_ABSOLUTE_MINUTES) || 480;
+
+// Only sent over HTTPS once the site is actually served that way. Force it
+// on by setting NODE_ENV=production (also see TRUST_PROXY below, needed
+// when a reverse proxy/tunnel sits in front of the app).
+const SESSION_COOKIE_SECURE = process.env.NODE_ENV === 'production';
+const TRUST_PROXY = process.env.TRUST_PROXY || false;
+
 if (!process.env.ADMIN_PASSWORD) {
   console.warn('[warn] ADMIN_PASSWORD not set in .env — using the insecure default. Set it before deploying.');
 }
@@ -37,4 +52,10 @@ module.exports = {
   LOGIN_LOCKOUT_BASE_MINUTES,
   LOGIN_LOCKOUT_MAX_MINUTES,
   LOGIN_ATTEMPT_LOG_RETENTION_DAYS,
+  STUDENT_SESSION_IDLE_MINUTES,
+  STUDENT_SESSION_ABSOLUTE_MINUTES,
+  ADMIN_SESSION_IDLE_MINUTES,
+  ADMIN_SESSION_ABSOLUTE_MINUTES,
+  SESSION_COOKIE_SECURE,
+  TRUST_PROXY,
 };

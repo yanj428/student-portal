@@ -49,6 +49,7 @@ router.post('/api/admin/students/:id/reset-password', requireAdmin, (req, res) =
   const passwordHash = bcrypt.hashSync(DEFAULT_STUDENT_PASSWORD, 10);
   const student = db.updateStudentPasswordHash(req.params.id, passwordHash, true);
   if (!student) return res.status(404).json({ error: 'Student not found.' });
+  db.destroyOtherStudentSessions(student.id);
   res.json({ ok: true, password: DEFAULT_STUDENT_PASSWORD });
 });
 

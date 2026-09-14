@@ -11,7 +11,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || INSECURE_DEFAULT_ADMIN_PASS
 // ensureAdminsBootstrap) the first time the app runs against a database
 // with no admins table yet. After that, admin accounts and their own
 // hashed passwords live in the database, and ADMIN_PASSWORD is unused.
-const ADMIN_BOOTSTRAP_EMAIL = process.env.ADMIN_BOOTSTRAP_EMAIL || 'admin@kpis.ac.th';
+const ADMIN_BOOTSTRAP_USERNAME = process.env.ADMIN_BOOTSTRAP_USERNAME || 'admin';
 const SESSION_SECRET = process.env.SESSION_SECRET || INSECURE_DEFAULT_SESSION_SECRET;
 const DEFAULT_STUDENT_PASSWORD = 'keerapat';
 const ACCOUNT_LOCKED_MESSAGE =
@@ -75,7 +75,7 @@ module.exports = {
   SCHOOL_DOMAIN,
   PORT,
   ADMIN_PASSWORD,
-  ADMIN_BOOTSTRAP_EMAIL,
+  ADMIN_BOOTSTRAP_USERNAME,
   SESSION_SECRET,
   DEFAULT_STUDENT_PASSWORD,
   ACCOUNT_LOCKED_MESSAGE,

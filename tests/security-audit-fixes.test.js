@@ -17,13 +17,13 @@ test.after(() => {
   fs.rmSync(dataDir, { recursive: true, force: true });
 });
 
-// Uses the bootstrap admin's email explicitly rather than the single-admin
-// fallback — several tests in this file create additional admins that
-// never get cleaned up, which would otherwise make a later bare-password
-// login ambiguous (and correctly rejected as such).
+// Uses the bootstrap admin's username explicitly rather than the
+// single-admin fallback — several tests in this file create additional
+// admins that never get cleaned up, which would otherwise make a later
+// bare-password login ambiguous (and correctly rejected as such).
 async function loginAsAdmin() {
   const agent = request.agent(app);
-  await agent.post('/api/admin/login').send({ email: 'admin@kpis.ac.th', password: 'test-admin-pw' });
+  await agent.post('/api/admin/login').send({ username: 'admin', password: 'test-admin-pw' });
   return agent;
 }
 
@@ -89,10 +89,10 @@ test("deleting a student immediately rejects their existing session (and doesn't
 
 test('deleting an admin immediately revokes that admin session, not just future logins', async () => {
   const owner = await loginAsAdmin();
-  const created = await owner.post('/api/admin/admins').send({ email: 'doomed.admin@kpis.ac.th', password: 'doomedpassword1' });
+  const created = await owner.post('/api/admin/admins').send({ username: 'doomed.admin', password: 'doomedpassword1' });
 
   const rogue = request.agent(app);
-  await rogue.post('/api/admin/login').send({ email: 'doomed.admin@kpis.ac.th', password: 'doomedpassword1' });
+  await rogue.post('/api/admin/login').send({ username: 'doomed.admin', password: 'doomedpassword1' });
   assert.equal((await rogue.get('/api/admin/students')).status, 200);
 
   await owner.delete(`/api/admin/admins/${created.body.admin.id}`);
@@ -102,12 +102,12 @@ test('deleting an admin immediately revokes that admin session, not just future 
 
 test("an admin's other sessions are logged out when they change their own password", async () => {
   const owner = await loginAsAdmin();
-  await owner.post('/api/admin/admins').send({ email: 'multi.session.admin@kpis.ac.th', password: 'originalpassword1' });
+  await owner.post('/api/admin/admins').send({ username: 'multi.session.admin', password: 'originalpassword1' });
 
   const sessionA = request.agent(app);
   const sessionB = request.agent(app);
-  await sessionA.post('/api/admin/login').send({ email: 'multi.session.admin@kpis.ac.th', password: 'originalpassword1' });
-  await sessionB.post('/api/admin/login').send({ email: 'multi.session.admin@kpis.ac.th', password: 'originalpassword1' });
+  await sessionA.post('/api/admin/login').send({ username: 'multi.session.admin', password: 'originalpassword1' });
+  await sessionB.post('/api/admin/login').send({ username: 'multi.session.admin', password: 'originalpassword1' });
 
   await sessionA.post('/api/admin/change-password').send({ currentPassword: 'originalpassword1', newPassword: 'newpassword12' });
 
@@ -117,31 +117,31 @@ test("an admin's other sessions are logged out when they change their own passwo
 
 // ---- Item 10: admin login has its own lockout and shows up in the log ----
 
-test('admin login locks out after repeated failures, distinct from any student lockout on the same email text', async () => {
-  // Uses a throwaway admin (not the shared bootstrap admin@kpis.ac.th other
-  // tests in this file log in as) so locking it out here doesn't block
-  // those other tests too.
+test('admin login locks out after repeated failures, distinct from any student lockout on the same username text', async () => {
+  // Uses a throwaway admin (not the shared bootstrap admin other tests in
+  // this file log in as) so locking it out here doesn't block those other
+  // tests too.
   const owner = await loginAsAdmin();
-  await owner.post('/api/admin/admins').send({ email: 'lockout.target.admin@kpis.ac.th', password: 'lockouttargetpw1' });
+  await owner.post('/api/admin/admins').send({ username: 'lockout.target.admin', password: 'lockouttargetpw1' });
 
   for (let i = 0; i < 5; i++) {
-    await request(app).post('/api/admin/login').send({ email: 'lockout.target.admin@kpis.ac.th', password: 'wrong' });
+    await request(app).post('/api/admin/login').send({ username: 'lockout.target.admin', password: 'wrong' });
   }
-  const locked = await request(app).post('/api/admin/login').send({ email: 'lockout.target.admin@kpis.ac.th', password: 'wrong' });
+  const locked = await request(app).post('/api/admin/login').send({ username: 'lockout.target.admin', password: 'wrong' });
   assert.equal(locked.status, 403);
   assert.equal(locked.body.locked, true);
 
   // The correct password is rejected too while locked out.
   const correctWhileLocked = await request(app)
     .post('/api/admin/login')
-    .send({ email: 'lockout.target.admin@kpis.ac.th', password: 'lockouttargetpw1' });
+    .send({ username: 'lockout.target.admin', password: 'lockouttargetpw1' });
   assert.equal(correctWhileLocked.status, 403);
 });
 
 test('admin login attempts are recorded in the security log', async () => {
-  await request(app).post('/api/admin/login').send({ email: 'log.check.admin@kpis.ac.th', password: 'wrong' });
+  await request(app).post('/api/admin/login').send({ username: 'log.check.admin', password: 'wrong' });
   const owner = await loginAsAdmin();
-  const res = await owner.get('/api/admin/security/attempts?email=admin:log.check.admin@kpis.ac.th');
+  const res = await owner.get('/api/admin/security/attempts?email=admin:log.check.admin');
   assert.equal(res.status, 200);
   assert.ok(res.body.attempts.length >= 1);
 });

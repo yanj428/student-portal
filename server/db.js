@@ -11,7 +11,7 @@ const {
   LOGIN_LOCKOUT_MAX_MINUTES,
   LOGIN_ATTEMPT_LOG_RETENTION_DAYS,
   ADMIN_PASSWORD,
-  ADMIN_BOOTSTRAP_EMAIL,
+  ADMIN_BOOTSTRAP_USERNAME,
 } = require('./config');
 
 const DATA_DIR = process.env.DATA_DIR
@@ -108,7 +108,7 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS admins (
     id TEXT PRIMARY KEY,
-    email TEXT NOT NULL UNIQUE,
+    username TEXT NOT NULL UNIQUE,
     passwordHash TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'editor',
     totpSecret TEXT,
@@ -118,7 +118,7 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS admin_audit_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    adminEmail TEXT NOT NULL,
+    adminUsername TEXT NOT NULL,
     action TEXT NOT NULL,
     details TEXT,
     createdAt TEXT NOT NULL
@@ -151,6 +151,20 @@ function ensureColumn(table, column, ddl) {
   db.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`);
   return true;
 }
+// A database created before admin accounts were username-based still has
+// the old `email`/`adminEmail` columns — rename them in place so existing
+// admin rows (and their already-hashed passwords) survive the switch
+// instead of silently losing access.
+function renameColumnIfNeeded(table, oldName, newName) {
+  const existing = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (existing.some((col) => col.name === newName)) return;
+  if (existing.some((col) => col.name === oldName)) {
+    db.exec(`ALTER TABLE ${table} RENAME COLUMN ${oldName} TO ${newName}`);
+  }
+}
+renameColumnIfNeeded('admins', 'email', 'username');
+renameColumnIfNeeded('admin_audit_log', 'adminEmail', 'adminUsername');
+
 const roleColumnJustAdded = ensureColumn('admins', 'role', "role TEXT NOT NULL DEFAULT 'editor'");
 ensureColumn('admins', 'totpSecret', 'totpSecret TEXT');
 ensureColumn('admins', 'totpEnabled', 'totpEnabled INTEGER NOT NULL DEFAULT 0');
@@ -173,9 +187,9 @@ if (roleColumnJustAdded) {
   if (c > 0) return;
   // Always 'owner' — the very first admin has to be, since there'd
   // otherwise be no owner at all to create one.
-  db.prepare("INSERT INTO admins (id, email, passwordHash, role, createdAt) VALUES (?, ?, ?, 'owner', ?)").run(
+  db.prepare("INSERT INTO admins (id, username, passwordHash, role, createdAt) VALUES (?, ?, ?, 'owner', ?)").run(
     crypto.randomUUID(),
-    ADMIN_BOOTSTRAP_EMAIL.toLowerCase(),
+    ADMIN_BOOTSTRAP_USERNAME.toLowerCase(),
     bcrypt.hashSync(ADMIN_PASSWORD, 10),
     new Date().toISOString()
   );
@@ -564,14 +578,14 @@ module.exports = {
   rawConnection: db,
 
   // ---- Admin accounts ----
-  findAdminByEmail(email) {
-    return db.prepare('SELECT * FROM admins WHERE lower(email) = ?').get(email.trim().toLowerCase()) || null;
+  findAdminByUsername(username) {
+    return db.prepare('SELECT * FROM admins WHERE lower(username) = ?').get(username.trim().toLowerCase()) || null;
   },
   findAdminById(id) {
     return db.prepare('SELECT * FROM admins WHERE id = ?').get(id) || null;
   },
   listAdmins() {
-    return db.prepare('SELECT id, email, role, totpEnabled, createdAt FROM admins ORDER BY createdAt').all();
+    return db.prepare('SELECT id, username, role, totpEnabled, createdAt FROM admins ORDER BY createdAt').all();
   },
   adminCount() {
     return db.prepare('SELECT COUNT(*) AS c FROM admins').get().c;
@@ -579,15 +593,15 @@ module.exports = {
   ownerCount() {
     return db.prepare("SELECT COUNT(*) AS c FROM admins WHERE role = 'owner'").get().c;
   },
-  createAdmin({ email, passwordHash, role }) {
+  createAdmin({ username, passwordHash, role }) {
     const admin = {
       id: crypto.randomUUID(),
-      email: email.trim().toLowerCase(),
+      username: username.trim().toLowerCase(),
       passwordHash,
       role: role === 'owner' ? 'owner' : 'editor',
       createdAt: new Date().toISOString(),
     };
-    db.prepare('INSERT INTO admins (id, email, passwordHash, role, createdAt) VALUES (@id, @email, @passwordHash, @role, @createdAt)').run(admin);
+    db.prepare('INSERT INTO admins (id, username, passwordHash, role, createdAt) VALUES (@id, @username, @passwordHash, @role, @createdAt)').run(admin);
     return admin;
   },
   updateAdminPasswordHash(id, passwordHash) {
@@ -639,13 +653,13 @@ module.exports = {
   },
 
   // ---- Admin audit log ----
-  logAuditEvent(adminEmail, action, details) {
-    // Falls back rather than throwing if adminEmail is missing (e.g. a
-    // session created before adminEmail existed on the session) — an audit
-    // log entry that says "unknown" is far better than a 500 on the action
-    // it was trying to record.
-    db.prepare('INSERT INTO admin_audit_log (adminEmail, action, details, createdAt) VALUES (?, ?, ?, ?)').run(
-      adminEmail || 'unknown',
+  logAuditEvent(adminUsername, action, details) {
+    // Falls back rather than throwing if adminUsername is missing (e.g. a
+    // session created before adminUsername existed on the session) — an
+    // audit log entry that says "unknown" is far better than a 500 on the
+    // action it was trying to record.
+    db.prepare('INSERT INTO admin_audit_log (adminUsername, action, details, createdAt) VALUES (?, ?, ?, ?)').run(
+      adminUsername || 'unknown',
       action,
       details ? JSON.stringify(details) : null,
       new Date().toISOString()

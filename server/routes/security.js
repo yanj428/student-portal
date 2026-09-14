@@ -27,13 +27,13 @@ router.post('/api/admin/security/unlock', requireOwnerAdmin, (req, res) => {
     return res.status(400).json({ error: 'Email is required.' });
   }
   db.unlockEmail(email);
-  db.logAuditEvent(req.session.adminEmail, 'security.unlock', { email });
+  db.logAuditEvent(req.session.adminUsername, 'security.unlock', { email });
   res.json({ ok: true });
 });
 
 router.post('/api/admin/security/unlock-all', requireOwnerAdmin, (req, res) => {
   db.unlockAllLocked();
-  db.logAuditEvent(req.session.adminEmail, 'security.unlock_all', null);
+  db.logAuditEvent(req.session.adminUsername, 'security.unlock_all', null);
   res.json({ ok: true });
 });
 

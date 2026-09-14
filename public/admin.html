@@ -15,10 +15,10 @@
   <div class="gate" id="gate">
     <form class="gate-card" id="gate-form">
       <h1>Admin access</h1>
-      <p>Enter your admin email and password to manage the student portal.</p>
-      <input class="field-input" type="email" id="admin-email" placeholder="Admin email" autocomplete="username" />
+      <p>Enter your admin username and password to manage the student portal.</p>
+      <input class="field-input" type="text" id="admin-username" placeholder="Admin username" autocomplete="username" />
       <input class="field-input" type="password" id="admin-password" placeholder="Admin password" autocomplete="current-password" />
-      <p class="field-error" id="gate-error" hidden>Incorrect email or password.</p>
+      <p class="field-error" id="gate-error" hidden>Incorrect username or password.</p>
       <button type="submit" class="btn primary">Continue</button>
     </form>
   </div>
@@ -93,7 +93,7 @@
           </button>
         </nav>
 
-        <p class="current-admin-email" id="current-admin-email"></p>
+        <p class="current-admin-username" id="current-admin-username"></p>
         <button class="btn ghost sidebar-logout" id="admin-logout">Log out</button>
       </aside>
 
@@ -660,8 +660,8 @@
         <form id="admin-create-form" class="create-form">
           <div class="form-row">
             <div class="form-field">
-              <label class="field-label" for="new-admin-email">Email</label>
-              <input class="field-input" type="email" id="new-admin-email" required />
+              <label class="field-label" for="new-admin-username">Username</label>
+              <input class="field-input" type="text" id="new-admin-username" required minlength="3" maxlength="32" />
             </div>
             <div class="form-field">
               <label class="field-label" for="new-admin-password">Temporary password</label>

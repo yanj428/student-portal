@@ -6,12 +6,12 @@ const { requireAdmin, requireOwnerAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
-function isValidEmail(email) {
-  return typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+function isValidUsername(username) {
+  return typeof username === 'string' && /^[A-Za-z0-9._-]{3,32}$/.test(username.trim());
 }
 
 function publicAdmin(admin) {
-  return { id: admin.id, email: admin.email, role: admin.role, createdAt: admin.createdAt };
+  return { id: admin.id, username: admin.username, role: admin.role, createdAt: admin.createdAt };
 }
 
 // ---- Admin account management (owner only) ----
@@ -21,18 +21,20 @@ router.get('/api/admin/admins', requireOwnerAdmin, (req, res) => {
 });
 
 router.post('/api/admin/admins', requireOwnerAdmin, (req, res) => {
-  const { email, password, role } = req.body || {};
-  if (!isValidEmail(email)) return res.status(400).json({ error: 'A valid email is required.' });
+  const { username, password, role } = req.body || {};
+  if (!isValidUsername(username)) {
+    return res.status(400).json({ error: 'Username must be 3-32 characters (letters, numbers, dots, underscores, hyphens).' });
+  }
   if (typeof password !== 'string' || password.length < 8) {
     return res.status(400).json({ error: 'Password must be at least 8 characters.' });
   }
   if (role !== undefined && role !== 'owner' && role !== 'editor') {
     return res.status(400).json({ error: 'Role must be "owner" or "editor".' });
   }
-  if (db.findAdminByEmail(email)) return res.status(409).json({ error: 'An admin with this email already exists.' });
+  if (db.findAdminByUsername(username)) return res.status(409).json({ error: 'An admin with this username already exists.' });
 
-  const admin = db.createAdmin({ email, passwordHash: bcrypt.hashSync(password, 10), role });
-  db.logAuditEvent(req.session.adminEmail, 'admin.create', { createdEmail: admin.email, role: admin.role });
+  const admin = db.createAdmin({ username, passwordHash: bcrypt.hashSync(password, 10), role });
+  db.logAuditEvent(req.session.adminUsername, 'admin.create', { createdUsername: admin.username, role: admin.role });
   res.status(201).json({ admin: publicAdmin(admin) });
 });
 
@@ -48,7 +50,7 @@ router.patch('/api/admin/admins/:id/role', requireOwnerAdmin, (req, res) => {
   }
 
   db.updateAdminRole(admin.id, role);
-  db.logAuditEvent(req.session.adminEmail, 'admin.role_change', { email: admin.email, role });
+  db.logAuditEvent(req.session.adminUsername, 'admin.role_change', { username: admin.username, role });
   res.json({ ok: true });
 });
 
@@ -70,7 +72,7 @@ router.delete('/api/admin/admins/:id', requireOwnerAdmin, (req, res) => {
   // until requireAdmin's next per-request existence check catches it — this
   // ends it immediately instead of leaving that window open at all.
   db.destroyAdminSessions(admin.id);
-  db.logAuditEvent(req.session.adminEmail, 'admin.delete', { deletedEmail: admin.email });
+  db.logAuditEvent(req.session.adminUsername, 'admin.delete', { deletedUsername: admin.username });
   res.json({ ok: true });
 });
 
@@ -93,7 +95,7 @@ router.post('/api/admin/change-password', requireAdmin, (req, res) => {
 
   db.updateAdminPasswordHash(admin.id, bcrypt.hashSync(newPassword, 10));
   db.destroyOtherAdminSessions(admin.id, req.sessionID);
-  db.logAuditEvent(admin.email, 'admin.password_change', null);
+  db.logAuditEvent(admin.username, 'admin.password_change', null);
   res.json({ ok: true });
 });
 

@@ -1,20 +1,20 @@
-// Admin login gate: email + password, then shows the panel and calls back
-// into main.js's loaders.
+// Admin login gate: username + password, then shows the panel and calls
+// back into main.js's loaders.
 
 const gate = document.getElementById('gate');
 const gateForm = document.getElementById('gate-form');
-const adminEmailInput = document.getElementById('admin-email');
+const adminUsernameInput = document.getElementById('admin-username');
 const adminPasswordInput = document.getElementById('admin-password');
 const gateError = document.getElementById('gate-error');
 const adminPage = document.getElementById('admin-page');
 const adminLogout = document.getElementById('admin-logout');
-const currentAdminEmailEl = document.getElementById('current-admin-email');
+const currentAdminUsernameEl = document.getElementById('current-admin-username');
 
 export function initAuth(onLogin) {
-  function showAdminPanel(email) {
+  function showAdminPanel(username) {
     gate.hidden = true;
     adminPage.hidden = false;
-    if (currentAdminEmailEl && email) currentAdminEmailEl.textContent = email;
+    if (currentAdminUsernameEl && username) currentAdminUsernameEl.textContent = username;
     onLogin();
   }
 
@@ -41,7 +41,7 @@ export function initAuth(onLogin) {
     const res = await fetch('/api/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: adminEmailInput.value, password: adminPasswordInput.value }),
+      body: JSON.stringify({ username: adminUsernameInput.value, password: adminPasswordInput.value }),
     });
 
     if (!res.ok) {
@@ -50,7 +50,7 @@ export function initAuth(onLogin) {
     }
     const data = await res.json();
     adminPasswordInput.value = '';
-    showAdminPanel(data.email);
+    showAdminPanel(data.username);
   });
 
   adminLogout.addEventListener('click', async () => {
@@ -61,7 +61,7 @@ export function initAuth(onLogin) {
   (async function checkSession() {
     const res = await fetch('/api/admin/session');
     const data = await res.json();
-    if (data.isAdmin) showAdminPanel(data.email);
+    if (data.isAdmin) showAdminPanel(data.username);
     else showGate();
   })();
 }

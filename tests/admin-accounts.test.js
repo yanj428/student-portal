@@ -14,56 +14,56 @@ test.after(() => {
   fs.rmSync(dataDir, { recursive: true, force: true });
 });
 
-// Uses the bootstrap admin's email explicitly (rather than relying on the
+// Uses the bootstrap admin's username explicitly (rather than relying on the
 // single-admin fallback) since several tests in this file add a second
 // admin, which would otherwise make later bare-password logins ambiguous.
 async function loginAsAdmin() {
   const agent = request.agent(app);
-  await agent.post('/api/admin/login').send({ email: 'admin@kpis.ac.th', password: 'test-admin-pw' });
+  await agent.post('/api/admin/login').send({ username: 'admin', password: 'test-admin-pw' });
   return agent;
 }
 
-test('the bootstrap admin exists and can log in by email too, not just the single-admin fallback', async () => {
-  const res = await request(app).post('/api/admin/login').send({ email: 'admin@kpis.ac.th', password: 'test-admin-pw' });
+test('the bootstrap admin exists and can log in by username too, not just the single-admin fallback', async () => {
+  const res = await request(app).post('/api/admin/login').send({ username: 'admin', password: 'test-admin-pw' });
   assert.equal(res.status, 200);
-  assert.equal(res.body.email, 'admin@kpis.ac.th');
+  assert.equal(res.body.username, 'admin');
 });
 
-test('a wrong email with the right password is rejected', async () => {
-  const res = await request(app).post('/api/admin/login').send({ email: 'nobody@kpis.ac.th', password: 'test-admin-pw' });
+test('a wrong username with the right password is rejected', async () => {
+  const res = await request(app).post('/api/admin/login').send({ username: 'nobody', password: 'test-admin-pw' });
   assert.equal(res.status, 401);
 });
 
-test('adding a second admin requires email to disambiguate at login', async () => {
+test('adding a second admin requires username to disambiguate at login', async () => {
   const admin = await loginAsAdmin();
-  const created = await admin.post('/api/admin/admins').send({ email: 'second.admin@kpis.ac.th', password: 'anotherpassword1' });
+  const created = await admin.post('/api/admin/admins').send({ username: 'second.admin', password: 'anotherpassword1' });
   assert.equal(created.status, 201);
 
-  // With two admins now, omitting email at login must fail rather than
+  // With two admins now, omitting username at login must fail rather than
   // guess which account the password belongs to.
   const ambiguous = await request(app).post('/api/admin/login').send({ password: 'test-admin-pw' });
   assert.equal(ambiguous.status, 401);
 
-  // But each admin can still log in by their own email.
-  const first = await request(app).post('/api/admin/login').send({ email: 'admin@kpis.ac.th', password: 'test-admin-pw' });
+  // But each admin can still log in by their own username.
+  const first = await request(app).post('/api/admin/login').send({ username: 'admin', password: 'test-admin-pw' });
   assert.equal(first.status, 200);
-  const second = await request(app).post('/api/admin/login').send({ email: 'second.admin@kpis.ac.th', password: 'anotherpassword1' });
+  const second = await request(app).post('/api/admin/login').send({ username: 'second.admin', password: 'anotherpassword1' });
   assert.equal(second.status, 200);
 });
 
-test('rejects creating a duplicate admin email and a too-short password', async () => {
+test('rejects creating a duplicate admin username and a too-short password', async () => {
   const admin = await loginAsAdmin();
-  const dup = await admin.post('/api/admin/admins').send({ email: 'admin@kpis.ac.th', password: 'longenough1' });
+  const dup = await admin.post('/api/admin/admins').send({ username: 'admin', password: 'longenough1' });
   assert.equal(dup.status, 409);
 
-  const shortPw = await admin.post('/api/admin/admins').send({ email: 'third.admin@kpis.ac.th', password: 'short' });
+  const shortPw = await admin.post('/api/admin/admins').send({ username: 'third.admin', password: 'short' });
   assert.equal(shortPw.status, 400);
 });
 
 test('an admin cannot delete their own account, and the last admin cannot be deleted', async () => {
   const admin = await loginAsAdmin();
   const before = await admin.get('/api/admin/admins');
-  const selfId = before.body.admins.find((a) => a.email === 'admin@kpis.ac.th').id;
+  const selfId = before.body.admins.find((a) => a.username === 'admin').id;
 
   const deleteSelf = await admin.delete(`/api/admin/admins/${selfId}`);
   assert.equal(deleteSelf.status, 400);
@@ -83,19 +83,19 @@ test('an admin can change their own password, and it is required for their next 
   // tests in this file log in as) so changing its password here doesn't
   // affect any test that runs afterward.
   const bootstrapAdmin = await loginAsAdmin();
-  await bootstrapAdmin.post('/api/admin/admins').send({ email: 'pw.change@kpis.ac.th', password: 'originalpassword1' });
+  await bootstrapAdmin.post('/api/admin/admins').send({ username: 'pw.change', password: 'originalpassword1' });
 
   const agent = request.agent(app);
-  await agent.post('/api/admin/login').send({ email: 'pw.change@kpis.ac.th', password: 'originalpassword1' });
+  await agent.post('/api/admin/login').send({ username: 'pw.change', password: 'originalpassword1' });
   const changed = await agent
     .post('/api/admin/change-password')
     .send({ currentPassword: 'originalpassword1', newPassword: 'brandnewadminpw1' });
   assert.equal(changed.status, 200);
 
-  const oldLogin = await request(app).post('/api/admin/login').send({ email: 'pw.change@kpis.ac.th', password: 'originalpassword1' });
+  const oldLogin = await request(app).post('/api/admin/login').send({ username: 'pw.change', password: 'originalpassword1' });
   assert.equal(oldLogin.status, 401);
 
-  const newLogin = await request(app).post('/api/admin/login').send({ email: 'pw.change@kpis.ac.th', password: 'brandnewadminpw1' });
+  const newLogin = await request(app).post('/api/admin/login').send({ username: 'pw.change', password: 'brandnewadminpw1' });
   assert.equal(newLogin.status, 200);
 });
 
@@ -111,6 +111,6 @@ test('security actions are recorded in the audit log', async () => {
 
 test('admin account endpoints require an admin session', async () => {
   assert.equal((await request(app).get('/api/admin/admins')).status, 401);
-  assert.equal((await request(app).post('/api/admin/admins').send({ email: 'x@kpis.ac.th', password: 'password123' })).status, 401);
+  assert.equal((await request(app).post('/api/admin/admins').send({ username: 'x', password: 'password123' })).status, 401);
   assert.equal((await request(app).get('/api/admin/security/audit-log')).status, 401);
 });

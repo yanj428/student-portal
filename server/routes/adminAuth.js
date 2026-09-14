@@ -9,10 +9,10 @@ const router = express.Router();
 
 // Admin lockout/attempt-log state shares the same login_throttle and
 // login_attempts tables the student login uses, keyed under an "admin:"
-// prefix so an admin email can never collide with (or borrow the lockout
-// state of) a student account that happens to share the same address.
-function throttleKey(email) {
-  return `admin:${email.trim().toLowerCase()}`;
+// prefix so an admin username can never collide with (or borrow the lockout
+// state of) a student account whose email happens to match the same text.
+function throttleKey(username) {
+  return `admin:${username.trim().toLowerCase()}`;
 }
 
 function minutesUntil(isoTimestamp) {
@@ -36,36 +36,36 @@ function completeLogin(req, res, admin) {
     if (err) return res.status(500).json({ error: 'Could not start a session.' });
     req.session.isAdmin = true;
     req.session.adminId = admin.id;
-    req.session.adminEmail = admin.email;
+    req.session.adminUsername = admin.username;
     req.session.loginAt = Date.now();
     req.session.cookie.maxAge = ADMIN_SESSION_IDLE_MINUTES * 60 * 1000;
-    res.json({ ok: true, email: admin.email });
+    res.json({ ok: true, username: admin.username });
   });
 }
 
 router.post('/api/admin/login', adminLoginLimiter, (req, res) => {
-  const { email, password } = req.body || {};
+  const { username, password } = req.body || {};
   const ip = req.ip;
   if (typeof password !== 'string') {
-    return res.status(401).json({ error: 'Incorrect email or password.' });
+    return res.status(401).json({ error: 'Incorrect username or password.' });
   }
 
-  // Real multi-admin login identifies by email. If it's omitted and there's
-  // exactly one admin account (true for every deployment until a second
-  // admin is added), fall back to that one — this is what lets the existing
-  // single-password login flow keep working unchanged for schools that
-  // never need more than one admin.
+  // Real multi-admin login identifies by username. If it's omitted and
+  // there's exactly one admin account (true for every deployment until a
+  // second admin is added), fall back to that one — this is what lets the
+  // existing single-password login flow keep working unchanged for schools
+  // that never need more than one admin.
   let admin;
-  if (email) {
-    admin = db.findAdminByEmail(email);
+  if (username) {
+    admin = db.findAdminByUsername(username);
   } else if (db.adminCount() === 1) {
-    admin = db.findAdminByEmail(db.listAdmins()[0].email);
+    admin = db.findAdminByUsername(db.listAdmins()[0].username);
   }
 
-  // The lockout key needs a real email even when one wasn't submitted (the
-  // single-admin fallback above), so a lockout on "the omitted-email path"
-  // and "that admin's real email" are the same lock, not two.
-  const key = throttleKey(admin ? admin.email : email || 'unknown');
+  // The lockout key needs a real username even when one wasn't submitted
+  // (the single-admin fallback above), so a lockout on "the omitted-username
+  // path" and "that admin's real username" are the same lock, not two.
+  const key = throttleKey(admin ? admin.username : username || 'unknown');
 
   const lockStatus = db.getLockStatus(key);
   if (lockStatus.locked) {
@@ -77,21 +77,21 @@ router.post('/api/admin/login', adminLoginLimiter, (req, res) => {
   // real account's check would. Skipping bcrypt entirely for "no such
   // admin" would make that case return near-instantly, which combined with
   // the identical response body would still let response *timing* reveal
-  // whether a given email has an admin account.
+  // whether a given username has an admin account.
   const passwordMatches = bcrypt.compareSync(password, admin ? admin.passwordHash : DUMMY_PASSWORD_HASH);
 
   if (!admin || !passwordMatches) {
     const throttle = db.recordFailedAttempt(key);
-    db.recordLoginAttempt({ email: key, ip, success: false, reason: admin ? 'bad_password' : 'unknown_email' });
+    db.recordLoginAttempt({ email: key, ip, success: false, reason: admin ? 'bad_password' : 'unknown_username' });
     if (throttle.lockedUntil) {
       return lockedResponse(res, key, ip, throttle.lockedUntil);
     }
-    return res.status(401).json({ error: 'Incorrect email or password.' });
+    return res.status(401).json({ error: 'Incorrect username or password.' });
   }
 
   db.clearThrottle(key);
   db.recordLoginAttempt({ email: key, ip, success: true });
-  db.logAuditEvent(admin.email, 'admin.login', null);
+  db.logAuditEvent(admin.username, 'admin.login', null);
   completeLogin(req, res, admin);
 });
 
@@ -104,12 +104,12 @@ router.post('/api/admin/logout', (req, res) => {
 
 router.get('/api/admin/session', (req, res) => {
   if (!req.session.isAdmin) {
-    return res.json({ isAdmin: false, email: null, id: null, role: null });
+    return res.json({ isAdmin: false, username: null, id: null, role: null });
   }
   const admin = db.findAdminById(req.session.adminId);
   res.json({
     isAdmin: true,
-    email: req.session.adminEmail || null,
+    username: req.session.adminUsername || null,
     id: req.session.adminId || null,
     role: admin ? admin.role : null,
   });

@@ -11,7 +11,7 @@ const adminCountEl = document.getElementById('admin-count');
 const adminList = document.getElementById('admin-list');
 const adminListEmpty = document.getElementById('admin-list-empty');
 const adminCreateForm = document.getElementById('admin-create-form');
-const newAdminEmail = document.getElementById('new-admin-email');
+const newAdminUsername = document.getElementById('new-admin-username');
 const newAdminPassword = document.getElementById('new-admin-password');
 const newAdminRole = document.getElementById('new-admin-role');
 const adminCreateError = document.getElementById('admin-create-error');
@@ -126,7 +126,7 @@ function renderAdmins(admins) {
     div.className = 'simple-item';
     div.innerHTML = `
       <div class="simple-item-head">
-        <span class="simple-item-title">${escapeHtml(admin.email)}${isSelf ? ' (you)' : ''}</span>
+        <span class="simple-item-title">${escapeHtml(admin.username)}${isSelf ? ' (you)' : ''}</span>
         <div class="simple-item-actions">
           <button class="edit-btn role-toggle-btn">Make ${toggleRole}</button>
           ${isSelf ? '' : '<button class="delete-btn" aria-label="Remove admin"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7H20M9 7V4C9 3.4 9.4 3 10 3H14C14.6 3 15 3.4 15 4V7M18 7L17.3 19C17.2 19.6 16.7 20 16.1 20H7.9C7.3 20 6.8 19.6 6.7 19L6 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'}
@@ -135,7 +135,7 @@ function renderAdmins(admins) {
       <p class="simple-item-body">${admin.role === 'owner' ? 'Owner' : 'Editor'}</p>
     `;
     div.querySelector('.role-toggle-btn').addEventListener('click', async () => {
-      if (!confirm(`Make ${admin.email} ${toggleRole === 'owner' ? 'an owner' : 'an editor'}?`)) return;
+      if (!confirm(`Make ${admin.username} ${toggleRole === 'owner' ? 'an owner' : 'an editor'}?`)) return;
       const { ok, data } = await sendJSON(`/api/admin/admins/${admin.id}/role`, 'PATCH', { role: toggleRole });
       if (!ok) {
         alert(data.error || 'Could not change this admin’s role.');
@@ -145,7 +145,7 @@ function renderAdmins(admins) {
     });
     if (!isSelf) {
       div.querySelector('.delete-btn').addEventListener('click', async () => {
-        if (!confirm(`Remove admin access for ${admin.email}?`)) return;
+        if (!confirm(`Remove admin access for ${admin.username}?`)) return;
         const { ok, data } = await sendJSON(`/api/admin/admins/${admin.id}`, 'DELETE', {});
         if (!ok) {
           alert(data.error || 'Could not remove this admin.');
@@ -163,7 +163,7 @@ adminCreateForm.addEventListener('submit', async (e) => {
   adminCreateError.hidden = true;
 
   const { ok, data } = await sendJSON('/api/admin/admins', 'POST', {
-    email: newAdminEmail.value.trim(),
+    username: newAdminUsername.value.trim(),
     password: newAdminPassword.value,
     role: newAdminRole.value,
   });
@@ -194,7 +194,7 @@ function renderAuditLog(entries) {
     const tr = document.createElement('tr');
     const details = entry.details ? Object.values(entry.details).join(', ') : '';
     tr.innerHTML = `
-      <td>${escapeHtml(entry.adminEmail)}</td>
+      <td>${escapeHtml(entry.adminUsername)}</td>
       <td>${escapeHtml(entry.action)}</td>
       <td>${escapeHtml(details)}</td>
       <td>${formatTime(entry.createdAt)}</td>

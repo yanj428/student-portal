@@ -324,12 +324,12 @@ html, body {
   margin: 26px 0 0 0;
 }
 
-.admin-page-section[hidden] { display: none; }
-.admin-main {
+.admin-page-section {
   display: flex;
   flex-direction: column;
   gap: 31.2px;
 }
+.admin-page-section[hidden] { display: none; }
 
 @media (max-width: 1170px) {
   .admin-shell { flex-direction: column; }

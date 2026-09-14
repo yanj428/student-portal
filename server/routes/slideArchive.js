@@ -2,8 +2,8 @@ const express = require('express');
 const crypto = require('crypto');
 
 const db = require('../db');
-const { requireAdmin, requireStudent } = require('../middleware/auth');
-const { validateOptionalUrl } = require('../utils/validateUrl');
+const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
+const { validateOptionalUrl, normalizeUrl } = require('../utils/validateUrl');
 
 const router = express.Router();
 
@@ -11,7 +11,7 @@ function publicSlide(slide) {
   return { id: slide.id, weekLabel: slide.weekLabel, canvaEmbedUrl: slide.canvaEmbedUrl, archivedAt: slide.archivedAt };
 }
 
-router.get('/api/slide-archive', requireStudent, (req, res) => {
+router.get('/api/slide-archive', requireActiveStudent, (req, res) => {
   const slides = db
     .readSlideArchive()
     .sort((a, b) => new Date(b.archivedAt) - new Date(a.archivedAt))
@@ -42,7 +42,7 @@ router.post('/api/admin/slide-archive', requireAdmin, (req, res) => {
   const slide = {
     id: crypto.randomUUID(),
     weekLabel: weekLabel.trim(),
-    canvaEmbedUrl: canvaEmbedUrl.trim(),
+    canvaEmbedUrl: normalizeUrl(canvaEmbedUrl),
     archivedAt: new Date().toISOString(),
   };
   slides.push(slide);

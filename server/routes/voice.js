@@ -1,8 +1,8 @@
-const express = require('express');
+﻿const express = require('express');
 const crypto = require('crypto');
 
 const db = require('../db');
-const { requireAdmin, requireStudent } = require('../middleware/auth');
+const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
 const { voicePostLimiter, voiceReplyLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
@@ -57,7 +57,7 @@ function publicPost(post, viewerId) {
   };
 }
 
-router.get('/api/voice/posts', requireStudent, (req, res) => {
+router.get('/api/voice/posts', requireActiveStudent, (req, res) => {
   const viewerId = req.session.studentId;
   const posts = db
     .readVoicePosts()
@@ -68,7 +68,7 @@ router.get('/api/voice/posts', requireStudent, (req, res) => {
   res.json({ posts });
 });
 
-router.post('/api/voice/posts', requireStudent, voicePostLimiter, (req, res) => {
+router.post('/api/voice/posts', requireActiveStudent, voicePostLimiter, (req, res) => {
   const { title, category, body } = req.body || {};
 
   if (typeof title !== 'string' || !title.trim()) {
@@ -108,7 +108,7 @@ router.post('/api/voice/posts', requireStudent, voicePostLimiter, (req, res) => 
   res.status(201).json({ post: publicPost(post, student.id) });
 });
 
-router.post('/api/voice/posts/:id/star', requireStudent, (req, res) => {
+router.post('/api/voice/posts/:id/star', requireActiveStudent, (req, res) => {
   const viewerId = req.session.studentId;
   const posts = db.readVoicePosts();
   const post = posts.find((p) => p.id === req.params.id);
@@ -122,7 +122,7 @@ router.post('/api/voice/posts/:id/star', requireStudent, (req, res) => {
   res.json({ starCount: post.stars.length, isStarredByMe: post.stars.includes(viewerId) });
 });
 
-router.post('/api/voice/posts/:id/replies', requireStudent, voiceReplyLimiter, (req, res) => {
+router.post('/api/voice/posts/:id/replies', requireActiveStudent, voiceReplyLimiter, (req, res) => {
   const { body } = req.body || {};
   if (typeof body !== 'string' || !body.trim()) {
     return res.status(400).json({ error: 'Reply cannot be empty.' });

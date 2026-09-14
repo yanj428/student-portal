@@ -15,8 +15,17 @@ app.set('views', path.join(__dirname, '..', 'views'));
 app.disable('x-powered-by');
 
 // Needed when the app sits behind a reverse proxy or tunnel (TRUST_PROXY=1
-// in .env) so req.ip/req.secure reflect the real client instead of the proxy.
-if (TRUST_PROXY) app.set('trust proxy', TRUST_PROXY === 'true' ? 1 : TRUST_PROXY);
+// in .env) so req.ip/req.secure reflect the real client instead of the
+// proxy. A numeric-looking value (including "1") must be passed to Express
+// as an actual Number — Express treats a trust-proxy STRING like "1" as a
+// literal IP/subnet to trust, not "trust 1 hop", which would silently trust
+// no proxy at all and leave every visitor's rate limit/IP log keyed by the
+// proxy's own address instead of the real client.
+if (TRUST_PROXY) {
+  const numericHops = Number(TRUST_PROXY);
+  const trustProxyValue = Number.isInteger(numericHops) ? numericHops : TRUST_PROXY === 'true' ? 1 : TRUST_PROXY;
+  app.set('trust proxy', trustProxyValue);
+}
 
 app.use(
   helmet({
@@ -94,7 +103,12 @@ app.use(express.static(path.join(__dirname, '..', 'public'), { extensions: ['htm
 // full stack trace with file paths (visible during earlier manual testing).
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
-  console.error(err);
+  // body-parser's JSON SyntaxError carries the raw request body as an own
+  // property (err.body) specifically so callers can log it — but our
+  // requests can contain plaintext passwords, so logging the error object
+  // as-is would write them to the server console/log file. Log only the
+  // message and stack, never the error object itself.
+  console.error(err && err.stack ? err.stack : String(err));
   res.status(err.status || 500).json({ error: 'Something went wrong. Please try again.' });
 });
 

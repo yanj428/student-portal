@@ -5,11 +5,16 @@ const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 // from one IP address hammering many different emails or the shared admin
 // password. Overridable via env so tests don't have to send hundreds of
 // requests to prove the limiter works.
+// skipSuccessfulRequests means only failed attempts count toward the
+// limit — this is what a login rate limit should actually be protecting
+// against (repeated wrong guesses), rather than penalizing a shared school
+// IP where many students legitimately succeed in the same 15 minutes.
 const studentLoginLimiter = rateLimit({
   windowMs: (parseFloat(process.env.STUDENT_LOGIN_RATE_WINDOW_MINUTES) || 15) * 60 * 1000,
-  limit: parseInt(process.env.STUDENT_LOGIN_RATE_LIMIT, 10) || 20,
+  limit: parseInt(process.env.STUDENT_LOGIN_RATE_LIMIT, 10) || 30,
   standardHeaders: true,
   legacyHeaders: false,
+  skipSuccessfulRequests: true,
   message: { error: 'Too many login attempts from this device. Please try again later.' },
 });
 
@@ -18,6 +23,7 @@ const adminLoginLimiter = rateLimit({
   limit: parseInt(process.env.ADMIN_LOGIN_RATE_LIMIT, 10) || 5,
   standardHeaders: true,
   legacyHeaders: false,
+  skipSuccessfulRequests: true,
   message: { error: 'Too many admin login attempts from this device. Please try again later.' },
 });
 

@@ -1,8 +1,18 @@
 const express = require('express');
 
 const db = require('../db');
-const { requireAdmin, requireStudent } = require('../middleware/auth');
-const { validateOptionalUrl } = require('../utils/validateUrl');
+const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
+const { validateOptionalUrl, normalizeUrl, isHttpsUrl } = require('../utils/validateUrl');
+
+// The lunch schedule image is normally set via the upload endpoint
+// (server/routes/lunch.js), which produces a relative /uploads/lunch/...
+// path rather than a full URL — so this accepts either that, or (since an
+// admin could also PUT this endpoint directly) a real https:// URL.
+function isValidImageValue(value) {
+  if (value === '') return true;
+  if (typeof value !== 'string') return false;
+  return value.startsWith('/uploads/') || isHttpsUrl(value);
+}
 
 const router = express.Router();
 
@@ -35,6 +45,9 @@ function validateContent(content) {
   if (typeof content.lunchSchedule.weekLabel !== 'string' || typeof content.lunchSchedule.imageUrl !== 'string') {
     return 'Lunch schedule needs a week label and image (both can be blank).';
   }
+  if (!isValidImageValue(content.lunchSchedule.imageUrl)) {
+    return 'Lunch schedule image must be an uploaded image or a valid https:// link.';
+  }
   for (const l of content.lunchMenu) {
     if (typeof l.weekday !== 'string' || typeof l.item !== 'string') return 'Each lunch entry needs a weekday and item.';
   }
@@ -42,7 +55,7 @@ function validateContent(content) {
   return null;
 }
 
-router.get('/api/content', requireStudent, (req, res) => {
+router.get('/api/content', requireActiveStudent, (req, res) => {
   res.json({ content: db.readContent() });
 });
 
@@ -55,6 +68,7 @@ router.put('/api/admin/content', requireAdmin, (req, res) => {
   const error = validateContent(content);
   if (error) return res.status(400).json({ error });
 
+  content.weeklySlide.canvaEmbedUrl = normalizeUrl(content.weeklySlide.canvaEmbedUrl);
   db.writeContent(content);
   res.json({ content });
 });

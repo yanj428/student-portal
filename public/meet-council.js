@@ -1,7 +1,9 @@
 function mcEscapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
-  return div.innerHTML;
+  // See voice.js's copy of this helper for why quotes need handling
+  // separately from the &/</> the textContent/innerHTML round-trip covers.
+  return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 async function loadCouncilPage() {

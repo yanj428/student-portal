@@ -2,8 +2,8 @@ const express = require('express');
 const crypto = require('crypto');
 
 const db = require('../db');
-const { requireAdmin, requireStudent } = require('../middleware/auth');
-const { validateOptionalUrl } = require('../utils/validateUrl');
+const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
+const { validateOptionalUrl, normalizeUrl } = require('../utils/validateUrl');
 
 const router = express.Router();
 
@@ -29,7 +29,7 @@ function validateCsEventFields(body) {
   return validateOptionalUrl(signupUrl, { fieldName: 'Signup link' });
 }
 
-router.get('/api/cs-events', requireStudent, (req, res) => {
+router.get('/api/cs-events', requireActiveStudent, (req, res) => {
   const events = db
     .readCsEvents()
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
@@ -57,7 +57,7 @@ router.post('/api/admin/cs-events', requireAdmin, (req, res) => {
     club: club.trim(),
     eventDate: eventDate.trim(),
     description: description.trim(),
-    signupUrl: (signupUrl || '').trim(),
+    signupUrl: normalizeUrl(signupUrl),
     createdAt: new Date().toISOString(),
   };
   events.push(event);

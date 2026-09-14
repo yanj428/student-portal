@@ -2,8 +2,8 @@ const express = require('express');
 const crypto = require('crypto');
 
 const db = require('../db');
-const { requireAdmin, requireStudent } = require('../middleware/auth');
-const { validateOptionalUrl } = require('../utils/validateUrl');
+const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
+const { validateOptionalUrl, normalizeUrl } = require('../utils/validateUrl');
 
 const router = express.Router();
 
@@ -11,7 +11,7 @@ function publicLink(q) {
   return { id: q.id, label: q.label, url: q.url, createdAt: q.createdAt };
 }
 
-router.get('/api/quick-links', requireStudent, (req, res) => {
+router.get('/api/quick-links', requireActiveStudent, (req, res) => {
   res.json({ quickLinks: db.readQuickLinks().map(publicLink) });
 });
 
@@ -34,7 +34,7 @@ router.post('/api/admin/quick-links', requireAdmin, (req, res) => {
   const item = {
     id: crypto.randomUUID(),
     label: req.body.label.trim(),
-    url: req.body.url.trim(),
+    url: normalizeUrl(req.body.url),
     createdAt: new Date().toISOString(),
   };
   items.push(item);
@@ -52,7 +52,7 @@ router.put('/api/admin/quick-links/:id', requireAdmin, (req, res) => {
   if (!item) return res.status(404).json({ error: 'Quick link not found.' });
 
   item.label = req.body.label.trim();
-  item.url = req.body.url.trim();
+  item.url = normalizeUrl(req.body.url);
   db.writeQuickLinks(items);
 
   res.json({ quickLink: publicLink(item) });

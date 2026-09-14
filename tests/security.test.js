@@ -5,6 +5,14 @@ const fs = require('fs');
 const { initTestEnv } = require('./helpers/setup');
 const dataDir = initTestEnv();
 
+// This file only checks that locks show up and can be unlocked, never that
+// they auto-expire — so widen the shared setup's near-instant lockout
+// window well past this file's own runtime (admin login now also does a
+// real bcrypt comparison, adding tens of ms per call) rather than risk a
+// lock expiring before the test gets around to asserting on it.
+process.env.LOGIN_LOCKOUT_BASE_MINUTES = '1';
+process.env.LOGIN_LOCKOUT_MAX_MINUTES = '1';
+
 const request = require('supertest');
 const app = require('../server/server');
 const db = require('../server/db');

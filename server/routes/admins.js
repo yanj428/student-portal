@@ -41,6 +41,10 @@ router.delete('/api/admin/admins/:id', requireAdmin, (req, res) => {
   const admin = db.findAdminById(req.params.id);
   if (!admin || !db.deleteAdmin(req.params.id)) return res.status(404).json({ error: 'Admin not found.' });
 
+  // Without this, a deleted admin's existing session would keep working
+  // until requireAdmin's next per-request existence check catches it — this
+  // ends it immediately instead of leaving that window open at all.
+  db.destroyAdminSessions(admin.id);
   db.logAuditEvent(req.session.adminEmail, 'admin.delete', { deletedEmail: admin.email });
   res.json({ ok: true });
 });
@@ -61,6 +65,7 @@ router.post('/api/admin/change-password', requireAdmin, (req, res) => {
   }
 
   db.updateAdminPasswordHash(admin.id, bcrypt.hashSync(newPassword, 10));
+  db.destroyOtherAdminSessions(admin.id, req.sessionID);
   db.logAuditEvent(admin.email, 'admin.password_change', null);
   res.json({ ok: true });
 });

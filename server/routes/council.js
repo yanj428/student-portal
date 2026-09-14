@@ -2,7 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 
 const db = require('../db');
-const { requireAdmin, requireStudent } = require('../middleware/auth');
+const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -10,7 +10,7 @@ function publicMember(m) {
   return { id: m.id, initials: m.initials, name: m.name, role: m.role, bio: m.bio, createdAt: m.createdAt };
 }
 
-router.get('/api/council', requireStudent, (req, res) => {
+router.get('/api/council', requireActiveStudent, (req, res) => {
   res.json({ council: db.readCouncil().map(publicMember) });
 });
 

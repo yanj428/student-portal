@@ -2,7 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 
 const db = require('../db');
-const { requireAdmin, requireStudent } = require('../middleware/auth');
+const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -10,7 +10,7 @@ function publicAnnouncement(a) {
   return { id: a.id, title: a.title, body: a.body, createdAt: a.createdAt };
 }
 
-router.get('/api/announcements', requireStudent, (req, res) => {
+router.get('/api/announcements', requireActiveStudent, (req, res) => {
   const items = db.readAnnouncements()
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .map(publicAnnouncement);

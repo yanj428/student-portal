@@ -34,4 +34,16 @@ function validateOptionalUrl(value, { fieldName, allowedHosts } = {}) {
   return null;
 }
 
-module.exports = { isHttpsUrl, hostMatches, validateOptionalUrl };
+// Returns the URL re-serialized through the URL parser rather than the
+// raw text as typed — this percent-encodes characters like `"` and `'`
+// that have no business in a URL but would otherwise be stored verbatim
+// and could break out of an href="..." attribute if a page ever rendered
+// one without properly escaping quotes (defense in depth alongside fixing
+// escapeHtml itself on the client). Only call after validateOptionalUrl
+// has already confirmed the value is a valid, allowed URL.
+function normalizeUrl(value) {
+  if (value === undefined || value === null || value === '') return '';
+  return new URL(value.trim()).toString();
+}
+
+module.exports = { isHttpsUrl, hostMatches, validateOptionalUrl, normalizeUrl };

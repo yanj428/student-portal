@@ -25,6 +25,10 @@ async function createLoggedInStudent(email) {
   const created = await admin.post('/api/admin/students').send({ firstName: 'Vee', lastName: 'Oh', email, grade: '10' });
   const agent = request.agent(app);
   await agent.post('/api/login').send({ email, password: created.body.password });
+  // A new account is created with mustChangePassword: true, and content
+  // routes now correctly refuse that until it's changed — so change it
+  // here to get a normal "active" student for these Voice tests.
+  await agent.post('/api/change-password').send({ currentPassword: created.body.password, newPassword: 'activepassword1' });
   return agent;
 }
 

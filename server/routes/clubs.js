@@ -4,9 +4,9 @@ const path = require('path');
 const crypto = require('crypto');
 
 const db = require('../db');
-const { requireAdmin, requireStudent } = require('../middleware/auth');
+const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
 const { UPLOADS_DIR, clubLogoUpload } = require('../uploads');
-const { validateOptionalUrl } = require('../utils/validateUrl');
+const { validateOptionalUrl, normalizeUrl } = require('../utils/validateUrl');
 
 const router = express.Router();
 
@@ -32,7 +32,7 @@ function filterByType(clubs, type) {
   return type ? clubs.filter((c) => c.type === type) : clubs;
 }
 
-router.get('/api/clubs', requireStudent, (req, res) => {
+router.get('/api/clubs', requireActiveStudent, (req, res) => {
   const clubs = filterByType(db.readClubs(), req.query.type)
     .sort((a, b) => a.name.localeCompare(b.name))
     .map(publicClub);
@@ -69,11 +69,11 @@ function readClubFields(body) {
       type,
       name: name.trim(),
       description: description.trim(),
-      instagramUrl: typeof instagramUrl === 'string' ? instagramUrl.trim() : '',
-      applicationFormUrl: typeof applicationFormUrl === 'string' ? applicationFormUrl.trim() : '',
+      instagramUrl: normalizeUrl(instagramUrl),
+      applicationFormUrl: normalizeUrl(applicationFormUrl),
       schedule: typeof schedule === 'string' ? schedule.trim() : '',
       advisor: typeof advisor === 'string' ? advisor.trim() : '',
-      signupUrl: typeof signupUrl === 'string' ? signupUrl.trim() : '',
+      signupUrl: normalizeUrl(signupUrl),
     },
   };
 }

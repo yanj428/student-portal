@@ -571,19 +571,33 @@ module.exports = {
   // Reads the sessions table the session store owns, so it's a no-op (not
   // an error) before that table exists yet.
   destroyOtherStudentSessions(studentId, exceptSid) {
-    let rows;
-    try {
-      rows = db.prepare('SELECT sid, data FROM sessions WHERE sid != ?').all(exceptSid || '');
-    } catch {
-      return; // sessions table doesn't exist yet (e.g. store not initialized)
-    }
-    const del = db.prepare('DELETE FROM sessions WHERE sid = ?');
-    for (const row of rows) {
-      try {
-        if (JSON.parse(row.data).studentId === studentId) del.run(row.sid);
-      } catch {
-        // malformed session data — leave it for the store's own pruning
-      }
-    }
+    destroySessionsMatching((session) => session.studentId === studentId, exceptSid);
+  },
+
+  // Same idea for admin accounts: used when an admin changes their own
+  // password (keeps the current session, drops any others), and when an
+  // admin account is deleted (no exceptSid — every session for it dies).
+  destroyOtherAdminSessions(adminId, exceptSid) {
+    destroySessionsMatching((session) => session.adminId === adminId, exceptSid);
+  },
+  destroyAdminSessions(adminId) {
+    destroySessionsMatching((session) => session.adminId === adminId);
   },
 };
+
+function destroySessionsMatching(predicate, exceptSid) {
+  let rows;
+  try {
+    rows = db.prepare('SELECT sid, data FROM sessions WHERE sid != ?').all(exceptSid || '');
+  } catch {
+    return; // sessions table doesn't exist yet (e.g. store not initialized)
+  }
+  const del = db.prepare('DELETE FROM sessions WHERE sid = ?');
+  for (const row of rows) {
+    try {
+      if (predicate(JSON.parse(row.data))) del.run(row.sid);
+    } catch {
+      // malformed session data — leave it for the store's own pruning
+    }
+  }
+}

@@ -6,7 +6,14 @@
 export function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
-  return div.innerHTML;
+  // The textContent/innerHTML round-trip only encodes &, <, and > — quotes
+  // aren't special in HTML text content, only inside an attribute value,
+  // which is exactly where this output often ends up (href="...", a
+  // data-email="..." attribute, etc.). Without this, a value containing a
+  // literal " could break out of that attribute — confirmed exploitable via
+  // the (unauthenticated) login form's email field showing up verbatim in
+  // the admin Security tab's locked-accounts list.
+  return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 export async function getJSON(url) {

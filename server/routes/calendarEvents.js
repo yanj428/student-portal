@@ -2,7 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 
 const db = require('../db');
-const { requireAdmin, requireStudent } = require('../middleware/auth');
+const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -19,7 +19,7 @@ function sortByDate(items) {
   });
 }
 
-router.get('/api/calendar-events', requireStudent, (req, res) => {
+router.get('/api/calendar-events', requireActiveStudent, (req, res) => {
   res.json({ calendarEvents: sortByDate(db.readCalendarEvents()).map(publicEvent) });
 });
 

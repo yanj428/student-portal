@@ -4,7 +4,12 @@ const bcrypt = require('bcryptjs');
 const db = require('../db');
 const { requireStudent, publicStudent } = require('../middleware/auth');
 const { studentLoginLimiter, passwordChangeLimiter } = require('../middleware/rateLimit');
-const { DEFAULT_STUDENT_PASSWORD, ACCOUNT_LOCKED_MESSAGE, STUDENT_SESSION_IDLE_MINUTES } = require('../config');
+const {
+  DEFAULT_STUDENT_PASSWORD,
+  ACCOUNT_LOCKED_MESSAGE,
+  STUDENT_SESSION_IDLE_MINUTES,
+  DUMMY_PASSWORD_HASH,
+} = require('../config');
 
 const router = express.Router();
 
@@ -41,7 +46,14 @@ router.post('/api/login', studentLoginLimiter, (req, res) => {
   }
 
   const student = db.findByEmail(email);
-  if (!student || !bcrypt.compareSync(password, student.passwordHash)) {
+  // Always run a real bcrypt comparison, even for an unknown email — against
+  // a fixed dummy hash — so this branch takes the same ~50ms a real
+  // account's check would. Otherwise "no such student" returns near-
+  // instantly while a real account's wrong-password check doesn't, and
+  // that timing difference reveals which emails have accounts even though
+  // the response bodies are identical.
+  const passwordMatches = bcrypt.compareSync(password, student ? student.passwordHash : DUMMY_PASSWORD_HASH);
+  if (!student || !passwordMatches) {
     const throttle = db.recordFailedAttempt(email);
     db.recordLoginAttempt({ email, ip, success: false, reason: student ? 'bad_password' : 'unknown_email' });
     if (throttle.lockedUntil) {

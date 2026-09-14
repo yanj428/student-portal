@@ -1,3 +1,40 @@
+// Famous quotes about learning/education for the login page's right panel.
+const QUOTES = [
+  { text: 'Education is the most powerful weapon which you can use to change the world.', author: 'Nelson Mandela' },
+  { text: 'The beautiful thing about learning is that no one can take it away from you.', author: 'B.B. King' },
+  { text: 'Live as if you were to die tomorrow. Learn as if you were to live forever.', author: 'Mahatma Gandhi' },
+  { text: 'An investment in knowledge pays the best interest.', author: 'Benjamin Franklin' },
+  { text: 'The roots of education are bitter, but the fruit is sweet.', author: 'Aristotle' },
+];
+
+let quoteIndex = 0;
+const quoteTextEl = document.getElementById('quote-text');
+const quoteAuthorEl = document.getElementById('quote-author');
+const quotePrevBtn = document.getElementById('quote-prev');
+const quoteNextBtn = document.getElementById('quote-next');
+
+function renderQuote() {
+  const q = QUOTES[quoteIndex];
+  if (quoteTextEl) quoteTextEl.textContent = `“${q.text}”`;
+  if (quoteAuthorEl) quoteAuthorEl.textContent = `— ${q.author}`;
+}
+
+if (quoteTextEl && quoteAuthorEl) {
+  renderQuote();
+  if (quotePrevBtn) {
+    quotePrevBtn.addEventListener('click', () => {
+      quoteIndex = (quoteIndex - 1 + QUOTES.length) % QUOTES.length;
+      renderQuote();
+    });
+  }
+  if (quoteNextBtn) {
+    quoteNextBtn.addEventListener('click', () => {
+      quoteIndex = (quoteIndex + 1) % QUOTES.length;
+      renderQuote();
+    });
+  }
+}
+
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
 const loginError = document.getElementById('login-error');

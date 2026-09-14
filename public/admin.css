@@ -358,7 +358,8 @@ html {
 .panel-hint {
   font-size: 13px;
   color: var(--text-muted);
-  margin: 0 0 22px 0;
+  line-height: 1.6;
+  margin: 18px 0 22px 0;
 }
 .panel-header {
   display: flex;

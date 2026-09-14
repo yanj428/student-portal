@@ -12,6 +12,7 @@
   --radius-md: 14px;
   --radius-sm: 10px;
   --shadow: 0 10px 30px rgba(150, 30, 32, 0.08);
+  --zoom: 1.3;
 }
 
 * { box-sizing: border-box; }
@@ -26,7 +27,7 @@ html, body {
 
 /* Scales the whole portal UI (fonts, spacing, icons) up by 1.3x. */
 html {
-  zoom: 1.3;
+  zoom: var(--zoom);
 }
 
 /* The sidebar is pinned to the left edge of the actual browser viewport
@@ -36,7 +37,9 @@ html {
    side on a wide monitor. */
 .app {
   display: flex;
-  min-height: 100vh;
+  /* zoom scales this box up too, so divide by it first or the box would
+     render 1.3x taller than the real viewport and push its content down. */
+  min-height: calc(100vh / var(--zoom));
 }
 
 /* Sidebar */

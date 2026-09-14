@@ -8,19 +8,23 @@
   --border: #E5DCDC;
   --radius-lg: 28px;
   --radius-md: 14px;
+  --zoom: 1.3;
 }
 
 * { box-sizing: border-box; }
 
 /* Scales the whole login/change-password UI (fonts, spacing, icons) up by 1.3x. */
 html {
-  zoom: 1.3;
+  zoom: var(--zoom);
 }
 
 html, body {
   margin: 0;
   padding: 0;
-  height: 100%;
+  /* Same zoom-vs-viewport-unit issue as .login-page below: 100% here
+     resolves against the pre-zoom viewport, then zoom scales it 1.3x
+     taller than the real screen unless divided back down first. */
+  height: calc(100vh / var(--zoom));
   overflow: hidden;
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: var(--text);
@@ -32,7 +36,9 @@ html, body {
 }
 
 .login-page {
-  height: 100vh;
+  /* zoom scales this box up too, so divide by it first or the box would
+     render 1.3x taller than the real viewport and push its content down. */
+  height: calc(100vh / var(--zoom));
   display: flex;
   align-items: center;
   justify-content: center;

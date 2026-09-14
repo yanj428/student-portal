@@ -1,4 +1,4 @@
-const rateLimit = require('express-rate-limit');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 
 // These sit on top of the timed account lockout (server/db.js), not instead
 // of it: the lockout protects one account/email, this protects the server
@@ -29,4 +29,31 @@ const passwordChangeLimiter = rateLimit({
   message: { error: 'Too many password change attempts. Please try again later.' },
 });
 
-module.exports = { studentLoginLimiter, adminLoginLimiter, passwordChangeLimiter };
+// Keyed by student id (not IP) since the concern here is spam from one
+// account, not one network address — a school's shared wifi/NAT would
+// otherwise throttle every student behind it together.
+const voicePostLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: parseInt(process.env.VOICE_POST_RATE_LIMIT, 10) || 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.session.studentId || ipKeyGenerator(req.ip),
+  message: { error: 'Too many posts submitted. Please try again later.' },
+});
+
+const voiceReplyLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: parseInt(process.env.VOICE_REPLY_RATE_LIMIT, 10) || 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.session.studentId || ipKeyGenerator(req.ip),
+  message: { error: 'Too many replies submitted. Please try again later.' },
+});
+
+module.exports = {
+  studentLoginLimiter,
+  adminLoginLimiter,
+  passwordChangeLimiter,
+  voicePostLimiter,
+  voiceReplyLimiter,
+};

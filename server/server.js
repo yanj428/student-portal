@@ -32,8 +32,15 @@ app.use(
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
         frameAncestors: ["'none'"],
+        // Only meaningful (and only safe to send) once the site is actually
+        // served over HTTPS — forcing it on for local http:// dev would have
+        // the browser try to upgrade same-origin requests to https and fail.
+        upgradeInsecureRequests: SESSION_COOKIE_SECURE ? [] : null,
       },
     },
+    // Same reasoning as the cookie's `secure` flag: only send Strict-
+    // Transport-Security once we're really on HTTPS in production.
+    hsts: SESSION_COOKIE_SECURE,
   })
 );
 

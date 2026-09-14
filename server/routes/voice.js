@@ -3,6 +3,7 @@ const crypto = require('crypto');
 
 const db = require('../db');
 const { requireAdmin, requireStudent } = require('../middleware/auth');
+const { voicePostLimiter, voiceReplyLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
 
@@ -67,7 +68,7 @@ router.get('/api/voice/posts', requireStudent, (req, res) => {
   res.json({ posts });
 });
 
-router.post('/api/voice/posts', requireStudent, (req, res) => {
+router.post('/api/voice/posts', requireStudent, voicePostLimiter, (req, res) => {
   const { title, category, body } = req.body || {};
 
   if (typeof title !== 'string' || !title.trim()) {
@@ -121,7 +122,7 @@ router.post('/api/voice/posts/:id/star', requireStudent, (req, res) => {
   res.json({ starCount: post.stars.length, isStarredByMe: post.stars.includes(viewerId) });
 });
 
-router.post('/api/voice/posts/:id/replies', requireStudent, (req, res) => {
+router.post('/api/voice/posts/:id/replies', requireStudent, voiceReplyLimiter, (req, res) => {
   const { body } = req.body || {};
   if (typeof body !== 'string' || !body.trim()) {
     return res.status(400).json({ error: 'Reply cannot be empty.' });

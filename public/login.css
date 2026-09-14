@@ -6,55 +6,44 @@
   --text: #2B2020;
   --text-muted: #8A7B7B;
   --border: #E5DCDC;
-  --radius-lg: 28px;
-  --radius-md: 14px;
-  --zoom: 1.3;
+  --radius-lg: 36.4px;
+  --radius-md: 18.2px;
 }
 
 * { box-sizing: border-box; }
 
-/* Scales the whole login/change-password UI (fonts, spacing, icons) up by 1.3x. */
-html {
-  zoom: var(--zoom);
-}
-
 html, body {
   margin: 0;
   padding: 0;
-  /* Same zoom-vs-viewport-unit issue as .login-page below: 100% here
-     resolves against the pre-zoom viewport, then zoom scales it 1.3x
-     taller than the real screen unless divided back down first. */
-  height: calc(100vh / var(--zoom));
+  height: 100%;
   overflow: hidden;
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: var(--text);
   background-color: #FFFFFF;
   background-image:
-    linear-gradient(rgba(150,30,32,0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(150,30,32,0.05) 1px, transparent 1px);
-  background-size: 42px 42px;
+    linear-gradient(rgba(150,30,32,0.05) 1.3px, transparent 1.3px),
+    linear-gradient(90deg, rgba(150,30,32,0.05) 1.3px, transparent 1.3px);
+  background-size: 54.6px 54.6px;
 }
 
 .login-page {
-  /* zoom scales this box up too, so divide by it first or the box would
-     render 1.3x taller than the real viewport and push its content down. */
-  height: calc(100vh / var(--zoom));
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 31.2px;
 }
 
 .login-card {
   width: 100%;
-  max-width: 1140px;
+  max-width: 1482px;
   height: 100%;
-  max-height: 680px;
+  max-height: 884px;
   background: #fff;
   border-radius: var(--radius-lg);
   display: grid;
   grid-template-columns: 1fr 1fr;
-  box-shadow: 0 30px 70px rgba(43, 32, 32, 0.14);
+  box-shadow: 0 39px 91px rgba(43, 32, 32, 0.14);
   overflow: hidden;
 }
 
@@ -63,64 +52,64 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px 40px;
+  padding: 41.6px 52px;
   overflow-y: auto;
   min-height: 0;
 }
 
 .login-left-inner {
   width: 100%;
-  max-width: 380px;
+  max-width: 494px;
 }
 
 .login-logo {
-  height: 64px;
+  height: 83.2px;
   width: auto;
-  margin: 0 0 18px 0;
+  margin: 0 0 23.4px 0;
   display: block;
 }
 
 .welcome {
-  font-size: 30px;
+  font-size: 39px;
   font-weight: 800;
-  margin: 0 0 8px 0;
+  margin: 0 0 10.4px 0;
 }
 .subtitle {
-  font-size: 14px;
+  font-size: 18.2px;
   color: var(--text-muted);
-  margin: 0 0 30px 0;
+  margin: 0 0 39px 0;
 }
 
 .field-label {
   display: block;
-  font-size: 13.5px;
+  font-size: 17.55px;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 10.4px;
 }
 
 .field-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 20px;
-  margin-bottom: 8px;
+  margin-top: 26px;
+  margin-bottom: 10.4px;
 }
 .field-row .field-label { margin-bottom: 0; }
 
 .forgot {
-  font-size: 12.5px;
+  font-size: 16.25px;
   color: var(--primary);
   font-weight: 600;
   text-decoration: none;
 }
 
 .forgot-note {
-  margin: -2px 0 12px 0;
-  padding: 10px 12px;
+  margin: -2.6px 0 15.6px 0;
+  padding: 13px 15.6px;
   border-radius: var(--radius-md);
   background: var(--primary-tint);
   color: var(--text);
-  font-size: 12.5px;
+  font-size: 16.25px;
   line-height: 1.5;
 }
 .forgot-note[hidden] { display: none; }
@@ -132,11 +121,11 @@ html, body {
 
 .field-input {
   width: 100%;
-  padding: 13px 16px;
+  padding: 16.9px 20.8px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border);
+  border: 1.3px solid var(--border);
   font-family: inherit;
-  font-size: 14px;
+  font-size: 18.2px;
   outline: none;
   color: var(--text);
   background: #fff;
@@ -144,16 +133,16 @@ html, body {
 .field-input::placeholder { color: #B7ACAC; }
 .field-input:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(150,30,32,0.1);
+  box-shadow: 0 0 0 3.9px rgba(150,30,32,0.1);
 }
 .field-input.invalid {
   border-color: #C0392B;
-  box-shadow: 0 0 0 3px rgba(192,57,43,0.1);
+  box-shadow: 0 0 0 3.9px rgba(192,57,43,0.1);
 }
 
 .field-error {
-  margin: 8px 2px 0 2px;
-  font-size: 12.5px;
+  margin: 10.4px 2.6px 0 2.6px;
+  font-size: 16.25px;
   color: #C0392B;
   font-weight: 500;
 }
@@ -163,29 +152,29 @@ html, body {
 }
 .toggle-pw {
   position: absolute;
-  right: 14px;
+  right: 18.2px;
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
   cursor: pointer;
   color: var(--text-muted);
-  padding: 4px;
+  padding: 5.2px;
   display: flex;
 }
-.toggle-pw svg { width: 18px; height: 18px; }
+.toggle-pw svg { width: 23.4px; height: 23.4px; }
 .toggle-pw.showing { color: var(--primary); }
 
 .login-btn {
   width: 100%;
-  margin-top: 26px;
-  padding: 14px;
+  margin-top: 33.8px;
+  padding: 18.2px;
   border-radius: var(--radius-md);
   border: none;
   background: var(--primary);
   color: #fff;
   font-family: inherit;
-  font-size: 15px;
+  font-size: 19.5px;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s ease;
@@ -195,15 +184,15 @@ html, body {
 
 .signup-line {
   text-align: center;
-  margin-top: 32px;
-  font-size: 13px;
+  margin-top: 41.6px;
+  font-size: 16.9px;
   color: var(--text-muted);
   line-height: 1.5;
 }
 .privacy-note {
   text-align: center;
-  margin-top: 12px;
-  font-size: 11.5px;
+  margin-top: 15.6px;
+  font-size: 14.95px;
   color: var(--text-muted);
   line-height: 1.5;
   opacity: 0.85;
@@ -212,8 +201,8 @@ html, body {
 /* Right */
 .login-right {
   position: relative;
-  margin: 18px;
-  border-radius: 22px;
+  margin: 23.4px;
+  border-radius: 28.6px;
   overflow: hidden;
 }
 
@@ -226,51 +215,51 @@ html, body {
 
 .testimonial {
   position: absolute;
-  left: 24px;
-  right: 24px;
-  bottom: 24px;
-  padding: 26px 26px 22px 26px;
-  border-radius: 18px;
+  left: 31.2px;
+  right: 31.2px;
+  bottom: 31.2px;
+  padding: 33.8px 33.8px 28.6px 33.8px;
+  border-radius: 23.4px;
   background: rgba(46, 15, 16, 0.45);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(13px);
+  -webkit-backdrop-filter: blur(13px);
   color: #fff;
 }
 
 .quote {
-  font-size: 16.5px;
+  font-size: 21.45px;
   line-height: 1.5;
-  margin: 0 0 20px 0;
+  margin: 0 0 26px 0;
 }
 
 .testimonial-name {
-  font-size: 17px;
+  font-size: 22.1px;
   font-weight: 700;
 }
 .testimonial-role {
-  font-size: 13.5px;
+  font-size: 17.55px;
   font-weight: 600;
-  margin-top: 6px;
+  margin-top: 7.8px;
 }
 .testimonial-org {
-  font-size: 13px;
+  font-size: 16.9px;
   color: rgba(255,255,255,0.75);
-  margin-top: 2px;
+  margin-top: 2.6px;
 }
 
 .testimonial-nav {
   position: absolute;
-  right: 26px;
-  bottom: 22px;
+  right: 33.8px;
+  bottom: 28.6px;
   display: flex;
-  gap: 10px;
+  gap: 13px;
 }
 
 .arrow-btn {
-  width: 36px;
-  height: 36px;
+  width: 46.8px;
+  height: 46.8px;
   border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.4);
+  border: 1.3px solid rgba(255,255,255,0.4);
   background: transparent;
   color: #fff;
   display: flex;
@@ -278,12 +267,12 @@ html, body {
   justify-content: center;
   cursor: pointer;
 }
-.arrow-btn svg { width: 16px; height: 16px; }
+.arrow-btn svg { width: 20.8px; height: 20.8px; }
 .arrow-btn:hover { background: rgba(255,255,255,0.15); }
 
 /* Responsive */
 @media (max-width: 980px) {
   .login-card { grid-template-columns: 1fr; min-height: unset; }
   .login-right { display: none; }
-  .login-left { padding: 40px 28px; }
+  .login-left { padding: 52px 36.4px; }
 }

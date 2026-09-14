@@ -7,6 +7,24 @@ const attemptsBody = document.getElementById('security-attempts-body');
 const attemptsFilter = document.getElementById('security-attempts-filter');
 const attemptsFilterForm = document.getElementById('security-attempts-filter-form');
 
+const adminCountEl = document.getElementById('admin-count');
+const adminList = document.getElementById('admin-list');
+const adminListEmpty = document.getElementById('admin-list-empty');
+const adminCreateForm = document.getElementById('admin-create-form');
+const newAdminEmail = document.getElementById('new-admin-email');
+const newAdminPassword = document.getElementById('new-admin-password');
+const adminCreateError = document.getElementById('admin-create-error');
+
+const adminPasswordForm = document.getElementById('admin-password-form');
+const adminCurrentPassword = document.getElementById('admin-current-password');
+const adminNewPassword = document.getElementById('admin-new-password');
+const adminPasswordError = document.getElementById('admin-password-error');
+const adminPasswordSuccess = document.getElementById('admin-password-success');
+
+const auditLogBody = document.getElementById('audit-log-body');
+
+let currentAdminId = null;
+
 function formatTime(iso) {
   return new Date(iso).toLocaleString('en-US', {
     month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
@@ -18,7 +36,9 @@ function minutesUntil(iso) {
 }
 
 export async function loadSecurity() {
-  await Promise.all([loadLockedAccounts(), loadAttempts()]);
+  const session = await getJSON('/api/admin/session');
+  if (session) currentAdminId = session.id;
+  await Promise.all([loadLockedAccounts(), loadAttempts(), loadAdmins(), loadAuditLog()]);
 }
 
 async function loadLockedAccounts() {
@@ -92,3 +112,105 @@ attemptsFilterForm.addEventListener('submit', (e) => {
   e.preventDefault();
   loadAttempts();
 });
+
+async function loadAdmins() {
+  const data = await getJSON('/api/admin/admins');
+  if (!data) return;
+  renderAdmins(data.admins);
+}
+
+function renderAdmins(admins) {
+  adminCountEl.textContent = admins.length;
+  adminList.querySelectorAll('.simple-item').forEach((el) => el.remove());
+  adminListEmpty.hidden = admins.length > 0;
+
+  admins.forEach((admin) => {
+    const isSelf = admin.id === currentAdminId;
+    const div = document.createElement('div');
+    div.className = 'simple-item';
+    div.innerHTML = `
+      <div class="simple-item-head">
+        <span class="simple-item-title">${escapeHtml(admin.email)}${isSelf ? ' (you)' : ''}</span>
+        <div class="simple-item-actions">
+          ${isSelf ? '' : '<button class="delete-btn" aria-label="Remove admin"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7H20M9 7V4C9 3.4 9.4 3 10 3H14C14.6 3 15 3.4 15 4V7M18 7L17.3 19C17.2 19.6 16.7 20 16.1 20H7.9C7.3 20 6.8 19.6 6.7 19L6 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'}
+        </div>
+      </div>
+    `;
+    if (!isSelf) {
+      div.querySelector('.delete-btn').addEventListener('click', async () => {
+        if (!confirm(`Remove admin access for ${admin.email}?`)) return;
+        const { ok, data } = await sendJSON(`/api/admin/admins/${admin.id}`, 'DELETE', {});
+        if (!ok) {
+          alert(data.error || 'Could not remove this admin.');
+          return;
+        }
+        loadAdmins();
+      });
+    }
+    adminList.appendChild(div);
+  });
+}
+
+adminCreateForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  adminCreateError.hidden = true;
+
+  const { ok, data } = await sendJSON('/api/admin/admins', 'POST', {
+    email: newAdminEmail.value.trim(),
+    password: newAdminPassword.value,
+  });
+
+  if (!ok) {
+    adminCreateError.textContent = data.error || 'Could not add this admin.';
+    adminCreateError.hidden = false;
+    return;
+  }
+
+  adminCreateForm.reset();
+  loadAdmins();
+});
+
+adminPasswordForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  adminPasswordError.hidden = true;
+  adminPasswordSuccess.hidden = true;
+
+  const { ok, data } = await sendJSON('/api/admin/change-password', 'POST', {
+    currentPassword: adminCurrentPassword.value,
+    newPassword: adminNewPassword.value,
+  });
+
+  if (!ok) {
+    adminPasswordError.textContent = data.error || 'Could not change your password.';
+    adminPasswordError.hidden = false;
+    return;
+  }
+
+  adminPasswordForm.reset();
+  adminPasswordSuccess.hidden = false;
+});
+
+async function loadAuditLog() {
+  const data = await getJSON('/api/admin/security/audit-log');
+  if (!data) return;
+  renderAuditLog(data.auditLog);
+}
+
+function renderAuditLog(entries) {
+  auditLogBody.innerHTML = '';
+  if (entries.length === 0) {
+    auditLogBody.innerHTML = '<tr class="empty-row"><td colspan="4">No audit log entries yet.</td></tr>';
+    return;
+  }
+  entries.forEach((entry) => {
+    const tr = document.createElement('tr');
+    const details = entry.details ? Object.values(entry.details).join(', ') : '';
+    tr.innerHTML = `
+      <td>${escapeHtml(entry.adminEmail)}</td>
+      <td>${escapeHtml(entry.action)}</td>
+      <td>${escapeHtml(details)}</td>
+      <td>${formatTime(entry.createdAt)}</td>
+    `;
+    auditLogBody.appendChild(tr);
+  });
+}

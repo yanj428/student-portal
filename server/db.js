@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const Database = require('better-sqlite3');
 
 const {
@@ -8,6 +10,8 @@ const {
   LOGIN_LOCKOUT_BASE_MINUTES,
   LOGIN_LOCKOUT_MAX_MINUTES,
   LOGIN_ATTEMPT_LOG_RETENTION_DAYS,
+  ADMIN_PASSWORD,
+  ADMIN_BOOTSTRAP_EMAIL,
 } = require('./config');
 
 const DATA_DIR = process.env.DATA_DIR
@@ -101,7 +105,38 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS idx_login_attempts_created ON login_attempts (createdAt);
   CREATE INDEX IF NOT EXISTS idx_login_attempts_email ON login_attempts (email);
+
+  CREATE TABLE IF NOT EXISTS admins (
+    id TEXT PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    passwordHash TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS admin_audit_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    adminEmail TEXT NOT NULL,
+    action TEXT NOT NULL,
+    details TEXT,
+    createdAt TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created ON admin_audit_log (createdAt);
 `);
+
+// The very first time this runs against a database with no admin accounts
+// yet, create one from ADMIN_PASSWORD so the existing single-password
+// workflow keeps working — after that, admins manage their own accounts
+// and this environment variable is no longer read for authentication.
+(function ensureAdminsBootstrap() {
+  const { c } = db.prepare('SELECT COUNT(*) AS c FROM admins').get();
+  if (c > 0) return;
+  db.prepare('INSERT INTO admins (id, email, passwordHash, createdAt) VALUES (?, ?, ?, ?)').run(
+    crypto.randomUUID(),
+    ADMIN_BOOTSTRAP_EMAIL.toLowerCase(),
+    bcrypt.hashSync(ADMIN_PASSWORD, 10),
+    new Date().toISOString()
+  );
+})();
 
 function rowToStudent(row) {
   if (!row) return null;
@@ -484,6 +519,51 @@ module.exports = {
   // this same portal.db file/connection rather than opening a second one —
   // currently just the session store (server/sessionStore.js).
   rawConnection: db,
+
+  // ---- Admin accounts ----
+  findAdminByEmail(email) {
+    return db.prepare('SELECT * FROM admins WHERE lower(email) = ?').get(email.trim().toLowerCase()) || null;
+  },
+  findAdminById(id) {
+    return db.prepare('SELECT * FROM admins WHERE id = ?').get(id) || null;
+  },
+  listAdmins() {
+    return db.prepare('SELECT id, email, createdAt FROM admins ORDER BY createdAt').all();
+  },
+  adminCount() {
+    return db.prepare('SELECT COUNT(*) AS c FROM admins').get().c;
+  },
+  createAdmin({ email, passwordHash }) {
+    const admin = { id: crypto.randomUUID(), email: email.trim().toLowerCase(), passwordHash, createdAt: new Date().toISOString() };
+    db.prepare('INSERT INTO admins (id, email, passwordHash, createdAt) VALUES (@id, @email, @passwordHash, @createdAt)').run(admin);
+    return admin;
+  },
+  updateAdminPasswordHash(id, passwordHash) {
+    return db.prepare('UPDATE admins SET passwordHash = ? WHERE id = ?').run(passwordHash, id).changes > 0;
+  },
+  deleteAdmin(id) {
+    return db.prepare('DELETE FROM admins WHERE id = ?').run(id).changes > 0;
+  },
+
+  // ---- Admin audit log ----
+  logAuditEvent(adminEmail, action, details) {
+    // Falls back rather than throwing if adminEmail is missing (e.g. a
+    // session created before adminEmail existed on the session) — an audit
+    // log entry that says "unknown" is far better than a 500 on the action
+    // it was trying to record.
+    db.prepare('INSERT INTO admin_audit_log (adminEmail, action, details, createdAt) VALUES (?, ?, ?, ?)').run(
+      adminEmail || 'unknown',
+      action,
+      details ? JSON.stringify(details) : null,
+      new Date().toISOString()
+    );
+  },
+  listAuditLog({ limit } = {}) {
+    return db
+      .prepare('SELECT * FROM admin_audit_log ORDER BY createdAt DESC LIMIT ?')
+      .all(Math.min(limit || 100, 500))
+      .map((row) => ({ ...row, details: row.details ? JSON.parse(row.details) : null }));
+  },
 
   // Logs a student out everywhere except (optionally) the session making
   // this call, so a password change or an admin reset can't be undone by

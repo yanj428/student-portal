@@ -36,12 +36,15 @@ router.post('/api/admin/students', requireAdmin, (req, res) => {
     createdAt: new Date().toISOString(),
   };
   db.addStudent(student);
+  db.logAuditEvent(req.session.adminEmail, 'student.create', { email: student.email });
   res.status(201).json({ student: publicStudent(student), password: DEFAULT_STUDENT_PASSWORD });
 });
 
 router.delete('/api/admin/students/:id', requireAdmin, (req, res) => {
+  const student = db.findById(req.params.id);
   const removed = db.removeStudent(req.params.id);
   if (!removed) return res.status(404).json({ error: 'Student not found.' });
+  db.logAuditEvent(req.session.adminEmail, 'student.delete', { email: student && student.email });
   res.json({ ok: true });
 });
 
@@ -50,6 +53,7 @@ router.post('/api/admin/students/:id/reset-password', requireAdmin, (req, res) =
   const student = db.updateStudentPasswordHash(req.params.id, passwordHash, true);
   if (!student) return res.status(404).json({ error: 'Student not found.' });
   db.destroyOtherStudentSessions(student.id);
+  db.logAuditEvent(req.session.adminEmail, 'student.reset_password', { email: student.email });
   res.json({ ok: true, password: DEFAULT_STUDENT_PASSWORD });
 });
 
@@ -57,7 +61,9 @@ router.post('/api/admin/students/:id/reset-password', requireAdmin, (req, res) =
 // db.js, for a staff decision (e.g. a student leaves mid-year) rather than
 // too many failed passwords.
 router.post('/api/admin/students/:id/lock', requireAdmin, (req, res) => {
-  if (!db.setAdminLocked(req.params.id, true)) return res.status(404).json({ error: 'Student not found.' });
+  const student = db.findById(req.params.id);
+  if (!student || !db.setAdminLocked(req.params.id, true)) return res.status(404).json({ error: 'Student not found.' });
+  db.logAuditEvent(req.session.adminEmail, 'student.lock', { email: student.email });
   res.json({ ok: true });
 });
 
@@ -66,6 +72,7 @@ router.post('/api/admin/students/:id/unlock', requireAdmin, (req, res) => {
   if (!student) return res.status(404).json({ error: 'Student not found.' });
   db.setAdminLocked(student.id, false);
   db.clearThrottle(student.email);
+  db.logAuditEvent(req.session.adminEmail, 'student.unlock', { email: student.email });
   res.json({ ok: true });
 });
 

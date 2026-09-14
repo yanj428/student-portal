@@ -15,9 +15,10 @@
   <div class="gate" id="gate">
     <form class="gate-card" id="gate-form">
       <h1>Admin access</h1>
-      <p>Enter the admin password to manage student accounts.</p>
+      <p>Enter your admin email and password to manage the student portal.</p>
+      <input class="field-input" type="email" id="admin-email" placeholder="Admin email" autocomplete="username" />
       <input class="field-input" type="password" id="admin-password" placeholder="Admin password" autocomplete="current-password" />
-      <p class="field-error" id="gate-error" hidden>Incorrect password.</p>
+      <p class="field-error" id="gate-error" hidden>Incorrect email or password.</p>
       <button type="submit" class="btn primary">Continue</button>
     </form>
   </div>
@@ -88,6 +89,7 @@
           </button>
         </nav>
 
+        <p class="current-admin-email" id="current-admin-email"></p>
         <button class="btn ghost sidebar-logout" id="admin-logout">Log out</button>
       </aside>
 
@@ -639,6 +641,72 @@
             </thead>
             <tbody id="security-attempts-body">
               <tr class="empty-row"><td colspan="4">No login attempts recorded yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Admin accounts</h2>
+          <span class="count-badge" id="admin-count">0</span>
+        </div>
+        <p class="panel-hint">Everyone listed here can manage the whole portal — there is no separate limited role yet.</p>
+
+        <form id="admin-create-form" class="create-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="new-admin-email">Email</label>
+              <input class="field-input" type="email" id="new-admin-email" required />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="new-admin-password">Temporary password</label>
+              <input class="field-input" type="text" id="new-admin-password" required minlength="8" />
+            </div>
+          </div>
+          <p class="field-error" id="admin-create-error" hidden></p>
+          <button type="submit" class="btn primary">Add admin</button>
+        </form>
+
+        <div class="simple-list" id="admin-list">
+          <p class="empty-hint" id="admin-list-empty">No admin accounts yet.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Change your password</h2>
+        <form id="admin-password-form" class="create-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="admin-current-password">Current password</label>
+              <input class="field-input" type="password" id="admin-current-password" required autocomplete="current-password" />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="admin-new-password">New password</label>
+              <input class="field-input" type="password" id="admin-new-password" required minlength="8" autocomplete="new-password" />
+            </div>
+          </div>
+          <p class="field-error" id="admin-password-error" hidden></p>
+          <p class="field-success" id="admin-password-success" hidden>Password changed.</p>
+          <button type="submit" class="btn primary">Change password</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Audit log</h2>
+        <p class="panel-hint">Security-relevant admin actions: student and admin account changes, unlocks.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Admin</th>
+                <th>Action</th>
+                <th>Details</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="audit-log-body">
+              <tr class="empty-row"><td colspan="4">No audit log entries yet.</td></tr>
             </tbody>
           </table>
         </div>

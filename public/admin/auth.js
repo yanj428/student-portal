@@ -3,15 +3,18 @@
 
 const gate = document.getElementById('gate');
 const gateForm = document.getElementById('gate-form');
+const adminEmailInput = document.getElementById('admin-email');
 const adminPasswordInput = document.getElementById('admin-password');
 const gateError = document.getElementById('gate-error');
 const adminPage = document.getElementById('admin-page');
 const adminLogout = document.getElementById('admin-logout');
+const currentAdminEmailEl = document.getElementById('current-admin-email');
 
 export function initAuth(onLogin) {
-  function showAdminPanel() {
+  function showAdminPanel(email) {
     gate.hidden = true;
     adminPage.hidden = false;
+    if (currentAdminEmailEl && email) currentAdminEmailEl.textContent = email;
     onLogin();
   }
 
@@ -27,15 +30,16 @@ export function initAuth(onLogin) {
     const res = await fetch('/api/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: adminPasswordInput.value }),
+      body: JSON.stringify({ email: adminEmailInput.value, password: adminPasswordInput.value }),
     });
 
     if (!res.ok) {
       gateError.hidden = false;
       return;
     }
+    const data = await res.json();
     adminPasswordInput.value = '';
-    showAdminPanel();
+    showAdminPanel(data.email);
   });
 
   adminLogout.addEventListener('click', async () => {
@@ -46,7 +50,7 @@ export function initAuth(onLogin) {
   (async function checkSession() {
     const res = await fetch('/api/admin/session');
     const data = await res.json();
-    if (data.isAdmin) showAdminPanel();
+    if (data.isAdmin) showAdminPanel(data.email);
     else showGate();
   })();
 }

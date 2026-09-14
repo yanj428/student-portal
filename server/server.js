@@ -59,6 +59,7 @@ app.use(
 );
 
 app.use(require('./routes/adminAuth'));
+app.use(require('./routes/admins'));
 app.use(require('./routes/students'));
 app.use(require('./routes/content'));
 app.use(require('./routes/lunch'));

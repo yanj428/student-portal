@@ -3,6 +3,11 @@ require('dotenv').config();
 const SCHOOL_DOMAIN = '@kpis.ac.th';
 const PORT = process.env.PORT || 8791;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'kpis-admin';
+// Only used once, to create the first admin account (see db.js's
+// ensureAdminsBootstrap) the first time the app runs against a database
+// with no admins table yet. After that, admin accounts and their own
+// hashed passwords live in the database, and ADMIN_PASSWORD is unused.
+const ADMIN_BOOTSTRAP_EMAIL = process.env.ADMIN_BOOTSTRAP_EMAIL || 'admin@kpis.ac.th';
 const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-only-secret-change-me';
 const DEFAULT_STUDENT_PASSWORD = 'keerapat';
 const ACCOUNT_LOCKED_MESSAGE =
@@ -44,6 +49,7 @@ module.exports = {
   SCHOOL_DOMAIN,
   PORT,
   ADMIN_PASSWORD,
+  ADMIN_BOOTSTRAP_EMAIL,
   SESSION_SECRET,
   DEFAULT_STUDENT_PASSWORD,
   ACCOUNT_LOCKED_MESSAGE,

@@ -27,11 +27,13 @@ router.post('/api/admin/security/unlock', requireAdmin, (req, res) => {
     return res.status(400).json({ error: 'Email is required.' });
   }
   db.unlockEmail(email);
+  db.logAuditEvent(req.session.adminEmail, 'security.unlock', { email });
   res.json({ ok: true });
 });
 
 router.post('/api/admin/security/unlock-all', requireAdmin, (req, res) => {
   db.unlockAllLocked();
+  db.logAuditEvent(req.session.adminEmail, 'security.unlock_all', null);
   res.json({ ok: true });
 });
 
@@ -39,6 +41,11 @@ router.get('/api/admin/security/attempts', requireAdmin, (req, res) => {
   const { email, ip, limit } = req.query;
   const attempts = db.listLoginAttempts({ email, ip, limit: limit ? parseInt(limit, 10) : undefined });
   res.json({ attempts });
+});
+
+router.get('/api/admin/security/audit-log', requireAdmin, (req, res) => {
+  const { limit } = req.query;
+  res.json({ auditLog: db.listAuditLog({ limit: limit ? parseInt(limit, 10) : undefined }) });
 });
 
 module.exports = router;

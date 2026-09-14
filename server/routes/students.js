@@ -52,4 +52,20 @@ router.post('/api/admin/students/:id/reset-password', requireAdmin, (req, res) =
   res.json({ ok: true, password: DEFAULT_STUDENT_PASSWORD });
 });
 
+// Manual, permanent lock — separate from the automatic timed lockout in
+// db.js, for a staff decision (e.g. a student leaves mid-year) rather than
+// too many failed passwords.
+router.post('/api/admin/students/:id/lock', requireAdmin, (req, res) => {
+  if (!db.setAdminLocked(req.params.id, true)) return res.status(404).json({ error: 'Student not found.' });
+  res.json({ ok: true });
+});
+
+router.post('/api/admin/students/:id/unlock', requireAdmin, (req, res) => {
+  const student = db.findById(req.params.id);
+  if (!student) return res.status(404).json({ error: 'Student not found.' });
+  db.setAdminLocked(student.id, false);
+  db.clearThrottle(student.email);
+  res.json({ ok: true });
+});
+
 module.exports = router;

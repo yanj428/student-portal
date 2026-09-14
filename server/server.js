@@ -34,6 +34,7 @@ app.use(require('./routes/projects'));
 app.use(require('./routes/quickLinks'));
 app.use(require('./routes/voice'));
 app.use(require('./routes/studentAuth'));
+app.use(require('./routes/security'));
 
 // Rendered student pages (server-side login/password-change gating) take
 // priority over the static handler below, which now only serves assets:

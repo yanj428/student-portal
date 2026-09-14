@@ -39,6 +39,7 @@ function renderStudents(students) {
         <td><span class="grade-pill">${escapeHtml(student.grade)}</span></td>
         <td>${created}</td>
         <td><button class="reset-btn" data-id="${student.id}" data-name="${escapeHtml(student.firstName)} ${escapeHtml(student.lastName)}" aria-label="Reset password">Reset password</button></td>
+        <td><button class="lock-toggle-btn" data-id="${student.id}" data-name="${escapeHtml(student.firstName)} ${escapeHtml(student.lastName)}" data-locked="${student.locked}" aria-label="${student.locked ? 'Unlock account' : 'Lock account'}">${student.locked ? 'Unlock' : 'Lock'}</button></td>
         <td><button class="delete-btn" data-id="${student.id}" aria-label="Remove account"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7H20M9 7V4C9 3.4 9.4 3 10 3H14C14.6 3 15 3.4 15 4V7M18 7L17.3 19C17.2 19.6 16.7 20 16.1 20H7.9C7.3 20 6.8 19.6 6.7 19L6 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button></td>
       `;
       studentRows.appendChild(tr);
@@ -50,6 +51,20 @@ function renderStudents(students) {
   document.querySelectorAll('.reset-btn').forEach((btn) => {
     btn.addEventListener('click', () => resetStudentPassword(btn.dataset.id, btn.dataset.name));
   });
+  document.querySelectorAll('.lock-toggle-btn').forEach((btn) => {
+    btn.addEventListener('click', () => toggleLock(btn.dataset.id, btn.dataset.name, btn.dataset.locked === 'true'));
+  });
+}
+
+async function toggleLock(id, name, currentlyLocked) {
+  const action = currentlyLocked ? 'unlock' : 'lock';
+  if (!confirm(`${currentlyLocked ? 'Unlock' : 'Lock'} ${name}'s account?`)) return;
+  const { ok, data } = await sendJSON(`/api/admin/students/${id}/${action}`, 'POST', {});
+  if (!ok) {
+    alert(data.error || `Could not ${action} the account.`);
+    return;
+  }
+  loadStudents();
 }
 
 async function resetStudentPassword(id, name) {

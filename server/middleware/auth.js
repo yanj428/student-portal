@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const db = require('../db');
 const { DEFAULT_STUDENT_PASSWORD, SCHOOL_DOMAIN } = require('../config');
 
 function isValidSchoolEmail(email) {
@@ -29,7 +30,7 @@ function publicStudent(student) {
     grade: student.grade,
     createdAt: student.createdAt,
     mustChangePassword: !!student.mustChangePassword || stillDefaultPassword,
-    locked: !!student.locked,
+    locked: db.getLockStatus(student.email).locked,
   };
 }
 

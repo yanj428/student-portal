@@ -11,6 +11,7 @@ import { loadCouncil } from './council.js';
 import { loadProjects } from './projects.js';
 import { loadQuickLinks } from './quickLinks.js';
 import { loadLunchCurrent } from './lunch.js';
+import { loadSecurity } from './security.js';
 
 initNav();
 
@@ -27,4 +28,5 @@ initAuth(() => {
   loadProjects();
   loadQuickLinks();
   loadLunchCurrent();
+  loadSecurity();
 });

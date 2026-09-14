@@ -13,6 +13,7 @@ export function initNav() {
     projects: 'StuCo Projects',
     quicklinks: 'Quick Links',
     voice: 'Student Voice',
+    security: 'Security',
   };
 
   const navItems = document.querySelectorAll('.nav-item[data-page]');

@@ -82,6 +82,10 @@
             <span>Student Voice</span>
             <span class="nav-badge" id="nav-voice-badge" hidden>0</span>
           </button>
+          <button class="nav-item" data-page="security" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 3L19 6V11C19 15.4 16 19.4 12 21C8 19.4 5 15.4 5 11V6L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 11.5L11 13.5L15 9.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Security</span>
+          </button>
         </nav>
 
         <button class="btn ghost sidebar-logout" id="admin-logout">Log out</button>
@@ -190,10 +194,11 @@
                 <th>Created</th>
                 <th></th>
                 <th></th>
+                <th></th>
               </tr>
             </thead>
             <tbody id="student-rows">
-              <tr class="empty-row" id="empty-row"><td colspan="6">No student accounts yet.</td></tr>
+              <tr class="empty-row" id="empty-row"><td colspan="7">No student accounts yet.</td></tr>
             </tbody>
           </table>
         </div>
@@ -589,6 +594,53 @@
 
         <div id="voice-pending-list" class="voice-pending-list">
           <p class="empty-hint" id="voice-pending-empty">Nothing waiting for review.</p>
+        </div>
+      </section>
+      </section>
+
+      <section class="admin-page-section" data-section="security" hidden>
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Locked accounts</h2>
+          <button type="button" class="btn ghost" id="security-unlock-all">Unlock all</button>
+        </div>
+        <p class="panel-hint">Includes both automatic timed lockouts (too many failed passwords) and accounts an admin locked manually.</p>
+
+        <div class="simple-list" id="security-locked-list">
+          <p class="empty-hint" id="security-locked-empty">No accounts are currently locked.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Login attempts</h2>
+        <p class="panel-hint">Every login attempt, successful or not, kept for 90 days.</p>
+
+        <form id="security-attempts-filter-form" class="archive-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="security-attempts-filter">Filter by email</label>
+              <input class="field-input" type="text" id="security-attempts-filter" placeholder="student@kpis.ac.th" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn primary">Filter</button>
+          </div>
+        </form>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>IP address</th>
+                <th>Result</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="security-attempts-body">
+              <tr class="empty-row"><td colspan="4">No login attempts recorded yet.</td></tr>
+            </tbody>
+          </table>
         </div>
       </section>
       </section>

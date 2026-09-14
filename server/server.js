@@ -49,6 +49,10 @@ app.use(require('./routes/pages'));
 app.use('/uploads', express.static(UPLOADS_DIR));
 app.use(express.static(path.join(__dirname, '..', 'public'), { extensions: ['html'] }));
 
-app.listen(PORT, () => {
-  console.log(`KPIS student portal running at http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`KPIS student portal running at http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;

@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
+const DATA_DIR = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.join(__dirname, '..', 'data');
 const STUDENTS_FILE = path.join(DATA_DIR, 'students.json');
 const CONTENT_FILE = path.join(DATA_DIR, 'content.json');
 

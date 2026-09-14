@@ -28,29 +28,12 @@ app.use(require('./routes/voice'));
 app.use(require('./routes/studentAuth'));
 
 // ---- Static site ----
-// The project root doubles as the web root (all the .html/.css/.js files live there),
-// but that root also holds data/ (password hashes, student PII), server/, and config
-// files that must never be servable over HTTP. Block those paths before the static
-// handler rather than trying to serve only an allowlist, since that would be a much
-// bigger restructure of an otherwise-flat project layout.
-const BLOCKED_STATIC_PREFIXES = ['/data', '/server', '/node_modules', '/.git'];
-const BLOCKED_STATIC_FILES = new Set([
-  '/.env',
-  '/.env.example',
-  '/.gitignore',
-  '/package.json',
-  '/package-lock.json',
-]);
-app.use((req, res, next) => {
-  const p = req.path;
-  if (BLOCKED_STATIC_FILES.has(p) || BLOCKED_STATIC_PREFIXES.some((prefix) => p === prefix || p.startsWith(prefix + '/'))) {
-    return res.status(404).end();
-  }
-  next();
-});
-
+// Only public/ is served over HTTP. Everything sensitive — data/ (password
+// hashes, student PII), server/, .env, package.json, node_modules/ — lives
+// outside it and is never reachable through the static handler, so no
+// blocklist is needed here.
 app.use('/uploads', express.static(UPLOADS_DIR));
-app.use(express.static(path.join(__dirname, '..'), { extensions: ['html'] }));
+app.use(express.static(path.join(__dirname, '..', 'public'), { extensions: ['html'] }));
 
 app.listen(PORT, () => {
   console.log(`KPIS student portal running at http://localhost:${PORT}`);

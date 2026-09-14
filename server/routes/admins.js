@@ -1,10 +1,8 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const { authenticator } = require('otplib');
 
 const db = require('../db');
 const { requireAdmin, requireOwnerAdmin } = require('../middleware/auth');
-const { generateRecoveryCodes, hashRecoveryCode } = require('../utils/twoFactor');
 
 const router = express.Router();
 
@@ -13,7 +11,7 @@ function isValidEmail(email) {
 }
 
 function publicAdmin(admin) {
-  return { id: admin.id, email: admin.email, role: admin.role, totpEnabled: !!admin.totpEnabled, createdAt: admin.createdAt };
+  return { id: admin.id, email: admin.email, role: admin.role, createdAt: admin.createdAt };
 }
 
 // ---- Admin account management (owner only) ----
@@ -76,7 +74,7 @@ router.delete('/api/admin/admins/:id', requireOwnerAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-// ---- Self-service: any admin manages their own password/2FA ----
+// ---- Self-service: any admin manages their own password ----
 
 router.post('/api/admin/change-password', requireAdmin, (req, res) => {
   const { currentPassword, newPassword } = req.body || {};
@@ -97,60 +95,6 @@ router.post('/api/admin/change-password', requireAdmin, (req, res) => {
   db.destroyOtherAdminSessions(admin.id, req.sessionID);
   db.logAuditEvent(admin.email, 'admin.password_change', null);
   res.json({ ok: true });
-});
-
-// Generates a new secret and returns it for the admin to add to their
-// authenticator app — doesn't turn 2FA on yet (see /2fa/enable), so a
-// setup an admin never finishes can't leave the account in a broken state.
-router.post('/api/admin/2fa/setup', requireAdmin, (req, res) => {
-  const secret = authenticator.generateSecret();
-  db.setPendingTotpSecret(req.admin.id, secret);
-  const otpauthUrl = authenticator.keyuri(req.admin.email, 'KPIS Admin', secret);
-  res.json({ secret, otpauthUrl });
-});
-
-router.post('/api/admin/2fa/enable', requireAdmin, (req, res) => {
-  const { code } = req.body || {};
-  const admin = db.findAdminById(req.admin.id);
-  if (!admin.totpSecret) return res.status(400).json({ error: 'Start 2FA setup first.' });
-  if (typeof code !== 'string' || !authenticator.check(code.trim(), admin.totpSecret)) {
-    return res.status(400).json({ error: 'Incorrect code. Please try again.' });
-  }
-
-  db.enableTotp(admin.id);
-  const recoveryCodes = generateRecoveryCodes();
-  db.replaceRecoveryCodes(admin.id, recoveryCodes.map(hashRecoveryCode));
-  db.logAuditEvent(admin.email, 'admin.2fa_enabled', null);
-
-  // Recovery codes are shown exactly once, here — only their hashes are
-  // ever stored, so this is the only chance to save them.
-  res.json({ ok: true, recoveryCodes });
-});
-
-router.post('/api/admin/2fa/disable', requireAdmin, (req, res) => {
-  const { password } = req.body || {};
-  const admin = db.findAdminById(req.admin.id);
-  if (typeof password !== 'string' || !bcrypt.compareSync(password, admin.passwordHash)) {
-    return res.status(401).json({ error: 'Current password is incorrect.' });
-  }
-
-  db.disableTotp(admin.id);
-  db.logAuditEvent(admin.email, 'admin.2fa_disabled', null);
-  res.json({ ok: true });
-});
-
-router.post('/api/admin/2fa/recovery-codes', requireAdmin, (req, res) => {
-  const { password } = req.body || {};
-  const admin = db.findAdminById(req.admin.id);
-  if (!admin.totpEnabled) return res.status(400).json({ error: '2FA is not enabled.' });
-  if (typeof password !== 'string' || !bcrypt.compareSync(password, admin.passwordHash)) {
-    return res.status(401).json({ error: 'Current password is incorrect.' });
-  }
-
-  const recoveryCodes = generateRecoveryCodes();
-  db.replaceRecoveryCodes(admin.id, recoveryCodes.map(hashRecoveryCode));
-  db.logAuditEvent(admin.email, 'admin.2fa_recovery_codes_regenerated', null);
-  res.json({ ok: true, recoveryCodes });
 });
 
 module.exports = router;

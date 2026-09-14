@@ -132,7 +132,7 @@ function renderAdmins(admins) {
           ${isSelf ? '' : '<button class="delete-btn" aria-label="Remove admin"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7H20M9 7V4C9 3.4 9.4 3 10 3H14C14.6 3 15 3.4 15 4V7M18 7L17.3 19C17.2 19.6 16.7 20 16.1 20H7.9C7.3 20 6.8 19.6 6.7 19L6 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'}
         </div>
       </div>
-      <p class="simple-item-body">${admin.role === 'owner' ? 'Owner' : 'Editor'} &middot; 2FA ${admin.totpEnabled ? 'on' : 'off'}</p>
+      <p class="simple-item-body">${admin.role === 'owner' ? 'Owner' : 'Editor'}</p>
     `;
     div.querySelector('.role-toggle-btn').addEventListener('click', async () => {
       if (!confirm(`Make ${admin.email} ${toggleRole === 'owner' ? 'an owner' : 'an editor'}?`)) return;

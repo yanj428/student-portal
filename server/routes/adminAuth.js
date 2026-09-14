@@ -1,15 +1,11 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const { authenticator } = require('otplib');
 
 const db = require('../db');
 const { ADMIN_SESSION_IDLE_MINUTES, ACCOUNT_LOCKED_MESSAGE, DUMMY_PASSWORD_HASH } = require('../config');
 const { adminLoginLimiter } = require('../middleware/rateLimit');
-const { hashRecoveryCode } = require('../utils/twoFactor');
 
 const router = express.Router();
-
-const PENDING_TOTP_WINDOW_MS = 5 * 60 * 1000;
 
 // Admin lockout/attempt-log state shares the same login_throttle and
 // login_attempts tables the student login uses, keyed under an "admin:"
@@ -93,73 +89,9 @@ router.post('/api/admin/login', adminLoginLimiter, (req, res) => {
     return res.status(401).json({ error: 'Incorrect email or password.' });
   }
 
-  // Password alone isn't enough for a 2FA-enabled admin — regenerate the
-  // session now (so the pending state itself can't be fixated) but hold
-  // off on granting isAdmin until a valid code follows.
-  if (admin.totpEnabled) {
-    req.session.regenerate((err) => {
-      if (err) return res.status(500).json({ error: 'Could not start a session.' });
-      req.session.pending2faAdminId = admin.id;
-      req.session.pending2faExpiresAt = Date.now() + PENDING_TOTP_WINDOW_MS;
-      res.json({ ok: true, requiresTotp: true });
-    });
-    return;
-  }
-
   db.clearThrottle(key);
   db.recordLoginAttempt({ email: key, ip, success: true });
   db.logAuditEvent(admin.email, 'admin.login', null);
-  completeLogin(req, res, admin);
-});
-
-router.post('/api/admin/login/verify-totp', adminLoginLimiter, (req, res) => {
-  const { code, recoveryCode } = req.body || {};
-  const ip = req.ip;
-  const pendingId = req.session.pending2faAdminId;
-  const expiresAt = req.session.pending2faExpiresAt;
-
-  if (!pendingId || !expiresAt || Date.now() > expiresAt) {
-    delete req.session.pending2faAdminId;
-    delete req.session.pending2faExpiresAt;
-    return res.status(401).json({ error: 'No pending login, or it expired. Please log in again.' });
-  }
-
-  const admin = db.findAdminById(pendingId);
-  if (!admin) {
-    delete req.session.pending2faAdminId;
-    delete req.session.pending2faExpiresAt;
-    return res.status(401).json({ error: 'This admin account no longer exists.' });
-  }
-
-  const key = throttleKey(admin.email);
-  const lockStatus = db.getLockStatus(key);
-  if (lockStatus.locked) {
-    return lockedResponse(res, key, ip, lockStatus.lockedUntil);
-  }
-
-  let usedRecovery = false;
-  let valid = false;
-  if (typeof code === 'string' && code.trim()) {
-    valid = authenticator.check(code.trim(), admin.totpSecret);
-  } else if (typeof recoveryCode === 'string' && recoveryCode.trim()) {
-    valid = db.consumeRecoveryCode(admin.id, hashRecoveryCode(recoveryCode));
-    usedRecovery = valid;
-  }
-
-  if (!valid) {
-    const throttle = db.recordFailedAttempt(key);
-    db.recordLoginAttempt({ email: key, ip, success: false, reason: 'bad_totp' });
-    if (throttle.lockedUntil) {
-      return lockedResponse(res, key, ip, throttle.lockedUntil);
-    }
-    return res.status(401).json({ error: 'Incorrect code.' });
-  }
-
-  delete req.session.pending2faAdminId;
-  delete req.session.pending2faExpiresAt;
-  db.clearThrottle(key);
-  db.recordLoginAttempt({ email: key, ip, success: true, reason: usedRecovery ? 'recovery_code' : undefined });
-  db.logAuditEvent(admin.email, 'admin.login', usedRecovery ? { recoveryCode: true } : { totp: true });
   completeLogin(req, res, admin);
 });
 
@@ -180,7 +112,6 @@ router.get('/api/admin/session', (req, res) => {
     email: req.session.adminEmail || null,
     id: req.session.adminId || null,
     role: admin ? admin.role : null,
-    totpEnabled: admin ? !!admin.totpEnabled : false,
   });
 });
 

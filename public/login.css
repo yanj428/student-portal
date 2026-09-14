@@ -271,7 +271,7 @@ html, body {
 .arrow-btn:hover { background: rgba(255,255,255,0.15); }
 
 /* Responsive */
-@media (max-width: 980px) {
+@media (max-width: 1274px) {
   .login-card { grid-template-columns: 1fr; min-height: unset; }
   .login-right { display: none; }
   .login-left { padding: 52px 36.4px; }

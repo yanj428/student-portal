@@ -586,11 +586,11 @@ html, body {
 .quicklink:hover { border-color: var(--primary-light); color: var(--primary); }
 
 /* Responsive */
-@media (max-width: 1100px) {
+@media (max-width: 1430px) {
   .content-grid { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1170px) {
   .app { flex-direction: column; }
   .main { margin-left: 0; max-width: none; padding: 20.8px; }
   .sidebar {

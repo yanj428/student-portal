@@ -331,7 +331,7 @@ html, body {
   gap: 31.2px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1170px) {
   .admin-shell { flex-direction: column; }
   .admin-sidebar { position: static; width: auto; height: auto; border-right: none; border-bottom: 1.3px solid var(--border); }
   .admin-content { margin-left: 0; max-width: none; }
@@ -818,7 +818,7 @@ tr:last-child td { border-bottom: none; }
 }
 .btn.reject:hover { background: #FBEEEC; }
 
-@media (max-width: 640px) {
+@media (max-width: 832px) {
   .form-row { grid-template-columns: 1fr; }
   .content-row, .content-row.two-col { grid-template-columns: 1fr; }
 }

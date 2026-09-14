@@ -87,10 +87,6 @@
             <svg viewBox="0 0 24 24" fill="none"><path d="M12 3L19 6V11C19 15.4 16 19.4 12 21C8 19.4 5 15.4 5 11V6L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 11.5L11 13.5L15 9.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span>Security</span>
           </button>
-          <button class="nav-item" data-page="account" type="button">
-            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.5" r="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M5 20C5 16 8 13.5 12 13.5C16 13.5 19 16 19 20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-            <span>My Account</span>
-          </button>
         </nav>
 
         <p class="current-admin-username" id="current-admin-username"></p>
@@ -593,13 +589,31 @@
       <section class="admin-page-section" data-section="voice" hidden>
       <section class="panel">
         <div class="panel-header">
-          <h2>Student Voice moderation</h2>
+          <h2>Pending review</h2>
           <span class="count-badge" id="voice-pending-count">0</span>
         </div>
-        <p class="panel-hint">Approve or reject posts and replies before they become visible to students.</p>
+        <p class="panel-hint">Suggestions students have submitted are only ever visible to StuCo here - approving one does not make it public.</p>
 
         <div id="voice-pending-list" class="voice-pending-list">
           <p class="empty-hint" id="voice-pending-empty">Nothing waiting for review.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Approved</h2>
+        <p class="panel-hint">Suggestions StuCo has approved. Still only visible here and to the student who submitted it.</p>
+
+        <div id="voice-approved-list" class="voice-pending-list">
+          <p class="empty-hint" id="voice-approved-empty">Nothing approved yet.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Rejected</h2>
+        <p class="panel-hint">Suggestions StuCo has rejected. Approve one again if it was a mistake.</p>
+
+        <div id="voice-rejected-list" class="voice-pending-list">
+          <p class="empty-hint" id="voice-rejected-empty">Nothing rejected.</p>
         </div>
       </section>
       </section>
@@ -707,26 +721,6 @@
       </section>
       </section>
 
-      <section class="admin-page-section" data-section="account" hidden>
-      <section class="panel">
-        <h2>Change your password</h2>
-        <form id="admin-password-form" class="create-form">
-          <div class="form-row">
-            <div class="form-field">
-              <label class="field-label" for="admin-current-password">Current password</label>
-              <input class="field-input" type="password" id="admin-current-password" required autocomplete="current-password" />
-            </div>
-            <div class="form-field">
-              <label class="field-label" for="admin-new-password">New password</label>
-              <input class="field-input" type="password" id="admin-new-password" required minlength="8" autocomplete="new-password" />
-            </div>
-          </div>
-          <p class="field-error" id="admin-password-error" hidden></p>
-          <p class="field-success" id="admin-password-success" hidden>Password changed.</p>
-          <button type="submit" class="btn primary">Change password</button>
-        </form>
-      </section>
-      </section>
       </main>
     </div>
   </div>

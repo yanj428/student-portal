@@ -1,27 +1,46 @@
 import { escapeHtml } from './api.js';
 
-const voicePendingList = document.getElementById('voice-pending-list');
-const voicePendingEmpty = document.getElementById('voice-pending-empty');
+// Each status gets its own list/empty-state pair in the DOM, and each item
+// gets both actions (Approve/Reject) regardless of which list it's in, so
+// re-moderating a past decision (e.g. un-rejecting something) is just
+// clicking the other button rather than a separate flow.
+const SECTIONS = {
+  pending: { list: 'voice-pending-list', empty: 'voice-pending-empty' },
+  approved: { list: 'voice-approved-list', empty: 'voice-approved-empty' },
+  rejected: { list: 'voice-rejected-list', empty: 'voice-rejected-empty' },
+};
+
 const voicePendingCount = document.getElementById('voice-pending-count');
 
 export async function loadVoicePending() {
-  const res = await fetch('/api/admin/voice/pending');
-  if (!res.ok) return;
-  const { items } = await res.json();
-  renderVoicePending(items);
+  await Promise.all([renderSection('pending'), renderSection('approved'), renderSection('rejected')]);
 }
 
-function renderVoicePending(items) {
-  voicePendingCount.textContent = items.length;
-  const statVoice = document.getElementById('stat-voice');
-  if (statVoice) statVoice.textContent = items.length;
-  const navVoiceBadge = document.getElementById('nav-voice-badge');
-  if (navVoiceBadge) {
-    navVoiceBadge.textContent = items.length;
-    navVoiceBadge.hidden = items.length === 0;
+async function renderSection(status) {
+  const res = await fetch(`/api/admin/voice/${status}`);
+  if (!res.ok) return;
+  const { items } = await res.json();
+  renderItems(status, items);
+
+  if (status === 'pending') {
+    voicePendingCount.textContent = items.length;
+    const statVoice = document.getElementById('stat-voice');
+    if (statVoice) statVoice.textContent = items.length;
+    const navVoiceBadge = document.getElementById('nav-voice-badge');
+    if (navVoiceBadge) {
+      navVoiceBadge.textContent = items.length;
+      navVoiceBadge.hidden = items.length === 0;
+    }
   }
-  voicePendingList.querySelectorAll('.mod-item').forEach((el) => el.remove());
-  voicePendingEmpty.hidden = items.length > 0;
+}
+
+function renderItems(status, items) {
+  const { list, empty } = SECTIONS[status];
+  const listEl = document.getElementById(list);
+  const emptyEl = document.getElementById(empty);
+
+  listEl.querySelectorAll('.mod-item').forEach((el) => el.remove());
+  emptyEl.hidden = items.length > 0;
 
   items.forEach((item) => {
     const div = document.createElement('div');
@@ -35,36 +54,37 @@ function renderVoicePending(items) {
           <span class="mod-item-author">${escapeHtml(item.authorName)}</span>
           <span class="mod-item-meta"> &middot; ${escapeHtml(item.authorGrade)} &middot; ${created}</span>
         </div>
-        <span class="mod-type-badge">${item.type === 'post' ? escapeHtml(item.category) : 'Reply'}</span>
+        <span class="mod-type-badge">${escapeHtml(item.category)}</span>
       </div>
-      ${item.type === 'post' ? `<div class="mod-item-title">${escapeHtml(item.title)}</div>` : ''}
-      ${item.type === 'reply' ? `<div class="mod-item-context">Replying to: "${escapeHtml(item.postPreview)}${item.postPreview.length >= 80 ? '…' : ''}"</div>` : ''}
+      <div class="mod-item-title">${escapeHtml(item.title)}</div>
       <p class="mod-item-body">${escapeHtml(item.body)}</p>
       <div class="mod-item-actions">
-        <button class="btn primary approve-btn">Approve</button>
-        <button class="btn reject reject-btn">Reject</button>
+        ${status !== 'approved' ? '<button class="btn primary approve-btn">Approve</button>' : ''}
+        ${status !== 'rejected' ? '<button class="btn reject reject-btn">Reject</button>' : ''}
+        <button class="btn ghost delete-btn">Delete</button>
       </div>
     `;
 
-    const approveUrl =
-      item.type === 'post'
-        ? `/api/admin/voice/posts/${item.id}/approve`
-        : `/api/admin/voice/posts/${item.postId}/replies/${item.id}/approve`;
-    const rejectUrl =
-      item.type === 'post'
-        ? `/api/admin/voice/posts/${item.id}/reject`
-        : `/api/admin/voice/posts/${item.postId}/replies/${item.id}/reject`;
-
-    div.querySelector('.approve-btn').addEventListener('click', async () => {
-      await fetch(approveUrl, { method: 'POST' });
+    const approveBtn = div.querySelector('.approve-btn');
+    if (approveBtn) {
+      approveBtn.addEventListener('click', async () => {
+        await fetch(`/api/admin/voice/posts/${item.id}/approve`, { method: 'POST' });
+        loadVoicePending();
+      });
+    }
+    const rejectBtn = div.querySelector('.reject-btn');
+    if (rejectBtn) {
+      rejectBtn.addEventListener('click', async () => {
+        await fetch(`/api/admin/voice/posts/${item.id}/reject`, { method: 'POST' });
+        loadVoicePending();
+      });
+    }
+    div.querySelector('.delete-btn').addEventListener('click', async () => {
+      if (!confirm('Permanently delete this suggestion? This cannot be undone.')) return;
+      await fetch(`/api/admin/voice/posts/${item.id}`, { method: 'DELETE' });
       loadVoicePending();
     });
-    div.querySelector('.reject-btn').addEventListener('click', async () => {
-      if (!confirm('Reject and permanently remove this?')) return;
-      await fetch(rejectUrl, { method: 'POST' });
-      loadVoicePending();
-    });
 
-    voicePendingList.appendChild(div);
+    listEl.appendChild(div);
   });
 }

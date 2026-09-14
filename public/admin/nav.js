@@ -14,7 +14,6 @@ export function initNav() {
     quicklinks: 'Quick Links',
     voice: 'Student Voice',
     security: 'Security',
-    account: 'My Account',
   };
 
   const navItems = document.querySelectorAll('.nav-item[data-page]');

@@ -26,7 +26,6 @@ function initTestEnv() {
   process.env.ADMIN_LOGIN_RATE_LIMIT = '1000';
   process.env.PASSWORD_CHANGE_RATE_LIMIT = '1000';
   process.env.VOICE_POST_RATE_LIMIT = '1000';
-  process.env.VOICE_REPLY_RATE_LIMIT = '1000';
 
   return dataDir;
 }

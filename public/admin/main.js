@@ -12,7 +12,6 @@ import { loadProjects } from './projects.js';
 import { loadQuickLinks } from './quickLinks.js';
 import { loadLunchCurrent } from './lunch.js';
 import { loadSecurity } from './security.js';
-import { loadAccount } from './account.js';
 import { getJSON } from './api.js';
 
 initNav();
@@ -30,7 +29,6 @@ initAuth(async () => {
   loadProjects();
   loadQuickLinks();
   loadLunchCurrent();
-  loadAccount();
 
   // The Security tab (locked accounts, admin management, audit log) is
   // owner-only — an editor admin has full access to student/content data,

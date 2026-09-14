@@ -1,9 +1,9 @@
-﻿const express = require('express');
+const express = require('express');
 const crypto = require('crypto');
 
 const db = require('../db');
 const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
-const { voicePostLimiter, voiceReplyLimiter } = require('../middleware/rateLimit');
+const { voicePostLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
 
@@ -11,81 +11,68 @@ const VOICE_BODY_MAX = 2000;
 const VOICE_TITLE_MAX = 120;
 const VOICE_CATEGORIES = ['Suggestion', 'Concern', 'Question', 'Shoutout', 'Other'];
 
-function initials(name) {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .map((p) => p[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-}
-
-function publicReply(reply, viewerId) {
-  return {
-    id: reply.id,
-    authorName: reply.authorName,
-    authorGrade: reply.authorGrade,
-    authorInitials: initials(reply.authorName),
-    isMine: reply.authorId === viewerId,
-    body: reply.body,
-    createdAt: reply.createdAt,
-    status: reply.authorId === viewerId ? reply.status : undefined,
-  };
-}
-
-function publicPost(post, viewerId) {
-  const visibleReplies = post.replies
-    .filter((r) => r.status === 'approved' || r.authorId === viewerId)
-    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-    .map((r) => publicReply(r, viewerId));
-
+// Suggestions are never shared between students - only the author (their
+// own submission, so they can see whether StuCo approved or rejected it)
+// and admins (who moderate on StuCo's behalf) ever see one.
+function publicPost(post) {
   return {
     id: post.id,
-    authorName: post.authorName,
-    authorGrade: post.authorGrade,
-    authorInitials: initials(post.authorName),
-    isMine: post.authorId === viewerId,
     title: post.title,
     category: post.category,
     body: post.body,
     createdAt: post.createdAt,
-    status: post.authorId === viewerId ? post.status : undefined,
-    starCount: post.stars.length,
-    isStarredByMe: post.stars.includes(viewerId),
-    replies: visibleReplies,
+    status: post.status,
   };
 }
 
+function adminPost(post) {
+  return {
+    id: post.id,
+    authorName: post.authorName,
+    authorGrade: post.authorGrade,
+    title: post.title,
+    category: post.category,
+    body: post.body,
+    createdAt: post.createdAt,
+    status: post.status,
+  };
+}
+
+// ---- Student-facing: submit and track your own suggestions ----
+
 router.get('/api/voice/posts', requireActiveStudent, (req, res) => {
-  const viewerId = req.session.studentId;
   const posts = db
     .readVoicePosts()
-    .filter((p) => p.status === 'approved' || p.authorId === viewerId)
+    .filter((p) => p.authorId === req.session.studentId)
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .map((p) => publicPost(p, viewerId));
+    .map(publicPost);
 
   res.json({ posts });
 });
 
-router.post('/api/voice/posts', requireActiveStudent, voicePostLimiter, (req, res) => {
-  const { title, category, body } = req.body || {};
-
+function validatePostFields({ title, category, body }) {
   if (typeof title !== 'string' || !title.trim()) {
-    return res.status(400).json({ error: 'Title is required.' });
+    return 'Title is required.';
   }
   if (title.length > VOICE_TITLE_MAX) {
-    return res.status(400).json({ error: `Title is too long (max ${VOICE_TITLE_MAX} characters).` });
+    return `Title is too long (max ${VOICE_TITLE_MAX} characters).`;
   }
   if (!VOICE_CATEGORIES.includes(category)) {
-    return res.status(400).json({ error: 'Please choose a category.' });
+    return 'Please choose a category.';
   }
   if (typeof body !== 'string' || !body.trim()) {
-    return res.status(400).json({ error: 'Message cannot be empty.' });
+    return 'Message cannot be empty.';
   }
   if (body.length > VOICE_BODY_MAX) {
-    return res.status(400).json({ error: `Message is too long (max ${VOICE_BODY_MAX} characters).` });
+    return `Message is too long (max ${VOICE_BODY_MAX} characters).`;
   }
+  return null;
+}
+
+router.post('/api/voice/posts', requireActiveStudent, voicePostLimiter, (req, res) => {
+  const error = validatePostFields(req.body || {});
+  if (error) return res.status(400).json({ error });
+  const { title, category, body } = req.body;
 
   const student = db.findById(req.session.studentId);
   const posts = db.readVoicePosts();
@@ -99,99 +86,68 @@ router.post('/api/voice/posts', requireActiveStudent, voicePostLimiter, (req, re
     body: body.trim(),
     createdAt: new Date().toISOString(),
     status: 'pending',
-    stars: [],
-    replies: [],
   };
   posts.push(post);
   db.writeVoicePosts(posts);
 
-  res.status(201).json({ post: publicPost(post, student.id) });
+  res.status(201).json({ post: publicPost(post) });
 });
 
-router.post('/api/voice/posts/:id/star', requireActiveStudent, (req, res) => {
-  const viewerId = req.session.studentId;
+// Editing your own suggestion sends it back for review — the content
+// changed, so whatever StuCo previously decided no longer necessarily
+// applies to what's there now.
+router.patch('/api/voice/posts/:id', requireActiveStudent, (req, res) => {
   const posts = db.readVoicePosts();
-  const post = posts.find((p) => p.id === req.params.id);
-  if (!post || post.status !== 'approved') return res.status(404).json({ error: 'Post not found.' });
+  const post = posts.find((p) => p.id === req.params.id && p.authorId === req.session.studentId);
+  if (!post) return res.status(404).json({ error: 'Suggestion not found.' });
 
-  const i = post.stars.indexOf(viewerId);
-  if (i === -1) post.stars.push(viewerId);
-  else post.stars.splice(i, 1);
+  const error = validatePostFields(req.body || {});
+  if (error) return res.status(400).json({ error });
+  const { title, category, body } = req.body;
 
-  db.writeVoicePosts(posts);
-  res.json({ starCount: post.stars.length, isStarredByMe: post.stars.includes(viewerId) });
-});
-
-router.post('/api/voice/posts/:id/replies', requireActiveStudent, voiceReplyLimiter, (req, res) => {
-  const { body } = req.body || {};
-  if (typeof body !== 'string' || !body.trim()) {
-    return res.status(400).json({ error: 'Reply cannot be empty.' });
-  }
-  if (body.length > VOICE_BODY_MAX) {
-    return res.status(400).json({ error: `Reply is too long (max ${VOICE_BODY_MAX} characters).` });
-  }
-
-  const posts = db.readVoicePosts();
-  const post = posts.find((p) => p.id === req.params.id);
-  if (!post || post.status !== 'approved') return res.status(404).json({ error: 'Post not found.' });
-
-  const student = db.findById(req.session.studentId);
-  const reply = {
-    id: crypto.randomUUID(),
-    authorId: student.id,
-    authorName: `${student.firstName} ${student.lastName}`,
-    authorGrade: student.grade,
-    body: body.trim(),
-    createdAt: new Date().toISOString(),
-    status: 'pending',
-  };
-  post.replies.push(reply);
+  post.title = title.trim();
+  post.category = category;
+  post.body = body.trim();
+  post.status = 'pending';
   db.writeVoicePosts(posts);
 
-  res.status(201).json({ reply: publicReply(reply, student.id) });
+  res.json({ post: publicPost(post) });
 });
 
-// ---- Admin: moderate Student Voice ----
+router.delete('/api/voice/posts/:id', requireActiveStudent, (req, res) => {
+  const posts = db.readVoicePosts();
+  const next = posts.filter((p) => !(p.id === req.params.id && p.authorId === req.session.studentId));
+  if (next.length === posts.length) return res.status(404).json({ error: 'Suggestion not found.' });
+  db.writeVoicePosts(next);
+  res.json({ ok: true });
+});
+
+// ---- Admin: moderate Student Voice on StuCo's behalf ----
+
+function listByStatus(status) {
+  const posts = db.readVoicePosts().filter((p) => p.status === status);
+  // Oldest-first for the review queue (work through it in submission
+  // order); newest-first once it's just a record of past decisions.
+  posts.sort((a, b) => (status === 'pending' ? 1 : -1) * (new Date(a.createdAt) - new Date(b.createdAt)));
+  return posts.map(adminPost);
+}
+
 router.get('/api/admin/voice/pending', requireAdmin, (req, res) => {
-  const posts = db.readVoicePosts();
+  res.json({ items: listByStatus('pending') });
+});
 
-  const pendingPosts = posts
-    .filter((p) => p.status === 'pending')
-    .map((p) => ({
-      type: 'post',
-      id: p.id,
-      authorName: p.authorName,
-      authorGrade: p.authorGrade,
-      title: p.title,
-      category: p.category,
-      body: p.body,
-      createdAt: p.createdAt,
-    }));
+router.get('/api/admin/voice/approved', requireAdmin, (req, res) => {
+  res.json({ items: listByStatus('approved') });
+});
 
-  const pendingReplies = posts.flatMap((p) =>
-    p.replies
-      .filter((r) => r.status === 'pending')
-      .map((r) => ({
-        type: 'reply',
-        id: r.id,
-        postId: p.id,
-        postPreview: p.body.slice(0, 80),
-        authorName: r.authorName,
-        authorGrade: r.authorGrade,
-        body: r.body,
-        createdAt: r.createdAt,
-      }))
-  );
-
-  res.json({
-    items: [...pendingPosts, ...pendingReplies].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)),
-  });
+router.get('/api/admin/voice/rejected', requireAdmin, (req, res) => {
+  res.json({ items: listByStatus('rejected') });
 });
 
 router.post('/api/admin/voice/posts/:id/approve', requireAdmin, (req, res) => {
   const posts = db.readVoicePosts();
   const post = posts.find((p) => p.id === req.params.id);
-  if (!post) return res.status(404).json({ error: 'Post not found.' });
+  if (!post) return res.status(404).json({ error: 'Suggestion not found.' });
   post.status = 'approved';
   db.writeVoicePosts(posts);
   res.json({ ok: true });
@@ -199,30 +155,18 @@ router.post('/api/admin/voice/posts/:id/approve', requireAdmin, (req, res) => {
 
 router.post('/api/admin/voice/posts/:id/reject', requireAdmin, (req, res) => {
   const posts = db.readVoicePosts();
+  const post = posts.find((p) => p.id === req.params.id);
+  if (!post) return res.status(404).json({ error: 'Suggestion not found.' });
+  post.status = 'rejected';
+  db.writeVoicePosts(posts);
+  res.json({ ok: true });
+});
+
+router.delete('/api/admin/voice/posts/:id', requireAdmin, (req, res) => {
+  const posts = db.readVoicePosts();
   const next = posts.filter((p) => p.id !== req.params.id);
-  if (next.length === posts.length) return res.status(404).json({ error: 'Post not found.' });
+  if (next.length === posts.length) return res.status(404).json({ error: 'Suggestion not found.' });
   db.writeVoicePosts(next);
-  res.json({ ok: true });
-});
-
-router.post('/api/admin/voice/posts/:postId/replies/:replyId/approve', requireAdmin, (req, res) => {
-  const posts = db.readVoicePosts();
-  const post = posts.find((p) => p.id === req.params.postId);
-  const reply = post && post.replies.find((r) => r.id === req.params.replyId);
-  if (!reply) return res.status(404).json({ error: 'Reply not found.' });
-  reply.status = 'approved';
-  db.writeVoicePosts(posts);
-  res.json({ ok: true });
-});
-
-router.post('/api/admin/voice/posts/:postId/replies/:replyId/reject', requireAdmin, (req, res) => {
-  const posts = db.readVoicePosts();
-  const post = posts.find((p) => p.id === req.params.postId);
-  if (!post) return res.status(404).json({ error: 'Post not found.' });
-  const next = post.replies.filter((r) => r.id !== req.params.replyId);
-  if (next.length === post.replies.length) return res.status(404).json({ error: 'Reply not found.' });
-  post.replies = next;
-  db.writeVoicePosts(posts);
   res.json({ ok: true });
 });
 

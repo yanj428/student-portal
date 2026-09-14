@@ -28,40 +28,48 @@ const postTitleInput = document.getElementById('post-title');
 const postCategorySelect = document.getElementById('post-category');
 const postInput = document.getElementById('post-input');
 const postSubmit = document.getElementById('post-submit');
+const postCancel = document.getElementById('post-cancel');
 const postError = document.getElementById('post-error');
+const composerTitle = document.getElementById('composer-title');
+const composerHint = document.getElementById('composer-hint');
 
-const starIcon = (filled) =>
-  `<svg viewBox="0 0 24 24" fill="${filled ? 'currentColor' : 'none'}"><path d="M12 3L14.5 8.9L21 9.6L16.2 13.9L17.5 20.3L12 17L6.5 20.3L7.8 13.9L3 9.6L9.5 8.9L12 3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
-const replyIcon = () =>
-  `<svg viewBox="0 0 24 24" fill="none"><path d="M9 17L4 12L9 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 12H14C17.3 12 20 14.7 20 18V19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const STATUS_LABEL = { pending: 'Pending review', approved: 'Approved', rejected: 'Not approved' };
 
-function renderReply(reply) {
-  return `
-    <div class="reply-item">
-      <div class="reply-avatar">${voiceEscapeHtml(reply.authorInitials)}</div>
-      <div class="reply-body-wrap">
-        <div class="reply-author">
-          ${voiceEscapeHtml(reply.authorName)}
-          ${reply.isMine && reply.status === 'pending' ? '<span class="pending-badge">Pending approval</span>' : ''}
-        </div>
-        <div class="reply-subline">${voiceEscapeHtml(reply.authorGrade)} &middot; ${timeAgo(reply.createdAt)}</div>
-        <p class="reply-body">${voiceEscapeHtml(reply.body)}</p>
-      </div>
-    </div>`;
+let editingId = null;
+let posts = [];
+
+function enterEditMode(post) {
+  editingId = post.id;
+  postTitleInput.value = post.title;
+  postCategorySelect.value = post.category;
+  postInput.value = post.body;
+  composerTitle.textContent = 'Edit suggestion';
+  composerHint.textContent = 'Saving sends this back to StuCo for review.';
+  postSubmit.textContent = 'Save changes';
+  postCancel.hidden = false;
+  postForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
+function exitEditMode() {
+  editingId = null;
+  postForm.reset();
+  composerTitle.textContent = 'Share something';
+  composerHint.textContent = 'Only StuCo can see what you submit — other students never will.';
+  postSubmit.textContent = 'Submit';
+  postCancel.hidden = true;
+}
+
+postCancel.addEventListener('click', exitEditMode);
+
 function renderPost(post) {
-  const pending = post.isMine && post.status === 'pending';
   return `
-    <article class="post-card ${pending ? 'pending' : ''}" data-post-id="${post.id}">
+    <article class="post-card status-${post.status}" data-post-id="${post.id}">
       <div class="post-head">
-        <div class="post-avatar">${voiceEscapeHtml(post.authorInitials)}</div>
         <div class="post-meta">
           <div class="post-author">
-            ${voiceEscapeHtml(post.authorName)}
-            ${pending ? '<span class="pending-badge">Pending approval</span>' : ''}
+            <span class="status-badge status-${post.status}">${voiceEscapeHtml(STATUS_LABEL[post.status] || post.status)}</span>
           </div>
-          <div class="post-subline">${voiceEscapeHtml(post.authorGrade)} &middot; ${timeAgo(post.createdAt)}</div>
+          <div class="post-subline">${timeAgo(post.createdAt)}</div>
         </div>
         <span class="category-badge">${voiceEscapeHtml(post.category)}</span>
       </div>
@@ -70,25 +78,8 @@ function renderPost(post) {
       <p class="post-body">${voiceEscapeHtml(post.body)}</p>
 
       <div class="post-actions">
-        <button class="action-btn star-btn ${post.isStarredByMe ? 'starred' : ''}" ${pending ? 'disabled' : ''} data-post-id="${post.id}">
-          ${starIcon(post.isStarredByMe)}
-          <span class="star-count">${post.starCount}</span>
-        </button>
-        <button class="action-btn reply-toggle" ${pending ? 'disabled' : ''} data-post-id="${post.id}">
-          ${replyIcon()}
-          <span>${post.replies.length ? `${post.replies.length} ${post.replies.length === 1 ? 'reply' : 'replies'}` : 'Reply'}</span>
-        </button>
-      </div>
-
-      ${
-        post.replies.length
-          ? `<div class="replies">${post.replies.map(renderReply).join('')}</div>`
-          : ''
-      }
-
-      <div class="reply-composer" id="reply-composer-${post.id}">
-        <textarea placeholder="Write a reply…" maxlength="2000"></textarea>
-        <button class="btn primary reply-submit" data-post-id="${post.id}">Reply</button>
+        <button class="btn ghost edit-btn" data-post-id="${post.id}">Edit</button>
+        <button class="btn reject delete-btn" data-post-id="${post.id}">Delete</button>
       </div>
     </article>`;
 }
@@ -96,7 +87,7 @@ function renderPost(post) {
 async function loadPosts() {
   const res = await fetch('/api/voice/posts');
   if (!res.ok) return;
-  const { posts } = await res.json();
+  ({ posts } = await res.json());
 
   feedEmpty.hidden = posts.length > 0;
   feedEl.querySelectorAll('.post-card').forEach((el) => el.remove());
@@ -105,50 +96,21 @@ async function loadPosts() {
 }
 
 function wireFeedEvents() {
-  feedEl.querySelectorAll('.star-btn').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      if (btn.disabled) return;
-      const postId = btn.dataset.postId;
-      const res = await fetch(`/api/voice/posts/${postId}/star`, { method: 'POST' });
-      if (!res.ok) return;
-      const { starCount, isStarredByMe } = await res.json();
-      btn.classList.toggle('starred', isStarredByMe);
-      btn.querySelector('.star-count').textContent = starCount;
-      btn.innerHTML = `${starIcon(isStarredByMe)}<span class="star-count">${starCount}</span>`;
-    });
-  });
-
-  feedEl.querySelectorAll('.reply-toggle').forEach((btn) => {
+  feedEl.querySelectorAll('.edit-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      if (btn.disabled) return;
-      const composer = document.getElementById(`reply-composer-${btn.dataset.postId}`);
-      composer.classList.toggle('open');
-      if (composer.classList.contains('open')) composer.querySelector('textarea').focus();
+      const post = posts.find((p) => p.id === btn.dataset.postId);
+      if (post) enterEditMode(post);
     });
   });
 
-  feedEl.querySelectorAll('.reply-submit').forEach((btn) => {
+  feedEl.querySelectorAll('.delete-btn').forEach((btn) => {
     btn.addEventListener('click', async () => {
+      if (!confirm('Delete this suggestion? This cannot be undone.')) return;
       const postId = btn.dataset.postId;
-      const composer = document.getElementById(`reply-composer-${postId}`);
-      const textarea = composer.querySelector('textarea');
-      const body = textarea.value.trim();
-      if (!body) return;
-
-      btn.disabled = true;
-      try {
-        const res = await fetch(`/api/voice/posts/${postId}/replies`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ body }),
-        });
-        if (res.ok) {
-          textarea.value = '';
-          composer.classList.remove('open');
-          loadPosts();
-        }
-      } finally {
-        btn.disabled = false;
+      const res = await fetch(`/api/voice/posts/${postId}`, { method: 'DELETE' });
+      if (res.ok) {
+        if (editingId === postId) exitEditMode();
+        loadPosts();
       }
     });
   });
@@ -169,30 +131,32 @@ postForm.addEventListener('submit', async (e) => {
   }
 
   postSubmit.disabled = true;
-  postSubmit.textContent = 'Submitting…';
+  postSubmit.textContent = editingId ? 'Saving…' : 'Submitting…';
 
   try {
-    const res = await fetch('/api/voice/posts', {
-      method: 'POST',
+    const url = editingId ? `/api/voice/posts/${editingId}` : '/api/voice/posts';
+    const method = editingId ? 'PATCH' : 'POST';
+    const res = await fetch(url, {
+      method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title, category, body }),
     });
     const data = await res.json();
 
     if (!res.ok) {
-      postError.textContent = data.error || 'Could not submit.';
+      postError.textContent = data.error || 'Could not save.';
       postError.hidden = false;
       return;
     }
 
-    postForm.reset();
+    exitEditMode();
     loadPosts();
   } catch {
     postError.textContent = 'Could not reach the server. Please try again.';
     postError.hidden = false;
   } finally {
     postSubmit.disabled = false;
-    postSubmit.textContent = 'Submit';
+    postSubmit.textContent = editingId ? 'Save changes' : 'Submit';
   }
 });
 

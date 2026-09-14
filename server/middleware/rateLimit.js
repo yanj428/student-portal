@@ -47,19 +47,9 @@ const voicePostLimiter = rateLimit({
   message: { error: 'Too many posts submitted. Please try again later.' },
 });
 
-const voiceReplyLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  limit: parseInt(process.env.VOICE_REPLY_RATE_LIMIT, 10) || 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => req.session.studentId || ipKeyGenerator(req.ip),
-  message: { error: 'Too many replies submitted. Please try again later.' },
-});
-
 module.exports = {
   studentLoginLimiter,
   adminLoginLimiter,
   passwordChangeLimiter,
   voicePostLimiter,
-  voiceReplyLimiter,
 };

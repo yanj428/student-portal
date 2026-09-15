@@ -10,7 +10,24 @@ const { UPLOADS_DIR, councilPhotoUpload } = require('../uploads');
 const router = express.Router();
 
 function publicMember(m) {
-  return { id: m.id, name: m.name, role: m.role, bio: m.bio, photoUrl: m.photoUrl || '', createdAt: m.createdAt };
+  return {
+    id: m.id,
+    name: m.name,
+    role: m.role,
+    grade: m.grade || '',
+    photoUrl: m.photoUrl || '',
+    group: m.group === 'general-council' ? 'general-council' : 'student-council',
+    level: m.level === 'ms' ? 'ms' : 'hs',
+    createdAt: m.createdAt,
+  };
+}
+
+// The admin panel and the public tree page both bucket members by school
+// level (HS/MS) crossed with council (Student/General) — this is the one
+// place that combination is computed, so both stay in sync with whatever
+// bucket key the client sends for reordering.
+function bucketOf(m) {
+  return `${m.level === 'ms' ? 'ms' : 'hs'}-${m.group === 'general-council' ? 'general-council' : 'student-council'}`;
 }
 
 router.get('/api/council', requireActiveStudent, (req, res) => {
@@ -22,11 +39,19 @@ router.get('/api/admin/council', requireAdmin, (req, res) => {
 });
 
 function readFields(body) {
-  const { name, role, bio } = body || {};
+  const { name, role, grade, group, level } = body || {};
   if (typeof name !== 'string' || !name.trim()) return { error: 'Name is required.' };
-  if (typeof role !== 'string' || !role.trim()) return { error: 'Role is required.' };
-  if (typeof bio !== 'string' || !bio.trim()) return { error: 'Bio is required.' };
-  return { fields: { name: name.trim(), role: role.trim(), bio: bio.trim() } };
+  if (typeof role !== 'string' || !role.trim()) return { error: 'Position is required.' };
+  if (typeof grade !== 'string') return { error: 'Grade must be text (it can be blank).' };
+  return {
+    fields: {
+      name: name.trim(),
+      role: role.trim(),
+      grade: grade.trim(),
+      group: group === 'general-council' ? 'general-council' : 'student-council',
+      level: level === 'ms' ? 'ms' : 'hs',
+    },
+  };
 }
 
 router.post('/api/admin/council', requireAdmin, (req, res) => {
@@ -48,6 +73,28 @@ router.post('/api/admin/council', requireAdmin, (req, res) => {
 
     res.status(201).json({ member: publicMember(item) });
   });
+});
+
+router.put('/api/admin/council/reorder', requireAdmin, (req, res) => {
+  const { bucket, orderedIds } = req.body || {};
+  if (typeof bucket !== 'string' || !bucket) return res.status(400).json({ error: 'bucket is required.' });
+  if (!Array.isArray(orderedIds) || !orderedIds.every((id) => typeof id === 'string')) {
+    return res.status(400).json({ error: 'orderedIds must be an array of ids.' });
+  }
+
+  const items = db.readCouncil();
+  const bucketItems = items.filter((m) => bucketOf(m) === bucket);
+  const bucketIds = new Set(bucketItems.map((m) => m.id));
+  const sameSet = orderedIds.length === bucketItems.length && orderedIds.every((id) => bucketIds.has(id));
+  if (!sameSet) return res.status(400).json({ error: 'orderedIds must match the current members of that council exactly.' });
+
+  const byId = new Map(bucketItems.map((m) => [m.id, m]));
+  const reordered = orderedIds.map((id) => byId.get(id));
+  let cursor = 0;
+  const next = items.map((m) => (bucketOf(m) === bucket ? reordered[cursor++] : m));
+  db.writeCouncil(next);
+
+  res.json({ council: next.map(publicMember) });
 });
 
 router.put('/api/admin/council/:id', requireAdmin, (req, res) => {

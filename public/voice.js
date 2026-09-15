@@ -54,7 +54,7 @@ function exitEditMode() {
   editingId = null;
   postForm.reset();
   composerTitle.textContent = 'Share something';
-  composerHint.textContent = 'Only StuCo can see what you submit — other students never will.';
+  composerHint.textContent = 'Only StuCo can see what you submit. Other students never will.';
   postSubmit.textContent = 'Submit';
   postCancel.hidden = true;
 }

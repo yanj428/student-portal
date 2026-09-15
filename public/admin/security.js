@@ -50,7 +50,7 @@ function renderLocked(entries) {
     const name = entry.student ? `${entry.student.firstName} ${entry.student.lastName}` : '(no matching account)';
     const reason = entry.adminLocked
       ? 'Locked by an admin'
-      : `Auto-locked — clears in about ${minutesUntil(entry.lockedUntil)} min`;
+      : `Auto-locked, clears in about ${minutesUntil(entry.lockedUntil)} min`;
 
     const div = document.createElement('div');
     div.className = 'simple-item';
@@ -95,7 +95,7 @@ function renderAttempts(attempts) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${escapeHtml(a.email)}</td>
-      <td>${escapeHtml(a.ip || '—')}</td>
+      <td>${escapeHtml(a.ip || 'N/A')}</td>
       <td>${a.success ? '<span class="attempt-badge success">Success</span>' : `<span class="attempt-badge failed">${escapeHtml(a.reason || 'Failed')}</span>`}</td>
       <td>${formatTime(a.createdAt)}</td>
     `;

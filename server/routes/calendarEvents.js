@@ -34,12 +34,19 @@ function publicEvent(e) {
   return { id: e.id, day: e.day, month: e.month, title: e.title, subtitle: e.subtitle, createdAt: e.createdAt };
 }
 
+// A ranged day like "19-20" sorts by its first number - Number() alone
+// would produce NaN for anything but a plain single-day string.
+function firstDayNumber(day) {
+  const match = String(day).match(/\d+/);
+  return match ? Number(match[0]) : 0;
+}
+
 function sortByDate(items) {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return items.slice().sort((a, b) => {
     const monthDiff = months.indexOf(a.month) - months.indexOf(b.month);
     if (monthDiff !== 0) return monthDiff;
-    return Number(a.day) - Number(b.day);
+    return firstDayNumber(a.day) - firstDayNumber(b.day);
   });
 }
 

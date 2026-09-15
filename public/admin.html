@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KPIS International School | Admin</title>
+  <title>Admin Portal | KPIS International School</title>
   <link rel="icon" type="image/png" href="assets/kpis-logo.png" />
   <link rel="stylesheet" href="admin.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -331,7 +331,7 @@
         <h2>Extract events with AI</h2>
         <p class="panel-hint">Upload a photo of a school calendar or events list and review the events it finds before adding them below.</p>
 
-        <div class="form-row">
+        <div class="form-row single-col">
           <div class="form-field">
             <label class="field-label" for="calendar-ai-image-input">Calendar photo</label>
             <input class="field-input" type="file" id="calendar-ai-image-input" accept="image/png,image/jpeg,image/webp,image/gif" />
@@ -341,6 +341,7 @@
           <button type="button" class="btn ghost" id="calendar-ai-extract-btn">Extract with AI</button>
         </div>
         <p class="field-error" id="calendar-ai-error" hidden></p>
+        <p class="field-hint" id="calendar-ai-duplicates-hint" hidden></p>
 
         <div id="calendar-ai-results" class="voice-pending-list" hidden>
           <div class="form-actions ai-results-actions">
@@ -358,7 +359,7 @@
           <div class="form-row">
             <div class="form-field">
               <label class="field-label" for="calendar-event-day">Day</label>
-              <input class="field-input" type="text" id="calendar-event-day" placeholder="e.g. 12" required />
+              <input class="field-input" type="text" id="calendar-event-day" placeholder="e.g. 12 or 19-20" required />
             </div>
             <div class="form-field">
               <label class="field-label" for="calendar-event-month">Month</label>
@@ -467,7 +468,7 @@
       <section class="admin-page-section" data-section="community" hidden>
       <section class="panel">
         <h2>Community Service events &amp; opportunities</h2>
-        <p class="panel-hint">Post volunteer opportunities for clubs to recruit students — students see these on the Community Service page.</p>
+        <p class="panel-hint">Post volunteer opportunities for clubs to recruit students. Students see these on the Community Service page.</p>
 
         <form id="cs-event-form" class="archive-form">
           <div class="form-row">
@@ -520,13 +521,40 @@
               <input class="field-input" type="file" id="council-photo" accept="image/png,image/jpeg,image/webp,image/gif" />
             </div>
           </div>
-          <div class="form-field">
-            <label class="field-label" for="council-role">Role</label>
-            <input class="field-input" type="text" id="council-role" placeholder="e.g. StuCo President" required />
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="council-role">Position</label>
+              <input class="field-input" type="text" id="council-role" placeholder="e.g. StuCo President" required />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="council-group">Council</label>
+              <select class="field-input" id="council-group">
+                <option value="student-council">Student Council</option>
+                <option value="general-council">General Council</option>
+              </select>
+            </div>
           </div>
-          <div class="form-field">
-            <label class="field-label" for="council-bio">Bio</label>
-            <textarea class="field-input" id="council-bio" rows="3" placeholder="Short bio" required></textarea>
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="council-level">School</label>
+              <select class="field-input" id="council-level">
+                <option value="hs">High School</option>
+                <option value="ms">Middle School</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="council-grade">Grade</label>
+              <select class="field-input" id="council-grade">
+                <option value="">Not specified</option>
+                <option>Grade 6</option>
+                <option>Grade 7</option>
+                <option>Grade 8</option>
+                <option>Grade 9</option>
+                <option>Grade 10</option>
+                <option>Grade 11</option>
+                <option>Grade 12</option>
+              </select>
+            </div>
           </div>
           <p class="field-error" id="council-error" hidden></p>
           <div class="form-actions">
@@ -535,8 +563,24 @@
           </div>
         </form>
 
-        <div class="simple-list" id="council-list">
-          <p class="empty-hint" id="council-empty-hint">No council members yet.</p>
+        <h3 class="simple-list-heading">HS Student Council</h3>
+        <div class="simple-list" id="council-list-hs-student-council">
+          <p class="empty-hint" id="council-empty-hint-hs-student-council">No HS Student Council members yet.</p>
+        </div>
+
+        <h3 class="simple-list-heading">MS Student Council</h3>
+        <div class="simple-list" id="council-list-ms-student-council">
+          <p class="empty-hint" id="council-empty-hint-ms-student-council">No MS Student Council members yet.</p>
+        </div>
+
+        <h3 class="simple-list-heading">HS General Council</h3>
+        <div class="simple-list" id="council-list-hs-general-council">
+          <p class="empty-hint" id="council-empty-hint-hs-general-council">No HS General Council members yet.</p>
+        </div>
+
+        <h3 class="simple-list-heading">MS General Council</h3>
+        <div class="simple-list" id="council-list-ms-general-council">
+          <p class="empty-hint" id="council-empty-hint-ms-general-council">No MS General Council members yet.</p>
         </div>
       </section>
       </section>
@@ -733,8 +777,8 @@
             <div class="form-field">
               <label class="field-label" for="new-admin-role">Role</label>
               <select class="field-input" id="new-admin-role">
-                <option value="editor" selected>Editor — students and content</option>
-                <option value="owner">Owner — full access, including admin accounts</option>
+                <option value="editor" selected>Editor: students and content</option>
+                <option value="owner">Owner: full access, including admin accounts</option>
               </select>
             </div>
           </div>

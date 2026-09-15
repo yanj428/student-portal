@@ -12,6 +12,9 @@ const listEl = document.getElementById('calendar-event-list');
 const emptyEl = document.getElementById('calendar-event-empty-hint');
 
 let editingId = null;
+// Kept in sync by loadCalendarEvents() so a fresh AI extraction can be
+// checked against what's already on the calendar without a separate fetch.
+let existingEvents = [];
 
 function resetForm() {
   editingId = null;
@@ -24,6 +27,7 @@ export async function loadCalendarEvents() {
   const res = await fetch('/api/admin/calendar-events');
   if (!res.ok) return;
   const { calendarEvents } = await res.json();
+  existingEvents = calendarEvents;
   render(calendarEvents);
 }
 
@@ -36,7 +40,7 @@ function render(items) {
     div.className = 'simple-item';
     div.innerHTML = `
       <div class="simple-item-head">
-        <span class="simple-item-title">${escapeHtml(item.day)} ${escapeHtml(item.month)} — ${escapeHtml(item.title)}</span>
+        <span class="simple-item-title">${escapeHtml(item.day)} ${escapeHtml(item.month)} · ${escapeHtml(item.title)}</span>
         <div class="simple-item-actions">
           <button class="edit-btn" aria-label="Edit">Edit</button>
           <button class="delete-btn" aria-label="Remove"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7H20M9 7V4C9 3.4 9.4 3 10 3H14C14.6 3 15 3.4 15 4V7M18 7L17.3 19C17.2 19.6 16.7 20 16.1 20H7.9C7.3 20 6.8 19.6 6.7 19L6 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -108,8 +112,23 @@ const aiError = document.getElementById('calendar-ai-error');
 const aiResults = document.getElementById('calendar-ai-results');
 const aiResultsList = document.getElementById('calendar-ai-results-list');
 const aiAddAllBtn = document.getElementById('calendar-ai-add-all');
+const aiDuplicatesHint = document.getElementById('calendar-ai-duplicates-hint');
 
 let candidates = [];
+
+// Same day + month + title (case-insensitive) as something already on the
+// calendar counts as the same event — most likely the admin re-uploading a
+// calendar that overlaps a range already entered. Extracting a real event
+// (a rare exact retitle aside) shouldn't require deleting the old one first,
+// so these are silently skipped rather than shown as an error.
+function isDuplicateOfExisting(candidate) {
+  return existingEvents.some(
+    (e) =>
+      e.day.trim() === candidate.day.trim() &&
+      e.month.trim().toLowerCase() === candidate.month.trim().toLowerCase() &&
+      e.title.trim().toLowerCase() === candidate.title.trim().toLowerCase()
+  );
+}
 
 function renderCandidates() {
   aiResultsList.querySelectorAll('.mod-item').forEach((el) => el.remove());
@@ -121,8 +140,24 @@ function renderCandidates() {
     div.className = 'mod-item open';
     div.innerHTML = `
       <div class="mod-item-details">
-        <div class="mod-item-meta">${escapeHtml(candidate.day)} ${escapeHtml(candidate.month)}</div>
-        <p class="mod-item-body"><strong>${escapeHtml(candidate.title)}</strong>${candidate.subtitle ? ` — ${escapeHtml(candidate.subtitle)}` : ''}</p>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="field-label">Day</label>
+            <input class="field-input candidate-day" type="text" value="${escapeHtml(candidate.day)}" />
+          </div>
+          <div class="form-field">
+            <label class="field-label">Month</label>
+            <input class="field-input candidate-month" type="text" value="${escapeHtml(candidate.month)}" />
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="field-label">Title</label>
+          <input class="field-input candidate-title" type="text" value="${escapeHtml(candidate.title)}" />
+        </div>
+        <div class="form-field">
+          <label class="field-label">Subtitle</label>
+          <input class="field-input candidate-subtitle" type="text" value="${escapeHtml(candidate.subtitle)}" />
+        </div>
         <div class="mod-item-actions">
           <button class="btn primary add-candidate-btn">Add</button>
           <button class="btn ghost dismiss-candidate-btn">Dismiss</button>
@@ -138,25 +173,39 @@ function renderCandidates() {
   });
 }
 
+// Reads the current (possibly hand-edited) values straight out of that
+// candidate's own inputs rather than the original AI-extracted `candidates`
+// entry, so an admin's edits are what actually gets saved.
+function readCandidateInputs(div) {
+  return {
+    day: div.querySelector('.candidate-day').value.trim(),
+    month: div.querySelector('.candidate-month').value.trim(),
+    title: div.querySelector('.candidate-title').value.trim(),
+    subtitle: div.querySelector('.candidate-subtitle').value.trim(),
+  };
+}
+
 // Returns whether it actually added the candidate — callers (especially
 // the "Add all" loop below) must not treat a rejected candidate as done,
 // but also must not just retry it forever.
 async function addCandidate(index) {
-  const candidate = candidates[index];
-  const { ok, data } = await sendJSON('/api/admin/calendar-events', 'POST', candidate);
+  const div = aiResultsList.children[index];
+  const payload = readCandidateInputs(div);
+  const { ok, data } = await sendJSON('/api/admin/calendar-events', 'POST', payload);
   if (ok) {
     candidates.splice(index, 1);
     renderCandidates();
     loadCalendarEvents();
     return true;
   }
-  aiError.textContent = data.error || `Could not add "${candidate.title}".`;
+  aiError.textContent = data.error || `Could not add "${payload.title}".`;
   aiError.hidden = false;
   return false;
 }
 
 aiExtractBtn.addEventListener('click', async () => {
   aiError.hidden = true;
+  aiDuplicatesHint.hidden = true;
 
   const file = aiImageInput.files[0];
   if (!file) {
@@ -180,8 +229,14 @@ aiExtractBtn.addEventListener('click', async () => {
       return;
     }
 
-    candidates = data.events;
+    const skipped = data.events.filter(isDuplicateOfExisting).length;
+    candidates = data.events.filter((c) => !isDuplicateOfExisting(c));
     renderCandidates();
+
+    aiDuplicatesHint.hidden = skipped === 0;
+    if (skipped > 0) {
+      aiDuplicatesHint.textContent = `Skipped ${skipped} event${skipped === 1 ? '' : 's'} already on the calendar.`;
+    }
   } catch {
     aiError.textContent = 'Could not reach the server. Please try again.';
     aiError.hidden = false;

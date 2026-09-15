@@ -105,35 +105,20 @@ async function loadCalendarEvents() {
     .join('');
 }
 
-async function loadLunchMenu() {
-  const el = document.getElementById('lunch-list');
+async function loadCsEvents() {
+  const el = document.getElementById('cs-events-list');
   if (!el) return;
-  const data = await fetchJson('/api/content');
+  const data = await fetchJson('/api/cs-events');
   if (!data) return;
-  el.innerHTML = data.content.lunchMenu
+  el.innerHTML = data.events
+    .slice(0, 3)
     .map(
-      (l) => `
-        <div class="lunch-day">
-          <span class="lunch-weekday">${escapeHtml(l.weekday)}</span>
-          <span class="lunch-item">${escapeHtml(l.item)}</span>
+      (e) => `
+        <div class="notice-item">
+          <h3>${escapeHtml(e.title)}</h3>
+          <p>${escapeHtml(e.description)}</p>
+          <a href="community-service.html" class="see-more">See more</a>
         </div>`
-    )
-    .join('');
-}
-
-const PERSON_ICON = '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 19C4.5 15.4 7.4 12.5 11 12.5H13C16.6 12.5 19.5 15.4 19.5 19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
-
-async function loadCouncil() {
-  const el = document.getElementById('council-list');
-  if (!el) return;
-  const data = await fetchJson('/api/council');
-  if (!data) return;
-  const colors = ['a1', 'a2', 'a3'];
-  el.innerHTML = data.council
-    .map((m, i) =>
-      m.photoUrl
-        ? `<div class="avatar-circle has-photo"><img src="${escapeHtml(m.photoUrl)}" alt="${escapeHtml(m.name || '')}" /></div>`
-        : `<div class="avatar-circle ${colors[i % colors.length]}">${PERSON_ICON}</div>`
     )
     .join('');
 }
@@ -177,8 +162,7 @@ async function loadQuickLinks() {
 
 loadAnnouncements();
 loadCalendarEvents();
-loadLunchMenu();
-loadCouncil();
+loadCsEvents();
 loadAfterSchoolClubChips();
 loadProjects();
 loadQuickLinks();

@@ -442,6 +442,7 @@ html, body {
   gap: 20.8px;
 }
 .form-row[hidden] { display: none; }
+.form-row.single-col { grid-template-columns: 1fr; }
 .password-row {
   display: flex;
   gap: 10.4px;
@@ -662,6 +663,19 @@ tr:last-child td { border-bottom: none; }
   font-weight: 600;
 }
 .edit-btn:hover { border-color: var(--primary-light); color: var(--primary); }
+.drag-handle {
+  cursor: grab;
+  color: var(--text-muted);
+  font-size: 18.2px;
+  line-height: 1;
+  letter-spacing: -2px;
+  user-select: none;
+  touch-action: none;
+  padding: 7.8px 5.2px;
+  margin: -7.8px -5.2px;
+}
+.drag-handle:active { cursor: grabbing; }
+.simple-item.dragging { opacity: 0.4; }
 .cs-club-item-links {
   display: flex;
   gap: 18.2px;

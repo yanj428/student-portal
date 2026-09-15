@@ -16,7 +16,7 @@ const quoteNextBtn = document.getElementById('quote-next');
 function renderQuote() {
   const q = QUOTES[quoteIndex];
   if (quoteTextEl) quoteTextEl.textContent = `“${q.text}”`;
-  if (quoteAuthorEl) quoteAuthorEl.textContent = `— ${q.author}`;
+  if (quoteAuthorEl) quoteAuthorEl.textContent = q.author;
 }
 
 if (quoteTextEl && quoteAuthorEl) {

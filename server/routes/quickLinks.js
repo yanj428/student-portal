@@ -23,7 +23,7 @@ function validateFields(body) {
   const { label, url } = body || {};
   if (typeof label !== 'string' || !label.trim()) return 'Label is required.';
   if (typeof url !== 'string' || !url.trim()) return 'URL is required.';
-  return validateOptionalUrl(url, { fieldName: 'URL' });
+  return validateOptionalUrl(url, { fieldName: 'URL', allowHttp: true });
 }
 
 router.post('/api/admin/quick-links', requireAdmin, (req, res) => {

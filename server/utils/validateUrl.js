@@ -1,14 +1,17 @@
 // Shared link validation for every admin-editable URL field. Rejects
-// anything that isn't a genuine https:// link — this is what stops a
+// anything that isn't a genuine http(s):// link — this is what stops a
 // `javascript:` URL from being saved as a "quick link" or embed and then
 // executed when a student clicks it (the pages that render these already
 // escape the text itself, but escaping doesn't stop a link's own scheme
-// from doing something dangerous when followed).
+// from doing something dangerous when followed). Defaults to https-only;
+// pass allowHttp: true for the handful of fields (currently just Quick
+// Links) where a plain http:// link is a real, legitimate case.
 
-function isHttpsUrl(value) {
+function isHttpsUrl(value, { allowHttp = false } = {}) {
   if (typeof value !== 'string' || !value.trim()) return false;
   try {
-    return new URL(value.trim()).protocol === 'https:';
+    const protocol = new URL(value.trim()).protocol;
+    return protocol === 'https:' || (allowHttp && protocol === 'http:');
   } catch {
     return false;
   }
@@ -25,9 +28,11 @@ function hostMatches(value, allowedHosts) {
 
 // Validates a URL field that's allowed to be blank (most of these links are
 // optional). Returns an error string, or null if the value is fine.
-function validateOptionalUrl(value, { fieldName, allowedHosts } = {}) {
+function validateOptionalUrl(value, { fieldName, allowedHosts, allowHttp = false } = {}) {
   if (value === undefined || value === null || value === '') return null;
-  if (!isHttpsUrl(value)) return `${fieldName || 'Link'} must be a valid https:// link.`;
+  if (!isHttpsUrl(value, { allowHttp })) {
+    return `${fieldName || 'Link'} must be a valid ${allowHttp ? 'http:// or https://' : 'https://'} link.`;
+  }
   if (allowedHosts && !hostMatches(value, allowedHosts)) {
     return `${fieldName || 'Link'} must be a ${allowedHosts.join(' or ')} link.`;
   }

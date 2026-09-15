@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 
 const db = require('../db');
 const { requireAdmin, requireOwnerAdmin } = require('../middleware/auth');
+const { passwordChangeLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
 
@@ -78,7 +79,7 @@ router.delete('/api/admin/admins/:id', requireOwnerAdmin, (req, res) => {
 
 // ---- Self-service: any admin manages their own password ----
 
-router.post('/api/admin/change-password', requireAdmin, (req, res) => {
+router.post('/api/admin/change-password', passwordChangeLimiter, requireAdmin, (req, res) => {
   const { currentPassword, newPassword } = req.body || {};
   if (!currentPassword || !newPassword) {
     return res.status(400).json({ error: 'Current and new password are required.' });

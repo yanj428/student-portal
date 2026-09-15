@@ -68,6 +68,17 @@ if (process.env.NODE_ENV === 'production') {
   if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === INSECURE_DEFAULT_SESSION_SECRET) {
     throw new Error('Refusing to start in production with no real SESSION_SECRET set in .env.');
   }
+  // Not fatal (a production run with no proxy in front of it is a real,
+  // valid setup) — but this is the single most common way to end up with
+  // every visitor sharing one rate-limit bucket (see server/middleware/
+  // rateLimit.js) behind a reverse proxy or tunnel, so it's worth flagging
+  // loudly rather than only discovering it once a login lockout hits
+  // everyone at once.
+  if (!process.env.TRUST_PROXY) {
+    console.warn(
+      '[warn] Running in production without TRUST_PROXY set. If this site is behind a reverse proxy or tunnel, every visitor will look like the same IP address to the rate limiter — set TRUST_PROXY (see .env.example).'
+    );
+  }
 } else {
   if (!process.env.ADMIN_PASSWORD) {
     console.warn('[warn] ADMIN_PASSWORD not set in .env — using the insecure default. Set it before deploying.');

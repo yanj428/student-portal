@@ -47,9 +47,22 @@ const voicePostLimiter = rateLimit({
   message: { error: 'Too many posts submitted. Please try again later.' },
 });
 
+// Keyed by admin id (not IP) so one admin session can't burn through the
+// Gemini free-tier quota, without penalizing other admins on the same
+// school network.
+const calendarAiLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: parseInt(process.env.CALENDAR_AI_RATE_LIMIT, 10) || 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.session.adminId || ipKeyGenerator(req.ip),
+  message: { error: 'Too many AI extraction requests. Please try again later.' },
+});
+
 module.exports = {
   studentLoginLimiter,
   adminLoginLimiter,
   passwordChangeLimiter,
   voicePostLimiter,
+  calendarAiLimiter,
 };

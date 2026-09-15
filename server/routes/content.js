@@ -16,43 +16,62 @@ function isValidImageValue(value) {
 
 const router = express.Router();
 
+const WEEK_LABEL_MAX = 100;
+const LUNCH_ITEM_MAX = 200;
+
 // ---- Homepage content: the weekly slide, lunch menu, and lunch schedule
 // image. Everything else that used to live here (announcements, calendar
 // events, clubs, council, projects, quick links) is now its own collection
 // with full admin add/edit/delete — see the other route files.
 function validateContent(content) {
   const shape = db.DEFAULT_CONTENT;
-  if (!content || typeof content !== 'object') return 'Invalid content.';
+  if (!content || typeof content !== 'object') return { error: 'Invalid content.' };
 
   for (const key of Object.keys(shape)) {
     if (Array.isArray(shape[key])) {
       if (!Array.isArray(content[key]) || content[key].length !== shape[key].length) {
-        return `"${key}" must be a list of exactly ${shape[key].length} item(s).`;
+        return { error: `"${key}" must be a list of exactly ${shape[key].length} item(s).` };
       }
     } else if (typeof content[key] !== 'object' || content[key] === null || Array.isArray(content[key])) {
-      return `"${key}" is invalid.`;
+      return { error: `"${key}" is invalid.` };
     }
   }
 
-  if (typeof content.weeklySlide.weekLabel !== 'string' || typeof content.weeklySlide.canvaEmbedUrl !== 'string') {
-    return 'Weekly slide needs a week label and a Canva embed URL (both can be blank).';
+  const { weekLabel: slideWeekLabel, canvaEmbedUrl } = content.weeklySlide;
+  if (typeof slideWeekLabel !== 'string' || typeof canvaEmbedUrl !== 'string') {
+    return { error: 'Weekly slide needs a week label and a Canva embed URL (both can be blank).' };
   }
-  const canvaError = validateOptionalUrl(content.weeklySlide.canvaEmbedUrl, {
+  if (slideWeekLabel.length > WEEK_LABEL_MAX) return { error: `Week label must be ${WEEK_LABEL_MAX} characters or fewer.` };
+  const canvaError = validateOptionalUrl(canvaEmbedUrl, {
     fieldName: 'Canva embed URL',
     allowedHosts: ['canva.com', 'canva.link'],
   });
-  if (canvaError) return canvaError;
-  if (typeof content.lunchSchedule.weekLabel !== 'string' || typeof content.lunchSchedule.imageUrl !== 'string') {
-    return 'Lunch schedule needs a week label and image (both can be blank).';
+  if (canvaError) return { error: canvaError };
+
+  const { weekLabel: lunchWeekLabel, imageUrl } = content.lunchSchedule;
+  if (typeof lunchWeekLabel !== 'string' || typeof imageUrl !== 'string') {
+    return { error: 'Lunch schedule needs a week label and image (both can be blank).' };
   }
-  if (!isValidImageValue(content.lunchSchedule.imageUrl)) {
-    return 'Lunch schedule image must be an uploaded image or a valid https:// link.';
-  }
-  for (const l of content.lunchMenu) {
-    if (typeof l.weekday !== 'string' || typeof l.item !== 'string') return 'Each lunch entry needs a weekday and item.';
+  if (lunchWeekLabel.length > WEEK_LABEL_MAX) return { error: `Week label must be ${WEEK_LABEL_MAX} characters or fewer.` };
+  if (!isValidImageValue(imageUrl)) {
+    return { error: 'Lunch schedule image must be an uploaded image or a valid https:// link.' };
   }
 
-  return null;
+  for (const l of content.lunchMenu) {
+    if (typeof l.weekday !== 'string' || typeof l.item !== 'string') return { error: 'Each lunch entry needs a weekday and item.' };
+    if (l.item.length > LUNCH_ITEM_MAX) return { error: `Lunch item must be ${LUNCH_ITEM_MAX} characters or fewer.` };
+  }
+
+  // Rebuilt from only the fields above rather than passed through as-is —
+  // an admin session is trusted to manage this content, but not to add
+  // arbitrary extra fields to what gets stored.
+  return {
+    fields: {
+      weeklySlide: { weekLabel: slideWeekLabel.trim(), canvaEmbedUrl: normalizeUrl(canvaEmbedUrl) },
+      lunchSchedule: { weekLabel: lunchWeekLabel.trim(), imageUrl },
+      lunchMenu: content.lunchMenu.map((l) => ({ weekday: l.weekday, item: l.item.trim() })),
+    },
+  };
 }
 
 router.get('/api/content', requireActiveStudent, (req, res) => {
@@ -64,13 +83,11 @@ router.get('/api/admin/content', requireAdmin, (req, res) => {
 });
 
 router.put('/api/admin/content', requireAdmin, (req, res) => {
-  const { content } = req.body || {};
-  const error = validateContent(content);
+  const { fields, error } = validateContent(req.body && req.body.content);
   if (error) return res.status(400).json({ error });
 
-  content.weeklySlide.canvaEmbedUrl = normalizeUrl(content.weeklySlide.canvaEmbedUrl);
-  db.writeContent(content);
-  res.json({ content });
+  db.writeContent(fields);
+  res.json({ content: fields });
 });
 
 module.exports = router;

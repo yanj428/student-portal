@@ -5,6 +5,7 @@ const db = require('../db');
 const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
 const { memoryImageUpload } = require('../uploads');
 const { extractCalendarEvents, isAiConfigured } = require('../utils/calendarEventsAi');
+const { calendarAiLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
 
@@ -12,7 +13,7 @@ const router = express.Router();
 // the admin to review - this never writes anything itself, the admin adds
 // each reviewed candidate via the normal POST /api/admin/calendar-events
 // route below, one at a time (or all at once from the UI).
-router.post('/api/admin/calendar-events/extract', requireAdmin, (req, res) => {
+router.post('/api/admin/calendar-events/extract', requireAdmin, calendarAiLimiter, (req, res) => {
   if (!isAiConfigured()) {
     return res.status(501).json({ error: 'AI event extraction is not set up yet. Add GEMINI_API_KEY to the server .env file.' });
   }

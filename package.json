@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server/server.js",
     "test": "node --test tests/**/*.test.js",
-    "backup": "node scripts/backup.js"
+    "backup": "node scripts/backup.js",
+    "seed": "node scripts/seedImport.js",
+    "seed:export": "node scripts/seedExport.js"
   },
   "repository": {
     "type": "git",

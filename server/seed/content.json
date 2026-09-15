@@ -1,0 +1,482 @@
+{
+  "content": {
+    "lunchMenu": [
+      {
+        "weekday": "Mon",
+        "item": ""
+      },
+      {
+        "weekday": "Tue",
+        "item": ""
+      },
+      {
+        "weekday": "Wed",
+        "item": ""
+      },
+      {
+        "weekday": "Thu",
+        "item": ""
+      },
+      {
+        "weekday": "Fri",
+        "item": ""
+      }
+    ],
+    "weeklySlide": {
+      "weekLabel": "week of sep 14",
+      "canvaEmbedUrl": "https://canva.com/o30roeu2n1609zn"
+    },
+    "lunchSchedule": {
+      "weekLabel": "",
+      "imageUrl": ""
+    }
+  },
+  "clubs": [
+    {
+      "id": "707909ee-43cd-40e0-a2c4-d482ffcba996",
+      "type": "community-service",
+      "name": "Beach Cleanup Club",
+      "description": "Monthly beach cleanups — final edit test.",
+      "logoUrl": "",
+      "instagramUrl": "https://instagram.com/kpisbeach",
+      "applicationFormUrl": "https://forms.gle/test123",
+      "schedule": "",
+      "advisor": "",
+      "signupUrl": "",
+      "createdAt": "2026-09-11T15:25:41.353Z"
+    },
+    {
+      "id": "d7f9cb5d-1a9c-4967-9411-5f695baa9d64",
+      "type": "community-service",
+      "name": "Robotics Club",
+      "description": "We build robots.",
+      "logoUrl": "/uploads/club-logos/1789140417983-bfb8682f3ab6.png",
+      "instagramUrl": "https://instagram.com/kpisrobotics",
+      "applicationFormUrl": "https://forms.gle/robotics",
+      "schedule": "",
+      "advisor": "",
+      "signupUrl": "",
+      "createdAt": "2026-09-11T15:26:57.986Z"
+    },
+    {
+      "id": "a961ebb2-feaa-4c63-b9ac-1a9e958ce2d3",
+      "type": "after-school",
+      "name": "Robotics",
+      "description": "Design, build, and program competition robots.",
+      "logoUrl": "",
+      "instagramUrl": "",
+      "applicationFormUrl": "",
+      "schedule": "Tue & Thu · 3:30–5:00 PM · STEM Lab",
+      "advisor": "Mr. Anan",
+      "signupUrl": "",
+      "createdAt": "2026-09-14T12:08:10.638Z"
+    },
+    {
+      "id": "a90b3886-6703-43bf-9321-b7fcc934d440",
+      "type": "after-school",
+      "name": "Debate",
+      "description": "Practice argumentation and compete in regional tournaments.",
+      "logoUrl": "",
+      "instagramUrl": "",
+      "applicationFormUrl": "",
+      "schedule": "Mon & Wed · 3:30–4:30 PM · Room 204",
+      "advisor": "Ms. Preecha",
+      "signupUrl": "",
+      "createdAt": "2026-09-14T12:08:10.638Z"
+    },
+    {
+      "id": "364297a4-a172-4953-9277-fcacbe54c24a",
+      "type": "after-school",
+      "name": "Art & Design",
+      "description": "Explore painting, digital art, and design fundamentals.",
+      "logoUrl": "",
+      "instagramUrl": "",
+      "applicationFormUrl": "",
+      "schedule": "Fri · 3:30–5:00 PM · Art Studio",
+      "advisor": "Ms. Kanya",
+      "signupUrl": "",
+      "createdAt": "2026-09-14T12:08:10.638Z"
+    },
+    {
+      "id": "16c5efe8-8f4b-447f-aadf-47438c6def4b",
+      "type": "after-school",
+      "name": "Basketball",
+      "description": "Open practice and inter-school friendlies.",
+      "logoUrl": "",
+      "instagramUrl": "",
+      "applicationFormUrl": "",
+      "schedule": "Mon, Wed & Fri · 4:00–5:30 PM · Gym",
+      "advisor": "Coach Somchai",
+      "signupUrl": "",
+      "createdAt": "2026-09-14T12:08:10.638Z"
+    }
+  ],
+  "council": [
+    {
+      "id": "8c509119-daca-4a6f-bc98-e0ef0dba563b",
+      "name": "Dr. Pimpa Yungyuen",
+      "role": "Advisor",
+      "grade": "",
+      "group": "student-council",
+      "photoUrl": "",
+      "createdAt": "2026-09-15T13:52:40.985Z"
+    },
+    {
+      "id": "1075dc3b-8fc6-4292-948f-782b04b2cfb0",
+      "name": "Kittichet (Tim) Maklin",
+      "role": "President",
+      "grade": "Grade 12",
+      "group": "student-council",
+      "photoUrl": "",
+      "createdAt": "2026-09-15T13:19:12.584Z"
+    },
+    {
+      "id": "ba9c0860-6e37-436b-8f96-545a0e53d7ef",
+      "name": "Yanita Jantaboot",
+      "role": "Vice President",
+      "grade": "Grade 12",
+      "group": "student-council",
+      "photoUrl": "",
+      "createdAt": "2026-09-15T13:19:21.344Z"
+    },
+    {
+      "id": "a8e7e0fd-4291-4829-83e1-fb5b646e3536",
+      "name": "Manatsanan (Aiji) Prasertsukho",
+      "role": "Secretary",
+      "grade": "Grade 12",
+      "group": "student-council",
+      "photoUrl": "",
+      "createdAt": "2026-09-15T13:19:46.452Z"
+    },
+    {
+      "id": "fb6c88de-62ac-40a7-a8f4-dd913da5cfeb",
+      "name": "Athit (Thonkla) Intasombut",
+      "role": "Treasurer",
+      "grade": "Grade 10",
+      "group": "student-council",
+      "photoUrl": "",
+      "createdAt": "2026-09-15T13:38:46.336Z"
+    },
+    {
+      "id": "6492e910-a020-4b4a-b12f-485a19ba8d1c",
+      "name": "Kavya Shree Guragain",
+      "role": "Event Representative",
+      "grade": "Grade 11",
+      "group": "student-council",
+      "photoUrl": "",
+      "createdAt": "2026-09-15T13:39:05.112Z"
+    },
+    {
+      "id": "9a1547dd-6e21-418e-9e53-e31a1f269651",
+      "name": "Theia Sibi Kulphaisal",
+      "role": "Club Representative",
+      "grade": "Grade 11",
+      "group": "student-council",
+      "photoUrl": "",
+      "createdAt": "2026-09-15T13:39:21.232Z"
+    },
+    {
+      "id": "caad4b8b-b862-47dd-986a-a11b6ff4cd8b",
+      "name": "Karynne Lois Lepiten",
+      "role": "Communication Representative",
+      "grade": "Grade 11",
+      "group": "student-council",
+      "photoUrl": "",
+      "createdAt": "2026-09-15T13:39:43.208Z"
+    },
+    {
+      "id": "1ef0fd16-b67d-4963-84f2-f1ec40fd2782",
+      "name": "Phudit (Acita) Ponprasertthavorn",
+      "role": "12/1 Class Representative",
+      "grade": "Grade 12",
+      "group": "general-council",
+      "photoUrl": "",
+      "createdAt": "2026-09-15T13:40:38.739Z"
+    },
+    {
+      "id": "d393dc4c-9fe3-4542-bce5-18fcce9767ce",
+      "name": "Kiragorn (Keane) Promma",
+      "role": "12/2 Class Representative",
+      "grade": "Grade 12",
+      "group": "general-council",
+      "photoUrl": "",
+      "createdAt": "2026-09-15T13:43:10.187Z"
+    },
+    {
+      "id": "8919db1b-8fb4-4119-a6eb-c8256805dbc8",
+      "name": "Yan-ni (Taini) Chen",
+      "role": "Marketing Representative",
+      "grade": "Grade 10",
+      "group": "student-council",
+      "photoUrl": "",
+      "createdAt": "2026-09-15T13:39:54.149Z"
+    },
+    {
+      "id": "43ac5297-a452-4925-a137-216150e80429",
+      "name": "Ms. Christina (Tina) Omamalin",
+      "role": "Advisor",
+      "grade": "",
+      "group": "student-council",
+      "level": "ms",
+      "photoUrl": "",
+      "createdAt": "2026-09-15T14:02:34.124Z"
+    },
+    {
+      "id": "e1ad22ab-4c07-46c0-b0bf-abfaa617f6e1",
+      "name": "Neil Jansen (NJ) Pilongo",
+      "role": "President",
+      "grade": "Grade 8",
+      "group": "student-council",
+      "level": "ms",
+      "photoUrl": "",
+      "createdAt": "2026-09-15T13:59:08.870Z"
+    },
+    {
+      "id": "3d922b03-c675-425b-90b1-48ed79ff873e",
+      "name": "Sirin (Jin Jine) Wang",
+      "role": "Vice President",
+      "grade": "Grade 8",
+      "group": "student-council",
+      "level": "ms",
+      "photoUrl": "",
+      "createdAt": "2026-09-15T13:59:34.204Z"
+    }
+  ],
+  "announcements": [
+    {
+      "id": "3006a65c-9670-44fd-84b2-471566a6ac6a",
+      "title": "Prelim payment due",
+      "body": "Please clear your prelim payment before the end of this week to avoid late fees.",
+      "createdAt": "2026-09-14T12:08:10.639Z"
+    },
+    {
+      "id": "5a41c7c1-abca-4149-9ec7-41956287f9a1",
+      "title": "Exam schedule posted",
+      "body": "The final exam schedule has been posted. Check your dashboard for your exact dates and rooms.",
+      "createdAt": "2026-09-14T12:08:10.639Z"
+    },
+    {
+      "id": "c0913a36-a4c7-4a4e-8dbd-6f9bce0f835c",
+      "title": "Community Service sign-ups open",
+      "body": "Sign up for this term's community service projects before spots fill up.",
+      "createdAt": "2026-09-14T12:08:10.639Z"
+    }
+  ],
+  "calendarEvents": [
+    {
+      "id": "9b4d5ef4-5c19-41cb-ba03-2cc0525d5302",
+      "day": "12",
+      "month": "Sep",
+      "title": "Midterm Exams Begin",
+      "subtitle": "All grades · Main building",
+      "createdAt": "2026-09-14T12:08:10.639Z"
+    },
+    {
+      "id": "0b66fdf4-45aa-4991-8b22-666373121867",
+      "day": "18",
+      "month": "Sep",
+      "title": "StuCo General Assembly",
+      "subtitle": "Grades 9–12 · Auditorium",
+      "createdAt": "2026-09-14T12:08:10.639Z"
+    },
+    {
+      "id": "663d21a3-5ab2-4006-9bac-70623b4e0d00",
+      "day": "25",
+      "month": "Sep",
+      "title": "Community Service Day",
+      "subtitle": "All grades · Off-campus",
+      "createdAt": "2026-09-14T12:08:10.639Z"
+    },
+    {
+      "id": "a2c36d58-e2f9-48b7-a22e-a737fda45251",
+      "day": "20",
+      "month": "Sep",
+      "title": "Science Fair",
+      "subtitle": "Grades 6-8 - Gymnasium",
+      "createdAt": "2026-09-15T12:47:00.445Z"
+    },
+    {
+      "id": "b4e6f8e2-634f-4c34-bc8f-7e8ecc814b35",
+      "day": "14",
+      "month": "Sep",
+      "title": "Fall MAP testing",
+      "subtitle": "",
+      "createdAt": "2026-09-15T14:23:47.518Z"
+    },
+    {
+      "id": "7ddd1951-260d-49fd-a82b-cd21a8352512",
+      "day": "16",
+      "month": "Sep",
+      "title": "Sep 16-17 Badminton @ SJMIS & KPIS",
+      "subtitle": "",
+      "createdAt": "2026-09-15T14:23:47.521Z"
+    },
+    {
+      "id": "b81627a4-3a78-410a-8d5d-210c444927fa",
+      "day": "17",
+      "month": "Sep",
+      "title": "Bridge U visits KPIS",
+      "subtitle": "gr 9 - 12 LifeSkills 8:15 - 9:25",
+      "createdAt": "2026-09-15T14:23:47.523Z"
+    },
+    {
+      "id": "bb7fc9fd-c8f8-42f8-a951-44e00a597394",
+      "day": "18",
+      "month": "Sep",
+      "title": "Early Finish Day for students/ Teacher In-Service (PD)",
+      "subtitle": "",
+      "createdAt": "2026-09-15T14:23:47.525Z"
+    },
+    {
+      "id": "7c080f28-dd7c-48ff-b9c9-d40fab9845cc",
+      "day": "24",
+      "month": "Sep",
+      "title": "Engineer and AI Workshop - KMITL",
+      "subtitle": "G9-12 Life Skills Block",
+      "createdAt": "2026-09-15T14:23:47.528Z"
+    },
+    {
+      "id": "0d06dceb-0429-4a19-84cb-2d083bbb0a55",
+      "day": "25",
+      "month": "Sep",
+      "title": "House Day 1 - Badminton",
+      "subtitle": "",
+      "createdAt": "2026-09-15T14:23:47.530Z"
+    },
+    {
+      "id": "77b1e73f-0292-464f-9c2a-5052a337075e",
+      "day": "1",
+      "month": "Oct",
+      "title": "SOP Session (Statement of Purpose)",
+      "subtitle": "Gr. 11-12",
+      "createdAt": "2026-09-15T14:23:47.532Z"
+    },
+    {
+      "id": "e7d19ae2-e8c0-4567-83c1-927f8391b77f",
+      "day": "2",
+      "month": "Oct",
+      "title": "Literacy Day",
+      "subtitle": "Activity block",
+      "createdAt": "2026-09-15T14:23:47.535Z"
+    },
+    {
+      "id": "8397d34c-2f56-468d-9808-d1b5636ad379",
+      "day": "3",
+      "month": "Oct",
+      "title": "SAT Test Day",
+      "subtitle": "",
+      "createdAt": "2026-09-15T14:23:47.539Z"
+    },
+    {
+      "id": "4646051e-4a3d-4e61-9d9e-bf43ff20300e",
+      "day": "9",
+      "month": "Oct",
+      "title": "Mini Hackathon and Coding with Humanoid with UTCC University",
+      "subtitle": "Grade 9-12 13:45-15:15 at KX Center",
+      "createdAt": "2026-09-15T14:23:47.541Z"
+    },
+    {
+      "id": "524517b8-b9d2-4b5e-bf3d-83300367acc9",
+      "day": "13",
+      "month": "Oct",
+      "title": "School Holidays",
+      "subtitle": "",
+      "createdAt": "2026-09-15T14:23:47.544Z"
+    },
+    {
+      "id": "17aca9d3-97b8-421b-8447-c7a7a69fc196",
+      "day": "15",
+      "month": "Oct",
+      "title": "SS Fall PTC - MS / Remote learning for HS",
+      "subtitle": "",
+      "createdAt": "2026-09-15T14:23:47.547Z"
+    },
+    {
+      "id": "1ed14c4b-b41d-4407-8ee4-176ab6c6ac27",
+      "day": "16",
+      "month": "Oct",
+      "title": "SS Fall PTC - MS and HS",
+      "subtitle": "",
+      "createdAt": "2026-09-15T14:23:47.549Z"
+    },
+    {
+      "id": "a3e94f52-079d-43a6-bc43-bf22569700d7",
+      "day": "19",
+      "month": "Oct",
+      "title": "School Holidays",
+      "subtitle": "",
+      "createdAt": "2026-09-15T14:23:47.552Z"
+    },
+    {
+      "id": "b0b00116-b8d0-4ae2-90d1-e21c6a716cfb",
+      "day": "29",
+      "month": "Oct",
+      "title": "UK Higher Education Guidance Session by BRIT-Education UK",
+      "subtitle": "gr. 10-12",
+      "createdAt": "2026-09-15T14:23:47.554Z"
+    },
+    {
+      "id": "e2163a41-5c19-40e0-8612-b83c4e83abdb",
+      "day": "30",
+      "month": "Oct",
+      "title": "Halloween Activities",
+      "subtitle": "",
+      "createdAt": "2026-09-15T14:23:47.555Z"
+    }
+  ],
+  "projects": [
+    {
+      "id": "c86926a1-3f74-4196-9961-c65411120973",
+      "title": "Spirit Week Planning",
+      "percent": 70,
+      "status": "On Track",
+      "lead": "StuCo Events Team",
+      "description": "Organizing daily themes, activities, and the closing pep rally.",
+      "createdAt": "2026-09-14T12:08:10.640Z"
+    },
+    {
+      "id": "a5a907d7-bc1d-4460-bda7-5ba1c919fd74",
+      "title": "Recycling Drive",
+      "percent": 35,
+      "status": "On Track",
+      "lead": "StuCo Sustainability Team",
+      "description": "Setting up recycling bins across campus and a collection schedule.",
+      "createdAt": "2026-09-14T12:08:10.640Z"
+    }
+  ],
+  "quickLinks": [
+    {
+      "id": "c00153a9-bcb6-4672-9244-5a2722fbb3e9",
+      "label": "Student Email",
+      "url": "#",
+      "createdAt": "2026-09-14T12:08:10.640Z"
+    },
+    {
+      "id": "ed5e1dec-f7ff-4abf-92a2-9ea746fee826",
+      "label": "Library Catalog",
+      "url": "#",
+      "createdAt": "2026-09-14T12:08:10.640Z"
+    },
+    {
+      "id": "649b4182-a255-4e08-9d7e-8e75893cd69b",
+      "label": "Student Handbook",
+      "url": "#",
+      "createdAt": "2026-09-14T12:08:10.640Z"
+    },
+    {
+      "id": "76b1dcd8-685b-4363-b0fd-c2aeb9852b0c",
+      "label": "Print Center",
+      "url": "#",
+      "createdAt": "2026-09-14T12:08:10.640Z"
+    }
+  ],
+  "csEvents": [],
+  "slideArchive": [
+    {
+      "id": "9d695d4c-3c3b-44a3-82ff-ab238c155a3d",
+      "weekLabel": "Week of Sep 15",
+      "canvaEmbedUrl": "https://www.canva.com/design/newweek/view",
+      "archivedAt": "2026-09-11T15:19:07.255Z"
+    }
+  ]
+}

@@ -65,11 +65,39 @@ function makeImageUpload(destinationDir, maxSizeMb) {
 const lunchImageUpload = makeImageUpload(LUNCH_UPLOADS_DIR, 8);
 const clubLogoUpload = makeImageUpload(CLUB_LOGO_UPLOADS_DIR, 4);
 
+// Same real-content-type check as makeImageUpload, but for a one-off image
+// that's only ever sent on to an external API (the AI menu extractor) and
+// never written to disk or served back from our own domain.
+function makeMemoryImageUpload(maxSizeMb) {
+  const memoryUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: maxSizeMb * 1024 * 1024 } });
+
+  return {
+    single(fieldName) {
+      const inner = memoryUpload.single(fieldName);
+      return (req, res, next) => {
+        inner(req, res, (err) => {
+          if (err) return next(err);
+          if (!req.file) return next();
+
+          const detected = detectImageType(req.file.buffer);
+          if (!detected) return next(new Error('Only JPEG, PNG, WEBP, or GIF images are allowed.'));
+
+          req.file.mimetype = detected.mimetype;
+          next();
+        });
+      };
+    },
+  };
+}
+
+const memoryImageUpload = makeMemoryImageUpload(8);
+
 module.exports = {
   UPLOADS_DIR,
   LUNCH_UPLOADS_DIR,
   CLUB_LOGO_UPLOADS_DIR,
   lunchImageUpload,
   clubLogoUpload,
+  memoryImageUpload,
   detectImageType,
 };

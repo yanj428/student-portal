@@ -3,8 +3,32 @@ const crypto = require('crypto');
 
 const db = require('../db');
 const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
+const { memoryImageUpload } = require('../uploads');
+const { extractCalendarEvents, isAiConfigured } = require('../utils/calendarEventsAi');
 
 const router = express.Router();
+
+// Reads a calendar/events photo with AI and hands back candidate events for
+// the admin to review - this never writes anything itself, the admin adds
+// each reviewed candidate via the normal POST /api/admin/calendar-events
+// route below, one at a time (or all at once from the UI).
+router.post('/api/admin/calendar-events/extract', requireAdmin, (req, res) => {
+  if (!isAiConfigured()) {
+    return res.status(501).json({ error: 'AI event extraction is not set up yet. Add GEMINI_API_KEY to the server .env file.' });
+  }
+
+  memoryImageUpload.single('image')(req, res, async (err) => {
+    if (err) return res.status(400).json({ error: err.message || 'Could not read image.' });
+    if (!req.file) return res.status(400).json({ error: 'No image was uploaded.' });
+
+    try {
+      const events = await extractCalendarEvents(req.file.buffer, req.file.mimetype);
+      res.json({ events });
+    } catch (extractErr) {
+      res.status(502).json({ error: extractErr.message });
+    }
+  });
+});
 
 function publicEvent(e) {
   return { id: e.id, day: e.day, month: e.month, title: e.title, subtitle: e.subtitle, createdAt: e.createdAt };
@@ -32,7 +56,7 @@ function validateFields(body) {
   if (typeof day !== 'string' || !day.trim()) return 'Day is required.';
   if (typeof month !== 'string' || !month.trim()) return 'Month is required.';
   if (typeof title !== 'string' || !title.trim()) return 'Title is required.';
-  if (typeof subtitle !== 'string' || !subtitle.trim()) return 'Subtitle is required.';
+  if (typeof subtitle !== 'string') return 'Subtitle must be text (it can be blank).';
   return null;
 }
 

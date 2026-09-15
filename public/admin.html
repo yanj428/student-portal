@@ -328,6 +328,29 @@
 
       <section class="admin-page-section" data-section="calendar" hidden>
       <section class="panel">
+        <h2>Extract events with AI</h2>
+        <p class="panel-hint">Upload a photo of a school calendar or events list and review the events it finds before adding them below.</p>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label class="field-label" for="calendar-ai-image-input">Calendar photo</label>
+            <input class="field-input" type="file" id="calendar-ai-image-input" accept="image/png,image/jpeg,image/webp,image/gif" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn ghost" id="calendar-ai-extract-btn">Extract with AI</button>
+        </div>
+        <p class="field-error" id="calendar-ai-error" hidden></p>
+
+        <div id="calendar-ai-results" class="voice-pending-list" hidden>
+          <div class="form-actions ai-results-actions">
+            <button type="button" class="btn primary" id="calendar-ai-add-all">Add all</button>
+          </div>
+          <div id="calendar-ai-results-list"></div>
+        </div>
+      </section>
+
+      <section class="panel">
         <h2>Calendar events</h2>
         <p class="panel-hint">Shown in "Upcoming on the Calendar" on the homepage and on the School Calendar page.</p>
 
@@ -347,8 +370,8 @@
             <input class="field-input" type="text" id="calendar-event-title" placeholder="e.g. Midterm Exams Begin" required />
           </div>
           <div class="form-field">
-            <label class="field-label" for="calendar-event-subtitle">Subtitle</label>
-            <input class="field-input" type="text" id="calendar-event-subtitle" placeholder="e.g. All grades · Main building" required />
+            <label class="field-label" for="calendar-event-subtitle">Subtitle (optional)</label>
+            <input class="field-input" type="text" id="calendar-event-subtitle" placeholder="e.g. All grades · Main building" />
           </div>
           <p class="field-error" id="calendar-event-error" hidden></p>
           <div class="form-actions">

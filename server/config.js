@@ -42,6 +42,12 @@ const ADMIN_SESSION_ABSOLUTE_MINUTES = parseFloat(process.env.ADMIN_SESSION_ABSO
 const SESSION_COOKIE_SECURE = process.env.NODE_ENV === 'production';
 const TRUST_PROXY = process.env.TRUST_PROXY || false;
 
+// Powers the optional "extract this lunch menu photo with AI" admin
+// feature (server/routes/lunch.js). Left unset, that feature just returns
+// a clear "not configured" error instead of the app failing to start —
+// it's an enhancement, not something the rest of the site depends on.
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+
 // A fixed, precomputed hash with no matching password — compared against
 // on every login for an email/admin that doesn't exist, so that branch
 // costs the same ~50ms of bcrypt work a real account's check would. Without
@@ -91,4 +97,5 @@ module.exports = {
   SESSION_COOKIE_SECURE,
   TRUST_PROXY,
   DUMMY_PASSWORD_HASH,
+  GEMINI_API_KEY,
 };

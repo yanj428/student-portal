@@ -103,6 +103,9 @@ html, body {
   color: var(--text);
   background: #fff;
 }
+.field-input[type="file"]::file-selector-button {
+  margin-right: 15.6px;
+}
 .field-input:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3.9px rgba(150,30,32,0.1);
@@ -774,6 +777,9 @@ tr:last-child td { border-bottom: none; }
 .radio-option input { cursor: pointer; }
 
 /* Student Voice moderation */
+.ai-results-actions {
+  margin-bottom: 15.6px;
+}
 .view-more-toggle {
   display: block;
   background: none;
@@ -798,6 +804,7 @@ tr:last-child td { border-bottom: none; }
   flex-direction: column;
   gap: 13px;
 }
+.voice-pending-list[hidden] { display: none; }
 .empty-hint {
   color: var(--text-muted);
   font-size: 16.9px;

@@ -99,3 +99,112 @@ form.addEventListener('submit', async (e) => {
     submitBtn.textContent = editingId ? 'Save changes' : 'Add event';
   }
 });
+
+// ---- Extract events from a photo with AI ----
+
+const aiImageInput = document.getElementById('calendar-ai-image-input');
+const aiExtractBtn = document.getElementById('calendar-ai-extract-btn');
+const aiError = document.getElementById('calendar-ai-error');
+const aiResults = document.getElementById('calendar-ai-results');
+const aiResultsList = document.getElementById('calendar-ai-results-list');
+const aiAddAllBtn = document.getElementById('calendar-ai-add-all');
+
+let candidates = [];
+
+function renderCandidates() {
+  aiResultsList.querySelectorAll('.mod-item').forEach((el) => el.remove());
+  aiResults.hidden = candidates.length === 0;
+  if (candidates.length === 0) return;
+
+  candidates.forEach((candidate, index) => {
+    const div = document.createElement('div');
+    div.className = 'mod-item open';
+    div.innerHTML = `
+      <div class="mod-item-details">
+        <div class="mod-item-meta">${escapeHtml(candidate.day)} ${escapeHtml(candidate.month)}</div>
+        <p class="mod-item-body"><strong>${escapeHtml(candidate.title)}</strong>${candidate.subtitle ? ` — ${escapeHtml(candidate.subtitle)}` : ''}</p>
+        <div class="mod-item-actions">
+          <button class="btn primary add-candidate-btn">Add</button>
+          <button class="btn ghost dismiss-candidate-btn">Dismiss</button>
+        </div>
+      </div>
+    `;
+    div.querySelector('.add-candidate-btn').addEventListener('click', () => addCandidate(index));
+    div.querySelector('.dismiss-candidate-btn').addEventListener('click', () => {
+      candidates.splice(index, 1);
+      renderCandidates();
+    });
+    aiResultsList.appendChild(div);
+  });
+}
+
+// Returns whether it actually added the candidate — callers (especially
+// the "Add all" loop below) must not treat a rejected candidate as done,
+// but also must not just retry it forever.
+async function addCandidate(index) {
+  const candidate = candidates[index];
+  const { ok, data } = await sendJSON('/api/admin/calendar-events', 'POST', candidate);
+  if (ok) {
+    candidates.splice(index, 1);
+    renderCandidates();
+    loadCalendarEvents();
+    return true;
+  }
+  aiError.textContent = data.error || `Could not add "${candidate.title}".`;
+  aiError.hidden = false;
+  return false;
+}
+
+aiExtractBtn.addEventListener('click', async () => {
+  aiError.hidden = true;
+
+  const file = aiImageInput.files[0];
+  if (!file) {
+    aiError.textContent = 'Choose a calendar photo first.';
+    aiError.hidden = false;
+    return;
+  }
+
+  aiExtractBtn.disabled = true;
+  aiExtractBtn.textContent = 'Reading photo…';
+
+  try {
+    const formData = new FormData();
+    formData.append('image', file);
+    const res = await fetch('/api/admin/calendar-events/extract', { method: 'POST', body: formData });
+    const data = await res.json();
+
+    if (!res.ok) {
+      aiError.textContent = data.error || 'Could not read this photo.';
+      aiError.hidden = false;
+      return;
+    }
+
+    candidates = data.events;
+    renderCandidates();
+  } catch {
+    aiError.textContent = 'Could not reach the server. Please try again.';
+    aiError.hidden = false;
+  } finally {
+    aiExtractBtn.disabled = false;
+    aiExtractBtn.textContent = 'Extract with AI';
+  }
+});
+
+aiAddAllBtn.addEventListener('click', async () => {
+  aiAddAllBtn.disabled = true;
+  aiAddAllBtn.textContent = 'Adding…';
+  try {
+    while (candidates.length > 0) {
+      // eslint-disable-next-line no-await-in-loop
+      const added = await addCandidate(0);
+      // A rejected candidate stays in the list (so the admin can fix or
+      // dismiss it) instead of being retried forever against the same
+      // error - stop the batch here rather than hammering the server.
+      if (!added) break;
+    }
+  } finally {
+    aiAddAllBtn.disabled = false;
+    aiAddAllBtn.textContent = 'Add all';
+  }
+});

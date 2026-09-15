@@ -5,9 +5,9 @@ import { escapeHtml } from './api.js';
 // it's in, so re-moderating a past decision (e.g. un-rejecting something)
 // is just clicking the other button rather than a separate flow.
 const SECTIONS = {
-  pending: { list: 'voice-pending-list', empty: 'voice-pending-empty', search: 'voice-pending-search' },
-  approved: { list: 'voice-approved-list', empty: 'voice-approved-empty', search: 'voice-approved-search' },
-  rejected: { list: 'voice-rejected-list', empty: 'voice-rejected-empty', search: 'voice-rejected-search' },
+  pending: { list: 'voice-pending-list', empty: 'voice-pending-empty', search: 'voice-pending-search', body: 'voice-pending-body', toggle: 'voice-pending-toggle' },
+  approved: { list: 'voice-approved-list', empty: 'voice-approved-empty', search: 'voice-approved-search', body: 'voice-approved-body', toggle: 'voice-approved-toggle' },
+  rejected: { list: 'voice-rejected-list', empty: 'voice-rejected-empty', search: 'voice-rejected-search', body: 'voice-rejected-body', toggle: 'voice-rejected-toggle' },
 };
 
 // Keeps each section's full fetched list around so the search box can
@@ -130,8 +130,16 @@ function renderSection(status) {
   });
 }
 
-Object.entries(SECTIONS).forEach(([status, { empty, search }]) => {
+Object.entries(SECTIONS).forEach(([status, { empty, search, body, toggle }]) => {
   const emptyEl = document.getElementById(empty);
   emptyEl.dataset.defaultText = emptyEl.textContent;
   document.getElementById(search).addEventListener('input', () => renderSection(status));
+
+  const bodyEl = document.getElementById(body);
+  const toggleEl = document.getElementById(toggle);
+  toggleEl.addEventListener('click', () => {
+    const nowOpen = bodyEl.hidden;
+    bodyEl.hidden = !nowOpen;
+    toggleEl.textContent = nowOpen ? 'View less' : 'View more';
+  });
 });

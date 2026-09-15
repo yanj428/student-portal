@@ -592,34 +592,46 @@
           <h2>Pending review</h2>
           <span class="count-badge" id="voice-pending-count">0</span>
         </div>
-        <p class="panel-hint">Suggestions students have submitted are only ever visible to StuCo here - approving one does not make it public.</p>
+        <button type="button" class="view-more-toggle" id="voice-pending-toggle">View more</button>
 
-        <input class="field-input voice-search" type="text" id="voice-pending-search" placeholder="Search by title, author, or content…" />
+        <div class="view-more-body" id="voice-pending-body" hidden>
+          <p class="panel-hint">Suggestions students have submitted are only ever visible to StuCo here - approving one does not make it public.</p>
 
-        <div id="voice-pending-list" class="voice-pending-list">
-          <p class="empty-hint" id="voice-pending-empty">Nothing waiting for review.</p>
+          <input class="field-input voice-search" type="text" id="voice-pending-search" placeholder="Search by title, author, or content…" />
+
+          <div id="voice-pending-list" class="voice-pending-list">
+            <p class="empty-hint" id="voice-pending-empty">Nothing waiting for review.</p>
+          </div>
         </div>
       </section>
 
       <section class="panel">
         <h2>Approved</h2>
-        <p class="panel-hint">Suggestions StuCo has approved. Still only visible here and to the student who submitted it.</p>
+        <button type="button" class="view-more-toggle" id="voice-approved-toggle">View more</button>
 
-        <input class="field-input voice-search" type="text" id="voice-approved-search" placeholder="Search by title, author, or content…" />
+        <div class="view-more-body" id="voice-approved-body" hidden>
+          <p class="panel-hint">Suggestions StuCo has approved. Still only visible here and to the student who submitted it.</p>
 
-        <div id="voice-approved-list" class="voice-pending-list">
-          <p class="empty-hint" id="voice-approved-empty">Nothing approved yet.</p>
+          <input class="field-input voice-search" type="text" id="voice-approved-search" placeholder="Search by title, author, or content…" />
+
+          <div id="voice-approved-list" class="voice-pending-list">
+            <p class="empty-hint" id="voice-approved-empty">Nothing approved yet.</p>
+          </div>
         </div>
       </section>
 
       <section class="panel">
         <h2>Rejected</h2>
-        <p class="panel-hint">Suggestions StuCo has rejected. Approve one again if it was a mistake.</p>
+        <button type="button" class="view-more-toggle" id="voice-rejected-toggle">View more</button>
 
-        <input class="field-input voice-search" type="text" id="voice-rejected-search" placeholder="Search by title, author, or content…" />
+        <div class="view-more-body" id="voice-rejected-body" hidden>
+          <p class="panel-hint">Suggestions StuCo has rejected. Approve one again if it was a mistake.</p>
 
-        <div id="voice-rejected-list" class="voice-pending-list">
-          <p class="empty-hint" id="voice-rejected-empty">Nothing rejected.</p>
+          <input class="field-input voice-search" type="text" id="voice-rejected-search" placeholder="Search by title, author, or content…" />
+
+          <div id="voice-rejected-list" class="voice-pending-list">
+            <p class="empty-hint" id="voice-rejected-empty">Nothing rejected.</p>
+          </div>
         </div>
       </section>
       </section>

@@ -774,6 +774,22 @@ tr:last-child td { border-bottom: none; }
 .radio-option input { cursor: pointer; }
 
 /* Student Voice moderation */
+.view-more-toggle {
+  display: block;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-top: 6.5px;
+  font-family: inherit;
+  font-size: 16.25px;
+  font-weight: 600;
+  color: var(--primary);
+  cursor: pointer;
+}
+.view-more-toggle:hover { color: var(--primary-dark); text-decoration: underline; }
+.view-more-body {
+  margin-top: 23.4px;
+}
 .voice-search {
   margin-bottom: 18.2px;
 }

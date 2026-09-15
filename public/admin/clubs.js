@@ -114,6 +114,18 @@ function renderClubs(clubs) {
   }
 }
 
+const viewMoreToggles = {
+  'community-service': { toggle: document.getElementById('club-community-service-toggle'), body: document.getElementById('club-community-service-body') },
+  'after-school': { toggle: document.getElementById('club-after-school-toggle'), body: document.getElementById('club-after-school-body') },
+};
+Object.values(viewMoreToggles).forEach(({ toggle, body }) => {
+  toggle.addEventListener('click', () => {
+    const nowOpen = body.hidden;
+    body.hidden = !nowOpen;
+    toggle.textContent = nowOpen ? 'View less' : 'View more';
+  });
+});
+
 clubCancelEdit.addEventListener('click', () => resetClubForm());
 
 clubForm.addEventListener('submit', async (e) => {

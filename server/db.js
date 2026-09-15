@@ -516,6 +516,18 @@ const council = jsonCollection('council');
 const projects = jsonCollection('projects');
 const quickLinks = jsonCollection('quickLinks');
 
+// Only these collections (public site content, not accounts or the private
+// Voice suggestion box) feed the checked-in seed - see seedWriter.js for why
+// this stays a no-op outside a normal local dev run.
+const { scheduleSeedSnapshot } = require('./seedWriter');
+function withSeedSync(writeFn) {
+  return (...args) => {
+    const result = writeFn(...args);
+    scheduleSeedSnapshot();
+    return result;
+  };
+}
+
 module.exports = {
   readStudents,
   writeStudents,
@@ -525,7 +537,7 @@ module.exports = {
   removeStudent,
   updateStudentPasswordHash,
   readContent,
-  writeContent,
+  writeContent: withSeedSync(writeContent),
 
   getThrottle,
   recordFailedAttempt,
@@ -542,28 +554,28 @@ module.exports = {
   writeVoicePosts: voicePosts.write,
 
   readSlideArchive: slideArchive.read,
-  writeSlideArchive: slideArchive.write,
+  writeSlideArchive: withSeedSync(slideArchive.write),
 
   readClubs: clubs.read,
-  writeClubs: clubs.write,
+  writeClubs: withSeedSync(clubs.write),
 
   readCsEvents: csEvents.read,
-  writeCsEvents: csEvents.write,
+  writeCsEvents: withSeedSync(csEvents.write),
 
   readAnnouncements: announcements.read,
-  writeAnnouncements: announcements.write,
+  writeAnnouncements: withSeedSync(announcements.write),
 
   readCalendarEvents: calendarEvents.read,
-  writeCalendarEvents: calendarEvents.write,
+  writeCalendarEvents: withSeedSync(calendarEvents.write),
 
   readCouncil: council.read,
-  writeCouncil: council.write,
+  writeCouncil: withSeedSync(council.write),
 
   readProjects: projects.read,
-  writeProjects: projects.write,
+  writeProjects: withSeedSync(projects.write),
 
   readQuickLinks: quickLinks.read,
-  writeQuickLinks: quickLinks.write,
+  writeQuickLinks: withSeedSync(quickLinks.write),
 
   DEFAULT_CONTENT,
 

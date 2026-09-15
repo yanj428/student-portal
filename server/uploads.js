@@ -6,8 +6,10 @@ const multer = require('multer');
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
 const LUNCH_UPLOADS_DIR = path.join(UPLOADS_DIR, 'lunch');
 const CLUB_LOGO_UPLOADS_DIR = path.join(UPLOADS_DIR, 'club-logos');
+const COUNCIL_PHOTO_UPLOADS_DIR = path.join(UPLOADS_DIR, 'council-photos');
 fs.mkdirSync(LUNCH_UPLOADS_DIR, { recursive: true });
 fs.mkdirSync(CLUB_LOGO_UPLOADS_DIR, { recursive: true });
+fs.mkdirSync(COUNCIL_PHOTO_UPLOADS_DIR, { recursive: true });
 
 // Identifies a file by its actual bytes (the "magic number" every image
 // format starts with), not by the Content-Type header the browser sent —
@@ -64,6 +66,7 @@ function makeImageUpload(destinationDir, maxSizeMb) {
 
 const lunchImageUpload = makeImageUpload(LUNCH_UPLOADS_DIR, 8);
 const clubLogoUpload = makeImageUpload(CLUB_LOGO_UPLOADS_DIR, 4);
+const councilPhotoUpload = makeImageUpload(COUNCIL_PHOTO_UPLOADS_DIR, 4);
 
 // Same real-content-type check as makeImageUpload, but for a one-off image
 // that's only ever sent on to an external API (the AI menu extractor) and
@@ -96,8 +99,10 @@ module.exports = {
   UPLOADS_DIR,
   LUNCH_UPLOADS_DIR,
   CLUB_LOGO_UPLOADS_DIR,
+  COUNCIL_PHOTO_UPLOADS_DIR,
   lunchImageUpload,
   clubLogoUpload,
+  councilPhotoUpload,
   memoryImageUpload,
   detectImageType,
 };

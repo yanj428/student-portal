@@ -1,13 +1,16 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const crypto = require('crypto');
 
 const db = require('../db');
 const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
+const { UPLOADS_DIR, councilPhotoUpload } = require('../uploads');
 
 const router = express.Router();
 
 function publicMember(m) {
-  return { id: m.id, initials: m.initials, name: m.name, role: m.role, bio: m.bio, createdAt: m.createdAt };
+  return { id: m.id, name: m.name, role: m.role, bio: m.bio, photoUrl: m.photoUrl || '', createdAt: m.createdAt };
 }
 
 router.get('/api/council', requireActiveStudent, (req, res) => {
@@ -18,56 +21,73 @@ router.get('/api/admin/council', requireAdmin, (req, res) => {
   res.json({ council: db.readCouncil().map(publicMember) });
 });
 
-function validateFields(body) {
-  const { initials, name, role, bio } = body || {};
-  if (typeof initials !== 'string' || !initials.trim()) return 'Initials are required.';
-  if (typeof name !== 'string' || !name.trim()) return 'Name is required.';
-  if (typeof role !== 'string' || !role.trim()) return 'Role is required.';
-  if (typeof bio !== 'string' || !bio.trim()) return 'Bio is required.';
-  return null;
+function readFields(body) {
+  const { name, role, bio } = body || {};
+  if (typeof name !== 'string' || !name.trim()) return { error: 'Name is required.' };
+  if (typeof role !== 'string' || !role.trim()) return { error: 'Role is required.' };
+  if (typeof bio !== 'string' || !bio.trim()) return { error: 'Bio is required.' };
+  return { fields: { name: name.trim(), role: role.trim(), bio: bio.trim() } };
 }
 
 router.post('/api/admin/council', requireAdmin, (req, res) => {
-  const error = validateFields(req.body);
-  if (error) return res.status(400).json({ error });
+  councilPhotoUpload.single('photo')(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message || 'Could not upload photo.' });
 
-  const items = db.readCouncil();
-  const item = {
-    id: crypto.randomUUID(),
-    initials: req.body.initials.trim().slice(0, 3),
-    name: req.body.name.trim(),
-    role: req.body.role.trim(),
-    bio: req.body.bio.trim(),
-    createdAt: new Date().toISOString(),
-  };
-  items.push(item);
-  db.writeCouncil(items);
+    const { fields, error } = readFields(req.body);
+    if (error) return res.status(400).json({ error });
 
-  res.status(201).json({ member: publicMember(item) });
+    const items = db.readCouncil();
+    const item = {
+      id: crypto.randomUUID(),
+      ...fields,
+      photoUrl: req.file ? `/uploads/council-photos/${req.file.filename}` : '',
+      createdAt: new Date().toISOString(),
+    };
+    items.push(item);
+    db.writeCouncil(items);
+
+    res.status(201).json({ member: publicMember(item) });
+  });
 });
 
 router.put('/api/admin/council/:id', requireAdmin, (req, res) => {
-  const error = validateFields(req.body);
-  if (error) return res.status(400).json({ error });
+  councilPhotoUpload.single('photo')(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message || 'Could not upload photo.' });
 
-  const items = db.readCouncil();
-  const item = items.find((m) => m.id === req.params.id);
-  if (!item) return res.status(404).json({ error: 'Council member not found.' });
+    const { fields, error } = readFields(req.body);
+    if (error) return res.status(400).json({ error });
 
-  item.initials = req.body.initials.trim().slice(0, 3);
-  item.name = req.body.name.trim();
-  item.role = req.body.role.trim();
-  item.bio = req.body.bio.trim();
-  db.writeCouncil(items);
+    const items = db.readCouncil();
+    const item = items.find((m) => m.id === req.params.id);
+    if (!item) return res.status(404).json({ error: 'Council member not found.' });
 
-  res.json({ member: publicMember(item) });
+    const previousPhotoUrl = item.photoUrl;
+    Object.assign(item, fields);
+    if (req.file) {
+      item.photoUrl = `/uploads/council-photos/${req.file.filename}`;
+    }
+    db.writeCouncil(items);
+
+    if (req.file && previousPhotoUrl && previousPhotoUrl.startsWith('/uploads/council-photos/')) {
+      fs.unlink(path.join(UPLOADS_DIR, 'council-photos', path.basename(previousPhotoUrl)), () => {});
+    }
+
+    res.json({ member: publicMember(item) });
+  });
 });
 
 router.delete('/api/admin/council/:id', requireAdmin, (req, res) => {
   const items = db.readCouncil();
+  const item = items.find((m) => m.id === req.params.id);
+  if (!item) return res.status(404).json({ error: 'Council member not found.' });
+
   const next = items.filter((m) => m.id !== req.params.id);
-  if (next.length === items.length) return res.status(404).json({ error: 'Council member not found.' });
   db.writeCouncil(next);
+
+  if (item.photoUrl && item.photoUrl.startsWith('/uploads/council-photos/')) {
+    fs.unlink(path.join(UPLOADS_DIR, 'council-photos', path.basename(item.photoUrl)), () => {});
+  }
+
   res.json({ ok: true });
 });
 

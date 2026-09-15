@@ -6,6 +6,8 @@ function mcEscapeHtml(str) {
   return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+const MC_PERSON_ICON = '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 19C4.5 15.4 7.4 12.5 11 12.5H13C16.6 12.5 19.5 15.4 19.5 19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+
 async function loadCouncilPage() {
   const res = await fetch('/api/council');
   if (!res.ok) return;
@@ -21,8 +23,10 @@ async function loadCouncilPage() {
     const article = document.createElement('article');
     article.className = 'council-page-card';
     article.innerHTML = `
-      <div class="council-page-avatar">${mcEscapeHtml(member.initials || '')}</div>
-      <h3>${mcEscapeHtml(member.name || member.initials || '')}</h3>
+      <div class="council-page-avatar${member.photoUrl ? ' has-photo' : ''}">${
+        member.photoUrl ? `<img src="${mcEscapeHtml(member.photoUrl)}" alt="${mcEscapeHtml(member.name || '')}" />` : MC_PERSON_ICON
+      }</div>
+      <h3>${mcEscapeHtml(member.name || '')}</h3>
       ${member.role ? `<p class="council-page-role">${mcEscapeHtml(member.role)}</p>` : ''}
       ${member.bio ? `<p class="council-page-bio">${mcEscapeHtml(member.bio)}</p>` : ''}
     `;

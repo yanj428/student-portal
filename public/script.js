@@ -121,6 +121,8 @@ async function loadLunchMenu() {
     .join('');
 }
 
+const PERSON_ICON = '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 19C4.5 15.4 7.4 12.5 11 12.5H13C16.6 12.5 19.5 15.4 19.5 19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+
 async function loadCouncil() {
   const el = document.getElementById('council-list');
   if (!el) return;
@@ -128,7 +130,11 @@ async function loadCouncil() {
   if (!data) return;
   const colors = ['a1', 'a2', 'a3'];
   el.innerHTML = data.council
-    .map((m, i) => `<div class="avatar-circle ${colors[i % colors.length]}">${escapeHtml(m.initials)}</div>`)
+    .map((m, i) =>
+      m.photoUrl
+        ? `<div class="avatar-circle has-photo"><img src="${escapeHtml(m.photoUrl)}" alt="${escapeHtml(m.name || '')}" /></div>`
+        : `<div class="avatar-circle ${colors[i % colors.length]}">${PERSON_ICON}</div>`
+    )
     .join('');
 }
 

@@ -1,7 +1,7 @@
-import { escapeHtml, sendJSON, del } from './api.js';
+import { escapeHtml, sendForm, del } from './api.js';
 
 const form = document.getElementById('council-form');
-const initialsInput = document.getElementById('council-initials');
+const photoInput = document.getElementById('council-photo');
 const nameInput = document.getElementById('council-name');
 const roleInput = document.getElementById('council-role');
 const bioInput = document.getElementById('council-bio');
@@ -36,7 +36,10 @@ function render(items) {
     div.className = 'simple-item';
     div.innerHTML = `
       <div class="simple-item-head">
-        <span class="simple-item-title">${escapeHtml(item.initials)} — ${escapeHtml(item.name)} · ${escapeHtml(item.role)}</span>
+        <div class="cs-club-item-identity">
+          ${item.photoUrl ? `<img class="cs-club-item-logo" src="${escapeHtml(item.photoUrl)}" alt="" />` : ''}
+          <span class="simple-item-title">${escapeHtml(item.name)} · ${escapeHtml(item.role)}</span>
+        </div>
         <div class="simple-item-actions">
           <button class="edit-btn" aria-label="Edit">Edit</button>
           <button class="delete-btn" aria-label="Remove"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7H20M9 7V4C9 3.4 9.4 3 10 3H14C14.6 3 15 3.4 15 4V7M18 7L17.3 19C17.2 19.6 16.7 20 16.1 20H7.9C7.3 20 6.8 19.6 6.7 19L6 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -46,10 +49,10 @@ function render(items) {
     `;
     div.querySelector('.edit-btn').addEventListener('click', () => {
       editingId = item.id;
-      initialsInput.value = item.initials;
       nameInput.value = item.name;
       roleInput.value = item.role;
       bioInput.value = item.bio;
+      photoInput.value = '';
       errorEl.hidden = true;
       submitBtn.textContent = 'Save changes';
       cancelBtn.hidden = false;
@@ -74,14 +77,14 @@ form.addEventListener('submit', async (e) => {
   submitBtn.textContent = editingId ? 'Saving…' : 'Adding…';
 
   try {
-    const payload = {
-      initials: initialsInput.value.trim(),
-      name: nameInput.value.trim(),
-      role: roleInput.value.trim(),
-      bio: bioInput.value.trim(),
-    };
+    const formData = new FormData();
+    formData.append('name', nameInput.value.trim());
+    formData.append('role', roleInput.value.trim());
+    formData.append('bio', bioInput.value.trim());
+    if (photoInput.files[0]) formData.append('photo', photoInput.files[0]);
+
     const url = editingId ? `/api/admin/council/${editingId}` : '/api/admin/council';
-    const { ok, data } = await sendJSON(url, editingId ? 'PUT' : 'POST', payload);
+    const { ok, data } = await sendForm(url, editingId ? 'PUT' : 'POST', formData);
 
     if (!ok) {
       errorEl.textContent = data.error || 'Could not save council member.';

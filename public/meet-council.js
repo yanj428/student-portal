@@ -33,8 +33,8 @@ function buildSubtier(members) {
   return wrap;
 }
 
-// A Student Council tier is broken into three sub-groups stacked vertically â€”
-// advisor(s), then President/Vice President, then everyone else â€” each only
+// A Student Council tier is broken into three sub-groups stacked vertically —
+// advisor(s), then President/Vice President, then everyone else — each only
 // appearing if it actually has members, so a school with no advisor on file
 // doesn't show an empty "Advisor" slot.
 function buildStudentCouncilTier(label, members) {

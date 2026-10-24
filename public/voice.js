@@ -125,7 +125,7 @@ postForm.addEventListener('submit', async (e) => {
   }
 
   postSubmit.disabled = true;
-  postSubmit.textContent = editingId ? 'Savingâ€¦' : 'Submittingâ€¦';
+  postSubmit.textContent = editingId ? 'Saving…' : 'Submitting…';
 
   try {
     const url = editingId ? `/api/voice/posts/${editingId}` : '/api/voice/posts';

@@ -6,7 +6,7 @@
         <div class="user-block">
           <div class="user-info">
             <span class="user-name" id="user-name"><%= student.firstName %> <%= student.lastName %></span>
-            <span class="user-meta" id="user-grade">Grade <%= student.grade %></span>
+            <span class="user-meta" id="user-grade"><%= /^grade\b/i.test(student.grade) ? student.grade : 'Grade ' + student.grade %></span>
           </div>
           <div class="avatar" id="user-avatar"><%= (student.firstName[0] || '') + (student.lastName[0] || '') %></div>
           <button class="bell" aria-label="Notifications">

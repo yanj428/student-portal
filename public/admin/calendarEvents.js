@@ -92,6 +92,15 @@ function candidateField(label, className, value) {
     </div>`;
 }
 
+// The rows are rebuilt from `candidates` on every render, so edits typed into
+// the inputs have to be copied back first or they would be thrown away. Must
+// run while the rows on screen still line up with `candidates`.
+function syncCandidatesFromInputs() {
+  aiResultsList.querySelectorAll('.mod-item').forEach((div, i) => {
+    if (candidates[i]) Object.assign(candidates[i], readCandidateInputs(div));
+  });
+}
+
 function renderCandidates() {
   aiResultsList.querySelectorAll('.mod-item').forEach((el) => el.remove());
   aiResults.hidden = candidates.length === 0;
@@ -116,6 +125,7 @@ function renderCandidates() {
     const addBtn = div.querySelector('.add-candidate-btn');
     addBtn.addEventListener('click', () => withBusy(addBtn, 'Adding…', () => addCandidate(index)));
     div.querySelector('.dismiss-candidate-btn').addEventListener('click', () => {
+      syncCandidatesFromInputs();
       candidates.splice(index, 1);
       renderCandidates();
     });
@@ -140,6 +150,7 @@ async function addCandidate(index) {
     const { ok, data } = await sendJSON('/api/admin/calendar-events', 'POST', payload);
     if (ok) {
       aiError.hidden = true;
+      syncCandidatesFromInputs();
       candidates.splice(index, 1);
       renderCandidates();
       loadCalendarEvents();

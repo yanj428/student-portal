@@ -542,37 +542,6 @@ html, body {
   box-shadow: var(--shadow);
 }
 
-/* StuCo project tracker */
-.project-list {
-  background: var(--surface);
-  border-radius: var(--radius-md);
-  padding: 23.4px;
-  box-shadow: var(--shadow);
-  display: flex;
-  flex-direction: column;
-  gap: 20.8px;
-}
-.project-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 16.9px;
-  font-weight: 600;
-  margin-bottom: 10.4px;
-}
-.project-pct { color: var(--primary); }
-.progress-track {
-  height: 7.8px;
-  border-radius: 1298.7px;
-  background: var(--primary-tint);
-  overflow: hidden;
-}
-.progress-fill {
-  height: 100%;
-  border-radius: 1298.7px;
-  background: var(--primary);
-}
-
 /* Quick links */
 .quicklinks-grid {
   display: grid;

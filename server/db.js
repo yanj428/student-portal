@@ -513,7 +513,6 @@ const csEvents = jsonCollection('csEvents');
 const announcements = jsonCollection('announcements');
 const calendarEvents = jsonCollection('calendarEvents');
 const council = jsonCollection('council');
-const projects = jsonCollection('projects');
 const quickLinks = jsonCollection('quickLinks');
 
 // Only these collections (public site content, not accounts or the private
@@ -570,9 +569,6 @@ module.exports = {
 
   readCouncil: council.read,
   writeCouncil: withSeedSync(council.write),
-
-  readProjects: projects.read,
-  writeProjects: withSeedSync(projects.write),
 
   readQuickLinks: quickLinks.read,
   writeQuickLinks: withSeedSync(quickLinks.write),

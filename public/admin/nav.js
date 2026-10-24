@@ -10,7 +10,6 @@ export function initNav() {
     clubs: 'Clubs',
     community: 'Community Service',
     council: 'Council',
-    projects: 'StuCo Projects',
     quicklinks: 'Quick Links',
     voice: 'Student Voice',
     security: 'Security',

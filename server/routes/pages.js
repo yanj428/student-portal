@@ -11,7 +11,6 @@ const PAGES = [
   { paths: ['/student-voice.html'], view: 'pages/student-voice' },
   { paths: ['/school-calendar.html'], view: 'pages/school-calendar' },
   { paths: ['/clubs.html'], view: 'pages/clubs' },
-  { paths: ['/stuco-tracker.html'], view: 'pages/stuco-tracker' },
   { paths: ['/quick-links.html'], view: 'pages/quick-links' },
   { paths: ['/meet-council.html'], view: 'pages/meet-council' },
 ];

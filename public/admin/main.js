@@ -8,7 +8,6 @@ import { loadCsEvents } from './csEvents.js';
 import { loadAnnouncements } from './announcements.js';
 import { loadCalendarEvents } from './calendarEvents.js';
 import { loadCouncil } from './council.js';
-import { loadProjects } from './projects.js';
 import { loadQuickLinks } from './quickLinks.js';
 import { loadLunchCurrent } from './lunch.js';
 import { loadSecurity } from './security.js';
@@ -26,7 +25,6 @@ initAuth(async () => {
   loadAnnouncements();
   loadCalendarEvents();
   loadCouncil();
-  loadProjects();
   loadQuickLinks();
   loadLunchCurrent();
 

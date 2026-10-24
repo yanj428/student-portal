@@ -131,25 +131,6 @@ async function loadAfterSchoolClubChips() {
   el.innerHTML = data.clubs.map((c) => `<span class="club-chip">${escapeHtml(c.name)}</span>`).join('');
 }
 
-async function loadProjects() {
-  const el = document.getElementById('projects-list');
-  if (!el) return;
-  const data = await fetchJson('/api/projects');
-  if (!data) return;
-  el.innerHTML = data.projects
-    .map(
-      (p) => `
-        <div class="project-item">
-          <div class="project-row">
-            <span>${escapeHtml(p.title)}</span>
-            <span class="project-pct">${p.percent}%</span>
-          </div>
-          <div class="progress-track"><div class="progress-fill" style="width: ${p.percent}%"></div></div>
-        </div>`
-    )
-    .join('');
-}
-
 async function loadQuickLinks() {
   const el = document.getElementById('quicklinks-list');
   if (!el) return;
@@ -164,5 +145,4 @@ loadAnnouncements();
 loadCalendarEvents();
 loadCsEvents();
 loadAfterSchoolClubChips();
-loadProjects();
 loadQuickLinks();

@@ -41,7 +41,6 @@ function writeSeedSnapshotNow() {
     council: db.readCouncil(),
     announcements: db.readAnnouncements(),
     calendarEvents: db.readCalendarEvents(),
-    projects: db.readProjects(),
     quickLinks: db.readQuickLinks(),
     csEvents: db.readCsEvents(),
     slideArchive: db.readSlideArchive(),

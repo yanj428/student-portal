@@ -3,8 +3,8 @@
   if (!data) return;
 
   const slide = data.content.weeklySlide || {};
-  if (slide.canvaEmbedUrl) document.getElementById('slide-embed').src = slide.canvaEmbedUrl;
-  document.getElementById('slide-embed-wrap').hidden = !slide.canvaEmbedUrl;
+  if (slide.canvaEmbedUrl) document.getElementById('slide-link').href = slide.canvaEmbedUrl;
+  document.getElementById('slide-link-wrap').hidden = !slide.canvaEmbedUrl;
   document.getElementById('slide-empty').hidden = !!slide.canvaEmbedUrl;
 
   const weekLabelEl = document.getElementById('week-label');

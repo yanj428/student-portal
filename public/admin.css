@@ -777,34 +777,22 @@ tr:last-child td { border-bottom: none; }
   .content-row, .content-row.two-col { grid-template-columns: 1fr; }
 }
 
-/* Grade headings in the Student Accounts table */
-.grade-group-row td {
-  background: #FAF1F0;
-  color: #9a1b1f;
-  font-weight: 700;
-  font-size: 13px;
-  padding: 10px 14px;
-}
-.grade-group-count {
-  margin-left: 8px;
-  font-weight: 600;
-  color: var(--text-muted, #6b6b6b);
-}
-
-/* Student Accounts: per-grade summary and the button that opens the full list */
+/* Student Accounts: one button per grade; pressing it shows that grade's accounts */
 .grade-summary {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 4px 0 14px;
+  margin: 4px 0 16px;
 }
-.grade-chip {
+.grade-btn { display: inline-flex; align-items: center; gap: 8px; }
+.grade-btn-count {
   background: #FAF1F0;
+  color: #9a1b1f;
   border-radius: 999px;
-  padding: 6px 14px;
+  padding: 2px 10px;
   font-size: 13px;
-  color: var(--text-muted, #6b6b6b);
+  font-weight: 700;
 }
-.grade-chip strong { color: #9a1b1f; margin-right: 4px; }
-.student-list-toggle { margin-bottom: 16px; }
+.grade-btn.active { background: #9a1b1f; border-color: #9a1b1f; color: #fff; }
+.grade-btn.active .grade-btn-count { background: rgba(255, 255, 255, 0.2); color: #fff; }
 .table-wrap[hidden] { display: none; }

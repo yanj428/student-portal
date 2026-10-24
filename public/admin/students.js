@@ -10,21 +10,22 @@ const studentRows = document.getElementById('student-rows');
 const emptyRow = document.getElementById('empty-row');
 const studentCount = document.getElementById('student-count');
 const gradeSummary = document.getElementById('grade-summary');
-const listToggle = document.getElementById('student-list-toggle');
 const listBody = document.getElementById('student-list-body');
 
-// The full list is long, so it stays folded away until the button is pressed.
-listToggle.addEventListener('click', () => {
-  const opening = listBody.hidden;
-  listBody.hidden = !opening;
-  listToggle.setAttribute('aria-expanded', String(opening));
-  listToggle.textContent = opening ? 'Hide accounts' : 'View all accounts';
-});
+let allStudents = [];
+// The grade whose accounts are showing. The list is long, so it stays folded
+// away (null) until a grade button is pressed.
+let openGrade = null;
 
 export async function loadStudents() {
   const data = await getJSON('/api/admin/students');
   if (!data) return;
-  const { students } = data;
+  allStudents = data.students;
+  renderStudents();
+}
+
+function renderStudents() {
+  const students = allStudents;
 
   studentCount.textContent = students.length;
   document.getElementById('stat-students').textContent = students.length;
@@ -33,11 +34,11 @@ export async function loadStudents() {
 
   if (students.length === 0) {
     studentRows.appendChild(emptyRow);
+    listBody.hidden = false;
     return;
   }
 
-  // Lowest grade first (a grade with no number sorts last), then by name, with
-  // a heading row above each grade showing how many accounts it has.
+  // Lowest grade first (a grade with no number sorts last), then by name.
   const gradeNumber = (grade) => {
     const n = parseInt(String(grade).replace(/\D+/g, ''), 10);
     return Number.isNaN(n) ? Infinity : n;
@@ -52,21 +53,27 @@ export async function loadStudents() {
     );
   const gradeCounts = new Map();
   sortedStudents.forEach((s) => gradeCounts.set(s.grade, (gradeCounts.get(s.grade) || 0) + 1));
-  gradeSummary.innerHTML = [...gradeCounts]
-    .map(([grade, count]) => `<span class="grade-chip"><strong>${escapeHtml(grade)}</strong> ${count}</span>`)
-    .join('');
-  let lastGrade = null;
+  if (!gradeCounts.has(openGrade)) openGrade = null;
+
+  // One button per grade with its account count; pressing it shows that grade's
+  // accounts, and pressing it again folds them away.
+  gradeCounts.forEach((count, grade) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `btn ghost grade-btn${grade === openGrade ? ' active' : ''}`;
+    btn.setAttribute('aria-pressed', String(grade === openGrade));
+    btn.innerHTML = `${escapeHtml(grade)} <span class="grade-btn-count">${count}</span>`;
+    btn.addEventListener('click', () => {
+      openGrade = openGrade === grade ? null : grade;
+      renderStudents();
+    });
+    gradeSummary.appendChild(btn);
+  });
+  listBody.hidden = openGrade === null;
 
   sortedStudents
+    .filter((student) => student.grade === openGrade)
     .forEach((student) => {
-      if (student.grade !== lastGrade) {
-        lastGrade = student.grade;
-        const count = gradeCounts.get(student.grade);
-        const headerRow = document.createElement('tr');
-        headerRow.className = 'grade-group-row';
-        headerRow.innerHTML = `<td colspan="8">${escapeHtml(student.grade)} <span class="grade-group-count">${count} ${count === 1 ? 'account' : 'accounts'}</span></td>`;
-        studentRows.appendChild(headerRow);
-      }
       const name = student.fullName;
       const created = new Date(student.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
       const tr = document.createElement('tr');

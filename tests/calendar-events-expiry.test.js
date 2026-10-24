@@ -82,6 +82,29 @@ test('a date well over a month before its own creation date is understood as the
   assert.equal(res.body.calendarEvents.some((e) => e.title === 'Annual event, entered early'), true);
 });
 
+test('editing an old event to a date that already passed this year moves it to next year instead of deleting it', async () => {
+  const admin = await loginAsAdmin();
+  const now = new Date();
+  const monthName = (offset) => new Date(2000, (now.getMonth() + offset + 12) % 12, 1).toLocaleString('en-US', { month: 'short' });
+
+  // Created six months ago for a date next month, so it is still upcoming.
+  const sixMonthsAgo = new Date(now);
+  sixMonthsAgo.setMonth(now.getMonth() - 6);
+  seedEvent({ day: '15', month: monthName(1), title: 'Postponed to next year', createdAt: sixMonthsAgo.toISOString() });
+  const id = db.readCalendarEvents().find((e) => e.title === 'Postponed to next year').id;
+
+  // The admin edits it to a month three months back - which can only mean that
+  // month next year. Judged against the old creation date it looked long past
+  // and was deleted on the next read.
+  const res = await admin
+    .put(`/api/admin/calendar-events/${id}`)
+    .send({ day: '15', month: monthName(-3), title: 'Postponed to next year', subtitle: '' });
+  assert.equal(res.status, 200);
+
+  const list = await admin.get('/api/admin/calendar-events');
+  assert.equal(list.body.calendarEvents.some((e) => e.title === 'Postponed to next year'), true);
+});
+
 test('a day range expires by its last day, not its first', async () => {
   const admin = await loginAsAdmin();
   const now = new Date();

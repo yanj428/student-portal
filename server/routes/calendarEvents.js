@@ -134,7 +134,13 @@ router.put('/api/admin/calendar-events/:id', requireAdmin, (req, res) => {
   const item = items.find((e) => e.id === req.params.id);
   if (!item) return res.status(404).json({ error: 'Calendar event not found.' });
 
+  // The year is inferred from createdAt, so a date the admin just typed in must
+  // be read relative to today. Otherwise moving an event into next year (say
+  // "Dec 15" to "Jan 12") would resolve against the old creation date, look
+  // like it was already past, and be deleted on the next read.
+  const dateChanged = fields.day !== item.day || fields.month !== item.month;
   Object.assign(item, fields);
+  if (dateChanged) item.createdAt = new Date().toISOString();
   db.writeCalendarEvents(items);
 
   res.json({ calendarEvent: publicEvent(item) });

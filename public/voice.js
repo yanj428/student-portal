@@ -1,14 +1,3 @@
-function voiceEscapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  // The textContent/innerHTML round-trip only encodes &, <, and > — quotes
-  // aren't special in HTML text content, only inside an attribute value,
-  // which is exactly where this output often ends up (href="...", etc.).
-  // Without this, a value containing a literal " could break out of that
-  // attribute.
-  return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
-
 function timeAgo(iso) {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.round(diffMs / 60000);
@@ -63,31 +52,31 @@ postCancel.addEventListener('click', exitEditMode);
 
 function renderPost(post) {
   return `
-    <article class="post-card status-${post.status}" data-post-id="${post.id}">
+    <article class="post-card status-${escapeHtml(post.status)}" data-post-id="${escapeHtml(post.id)}">
       <div class="post-head">
         <div class="post-meta">
           <div class="post-author">
-            <span class="status-badge status-${post.status}">${voiceEscapeHtml(STATUS_LABEL[post.status] || post.status)}</span>
+            <span class="status-badge status-${escapeHtml(post.status)}">${escapeHtml(STATUS_LABEL[post.status] || post.status)}</span>
           </div>
           <div class="post-subline">${timeAgo(post.createdAt)}</div>
         </div>
-        <span class="category-badge">${voiceEscapeHtml(post.category)}</span>
+        <span class="category-badge">${escapeHtml(post.category)}</span>
       </div>
 
-      <h3 class="post-title">${voiceEscapeHtml(post.title)}</h3>
-      <p class="post-body">${voiceEscapeHtml(post.body)}</p>
+      <h3 class="post-title">${escapeHtml(post.title)}</h3>
+      <p class="post-body">${escapeHtml(post.body)}</p>
 
       <div class="post-actions">
-        <button class="btn ghost edit-btn" data-post-id="${post.id}">Edit</button>
-        <button class="btn reject delete-btn" data-post-id="${post.id}">Delete</button>
+        <button class="btn ghost edit-btn" data-post-id="${escapeHtml(post.id)}">Edit</button>
+        <button class="btn reject delete-btn" data-post-id="${escapeHtml(post.id)}">Delete</button>
       </div>
     </article>`;
 }
 
 async function loadPosts() {
-  const res = await fetch('/api/voice/posts');
-  if (!res.ok) return;
-  ({ posts } = await res.json());
+  const data = await fetchJson('/api/voice/posts');
+  if (!data) return;
+  ({ posts } = data);
 
   feedEmpty.hidden = posts.length > 0;
   feedEl.querySelectorAll('.post-card').forEach((el) => el.remove());
@@ -107,10 +96,15 @@ function wireFeedEvents() {
     btn.addEventListener('click', async () => {
       if (!confirm('Delete this suggestion? This cannot be undone.')) return;
       const postId = btn.dataset.postId;
-      const res = await fetch(`/api/voice/posts/${postId}`, { method: 'DELETE' });
-      if (res.ok) {
+      postError.hidden = true;
+      try {
+        const res = await fetch(`/api/voice/posts/${postId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error();
         if (editingId === postId) exitEditMode();
         loadPosts();
+      } catch {
+        postError.textContent = 'Could not delete that suggestion. Please try again.';
+        postError.hidden = false;
       }
     });
   });
@@ -131,7 +125,7 @@ postForm.addEventListener('submit', async (e) => {
   }
 
   postSubmit.disabled = true;
-  postSubmit.textContent = editingId ? 'Saving…' : 'Submitting…';
+  postSubmit.textContent = editingId ? 'Savingâ€¦' : 'Submittingâ€¦';
 
   try {
     const url = editingId ? `/api/voice/posts/${editingId}` : '/api/voice/posts';

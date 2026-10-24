@@ -10,21 +10,24 @@
 <%- include('../partials/topbar', { student }) %>
 
 
-      <section class="voice-header">
+      <section class="page-header">
         <h1>School Calendar</h1>
-        <p>Everything coming up at KPIS: exams, StuCo events, and school-wide days.</p>
+        <p>The school calendar for the whole school year.</p>
       </section>
 
-      <section class="calendar-page-section">
-        <div class="calendar-page-list" id="calendar-page-list">
-          <p class="calendar-page-empty" id="calendar-page-empty">No upcoming events posted right now. Check back soon.</p>
-        </div>
+      <section class="calendar-image-card" id="calendar-image-card" hidden>
+        <h2 class="section-heading" id="calendar-image-label">School year calendar</h2>
+        <a id="calendar-image-link" href="#" target="_blank" rel="noopener" title="Open the full size calendar">
+          <img id="calendar-image" alt="School calendar for the school year" />
+        </a>
+        <p class="calendar-image-hint">Tap or click the calendar to open it full size.</p>
       </section>
+      <p class="calendar-image-empty" id="calendar-image-empty">The school calendar hasn't been posted yet. Check back soon.</p>
 
     </main>
   </div>
 
-  <script src="script.js"></script>
+  <script src="common.js"></script>
   <script src="school-calendar.js"></script>
 </body>
 </html>

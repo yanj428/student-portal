@@ -57,6 +57,7 @@ html, body {
 
 .login-page {
   height: 100vh;
+  overflow-y: auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -141,7 +142,6 @@ html, body {
   font-size: 16.25px;
   line-height: 1.5;
 }
-.forgot-note[hidden] { display: none; }
 .forgot-note a {
   color: var(--primary);
   font-weight: 600;
@@ -264,16 +264,6 @@ html, body {
 .testimonial-name {
   font-size: 22.1px;
   font-weight: 700;
-}
-.testimonial-role {
-  font-size: 17.55px;
-  font-weight: 600;
-  margin-top: 7.8px;
-}
-.testimonial-org {
-  font-size: 16.9px;
-  color: rgba(255,255,255,0.75);
-  margin-top: 2.6px;
 }
 
 .testimonial-nav {

@@ -1,67 +1,29 @@
-.voice-header {
-  margin-bottom: 4px;
-}
-.voice-header h1 {
-  font-size: 22px;
-  font-weight: 800;
-  margin: 0 0 4px 0;
-}
-.voice-header p {
-  font-size: 13.5px;
-  color: var(--text-muted);
-  margin: 0;
-}
-
-.calendar-page-section {
-  margin-top: 4px;
-}
-.calendar-page-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.calendar-page-empty {
-  color: var(--text-muted);
-  font-size: 13px;
-  margin: 0;
-}
-.calendar-page-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+/* The school year calendar picture: wide enough to read, but not the whole
+   width of a large screen. Clicking it opens the full size picture. */
+.calendar-image-card {
   background: var(--surface);
   border-radius: var(--radius-md);
-  padding: 16px 20px;
+  padding: 20px;
   box-shadow: var(--shadow);
+  max-width: 820px;
 }
-.calendar-page-date {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  flex-shrink: 0;
+.calendar-image-card h2 {
+  margin: 0 0 12px 0;
+}
+.calendar-image-card img {
+  display: block;
+  width: 100%;
+  height: auto;
   border-radius: var(--radius-sm);
-  background: var(--primary-tint);
-  color: var(--primary);
+  border: 1px solid var(--border);
 }
-.calendar-page-date .day {
-  font-size: 18px;
-  font-weight: 800;
-  line-height: 1.1;
-}
-.calendar-page-date .month {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-.calendar-page-info h3 {
-  font-size: 15px;
-  margin: 0 0 4px 0;
-}
-.calendar-page-info p {
-  font-size: 13px;
+.calendar-image-hint {
+  font-size: 12px;
   color: var(--text-muted);
+  margin: 10px 0 0 0;
+}
+.calendar-image-empty {
+  color: var(--text-muted);
+  font-size: 13px;
   margin: 0;
 }

@@ -75,6 +75,8 @@ function normalizeEvents(parsed) {
   return mergeConsecutiveDuplicates(events);
 }
 
+const NOT_CONFIGURED_MESSAGE = 'AI event extraction is not set up yet. Add GEMINI_API_KEY to the server .env file.';
+
 function isAiConfigured() {
   return !!GEMINI_API_KEY;
 }
@@ -112,9 +114,7 @@ async function generateWithRetry(model, parts) {
 // subtitle} events for an admin to review before adding any of them.
 // Throws with a message safe to show an admin directly.
 async function extractCalendarEvents(imageBuffer, mimeType) {
-  if (!GEMINI_API_KEY) {
-    throw new Error('AI event extraction is not set up yet. Add GEMINI_API_KEY to the server .env file.');
-  }
+  if (!GEMINI_API_KEY) throw new Error(NOT_CONFIGURED_MESSAGE);
 
   const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
   const model = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' });
@@ -141,4 +141,4 @@ async function extractCalendarEvents(imageBuffer, mimeType) {
   return events;
 }
 
-module.exports = { extractCalendarEvents, isAiConfigured };
+module.exports = { extractCalendarEvents, isAiConfigured, NOT_CONFIGURED_MESSAGE };

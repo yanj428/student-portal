@@ -2,6 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 
 const db = require('../db');
+const { fullName } = require('../utils/studentName');
 const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
 const { voicePostLimiter } = require('../middleware/rateLimit');
 
@@ -74,12 +75,12 @@ router.post('/api/voice/posts', requireActiveStudent, voicePostLimiter, (req, re
   if (error) return res.status(400).json({ error });
   const { title, category, body } = req.body;
 
-  const student = db.findById(req.session.studentId);
+  const student = req.student;
   const posts = db.readVoicePosts();
   const post = {
     id: crypto.randomUUID(),
     authorId: student.id,
-    authorName: `${student.firstName} ${student.lastName}`,
+    authorName: fullName(student),
     authorGrade: student.grade,
     title: title.trim(),
     category,
@@ -96,7 +97,7 @@ router.post('/api/voice/posts', requireActiveStudent, voicePostLimiter, (req, re
 // Editing your own suggestion sends it back for review — the content
 // changed, so whatever StuCo previously decided no longer necessarily
 // applies to what's there now.
-router.patch('/api/voice/posts/:id', requireActiveStudent, (req, res) => {
+router.patch('/api/voice/posts/:id', requireActiveStudent, voicePostLimiter, (req, res) => {
   const posts = db.readVoicePosts();
   const post = posts.find((p) => p.id === req.params.id && p.authorId === req.session.studentId);
   if (!post) return res.status(404).json({ error: 'Suggestion not found.' });
@@ -132,35 +133,22 @@ function listByStatus(status) {
   return posts.map(adminPost);
 }
 
-router.get('/api/admin/voice/pending', requireAdmin, (req, res) => {
-  res.json({ items: listByStatus('pending') });
-});
+for (const status of ['pending', 'approved', 'rejected']) {
+  router.get(`/api/admin/voice/${status}`, requireAdmin, (req, res) => {
+    res.json({ items: listByStatus(status) });
+  });
+}
 
-router.get('/api/admin/voice/approved', requireAdmin, (req, res) => {
-  res.json({ items: listByStatus('approved') });
-});
-
-router.get('/api/admin/voice/rejected', requireAdmin, (req, res) => {
-  res.json({ items: listByStatus('rejected') });
-});
-
-router.post('/api/admin/voice/posts/:id/approve', requireAdmin, (req, res) => {
-  const posts = db.readVoicePosts();
-  const post = posts.find((p) => p.id === req.params.id);
-  if (!post) return res.status(404).json({ error: 'Suggestion not found.' });
-  post.status = 'approved';
-  db.writeVoicePosts(posts);
-  res.json({ ok: true });
-});
-
-router.post('/api/admin/voice/posts/:id/reject', requireAdmin, (req, res) => {
-  const posts = db.readVoicePosts();
-  const post = posts.find((p) => p.id === req.params.id);
-  if (!post) return res.status(404).json({ error: 'Suggestion not found.' });
-  post.status = 'rejected';
-  db.writeVoicePosts(posts);
-  res.json({ ok: true });
-});
+for (const [action, status] of [['approve', 'approved'], ['reject', 'rejected']]) {
+  router.post(`/api/admin/voice/posts/:id/${action}`, requireAdmin, (req, res) => {
+    const posts = db.readVoicePosts();
+    const post = posts.find((p) => p.id === req.params.id);
+    if (!post) return res.status(404).json({ error: 'Suggestion not found.' });
+    post.status = status;
+    db.writeVoicePosts(posts);
+    res.json({ ok: true });
+  });
+}
 
 router.delete('/api/admin/voice/posts/:id', requireAdmin, (req, res) => {
   const posts = db.readVoicePosts();

@@ -4,15 +4,15 @@ const { requireStudentPage } = require('../middleware/pageAuth');
 const router = express.Router();
 
 const PAGES = [
-  { paths: ['/', '/index.html'], view: 'pages/home' },
-  { paths: ['/announcements.html'], view: 'pages/announcements' },
-  { paths: ['/community-service.html'], view: 'pages/community-service' },
-  { paths: ['/lunch-schedule.html'], view: 'pages/lunch-schedule' },
-  { paths: ['/student-voice.html'], view: 'pages/student-voice' },
-  { paths: ['/school-calendar.html'], view: 'pages/school-calendar' },
-  { paths: ['/clubs.html'], view: 'pages/clubs' },
-  { paths: ['/quick-links.html'], view: 'pages/quick-links' },
-  { paths: ['/meet-council.html'], view: 'pages/meet-council' },
+  { paths: ['/'], view: 'pages/home' },
+  { paths: ['/announcements'], view: 'pages/announcements' },
+  { paths: ['/community-service'], view: 'pages/community-service' },
+  { paths: ['/lunch-schedule'], view: 'pages/lunch-schedule' },
+  { paths: ['/student-voice'], view: 'pages/student-voice' },
+  { paths: ['/school-calendar'], view: 'pages/school-calendar' },
+  { paths: ['/clubs'], view: 'pages/clubs' },
+  { paths: ['/quick-links'], view: 'pages/quick-links' },
+  { paths: ['/meet-council'], view: 'pages/meet-council' },
 ];
 
 for (const { paths, view } of PAGES) {

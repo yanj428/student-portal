@@ -1,167 +1,145 @@
-import { escapeHtml, sendForm, del } from './api.js';
+import { escapeHtml, getJSON, ITEM_ACTIONS_HTML } from './api.js';
+import { crudPanel } from './crud.js';
+import { bindViewMore } from './viewMore.js';
 
-const clubForm = document.getElementById('club-form');
-const clubTypeRadios = document.querySelectorAll('input[name="club-type"]');
-const clubNameInput = document.getElementById('club-name');
-const clubLogoInput = document.getElementById('club-logo');
-const clubDescriptionInput = document.getElementById('club-description');
-const clubInstagramInput = document.getElementById('club-instagram');
-const clubApplicationInput = document.getElementById('club-application');
-const clubScheduleInput = document.getElementById('club-schedule');
-const clubAdvisorInput = document.getElementById('club-advisor');
-const clubSignupInput = document.getElementById('club-signup');
-const clubError = document.getElementById('club-error');
-const clubSubmit = document.getElementById('club-submit');
-const clubCancelEdit = document.getElementById('club-cancel-edit');
+const typeRadios = document.querySelectorAll('input[name="club-type"]');
+const nameInput = document.getElementById('club-name');
+const logoInput = document.getElementById('club-logo');
+const removeLogoRow = document.getElementById('club-remove-logo-row');
+const removeLogoInput = document.getElementById('club-remove-logo');
+const missionInput = document.getElementById('club-mission');
+const goalsInput = document.getElementById('club-goals');
+const sdgsInput = document.getElementById('club-sdgs');
+const leadersInput = document.getElementById('club-leaders');
+const contactsInput = document.getElementById('club-contacts');
+const instagramInput = document.getElementById('club-instagram');
+const applicationInput = document.getElementById('club-application');
+const scheduleInput = document.getElementById('club-schedule');
+const advisorInput = document.getElementById('club-advisor');
+const signupInput = document.getElementById('club-signup');
 const typeFieldGroups = document.querySelectorAll('.club-type-fields');
 
-const listEls = {
-  'community-service': document.getElementById('club-list-community-service'),
-  'after-school': document.getElementById('club-list-after-school'),
+const LISTS = {
+  'community-service': {
+    listEl: document.getElementById('club-list-community-service'),
+    emptyEl: document.getElementById('club-empty-community-service'),
+    toggle: document.getElementById('club-community-service-toggle'),
+    body: document.getElementById('club-community-service-body'),
+  },
+  'after-school': {
+    listEl: document.getElementById('club-list-after-school'),
+    emptyEl: document.getElementById('club-empty-after-school'),
+    toggle: document.getElementById('club-after-school-toggle'),
+    body: document.getElementById('club-after-school-body'),
+  },
 };
-const emptyEls = {
-  'community-service': document.getElementById('club-empty-community-service'),
-  'after-school': document.getElementById('club-empty-after-school'),
-};
+Object.values(LISTS).forEach(({ toggle, body }) => bindViewMore(toggle, body));
 
-let editingClubId = null;
-
-function currentType() {
-  return document.querySelector('input[name="club-type"]:checked').value;
-}
+const currentType = () => document.querySelector('input[name="club-type"]:checked').value;
 
 function updateVisibleFields() {
-  const type = currentType();
   typeFieldGroups.forEach((group) => {
-    group.hidden = group.dataset.for !== type;
+    group.hidden = group.dataset.for !== currentType();
   });
 }
-clubTypeRadios.forEach((r) => r.addEventListener('change', updateVisibleFields));
+typeRadios.forEach((r) => r.addEventListener('change', updateVisibleFields));
 updateVisibleFields();
 
-function resetClubForm() {
-  editingClubId = null;
-  clubForm.reset();
-  updateVisibleFields();
-  clubSubmit.textContent = 'Add club';
-  clubCancelEdit.hidden = true;
+const panel = crudPanel({
+  form: document.getElementById('club-form'),
+  submitBtn: document.getElementById('club-submit'),
+  cancelBtn: document.getElementById('club-cancel-edit'),
+  errorEl: document.getElementById('club-error'),
+  endpoint: '/api/admin/clubs',
+  addLabel: 'Add club',
+  saveError: 'Could not save club.',
+  readPayload: () => {
+    const type = currentType();
+    // Fields for the other club type are sent blank so a stale value left in
+    // a hidden input can't block saving or stick around after a type change.
+    const only = (forType, input) => (type === forType ? input.value.trim() : '');
+    const fields = {
+      type,
+      name: nameInput.value.trim(),
+      mission: missionInput.value.trim(),
+      goals: goalsInput.value.trim(),
+      sdgs: sdgsInput.value.trim(),
+      leaders: leadersInput.value.trim(),
+      contacts: contactsInput.value.trim(),
+      instagramUrl: instagramInput.value.trim(),
+      advisor: advisorInput.value.trim(),
+      applicationFormUrl: only('community-service', applicationInput),
+      schedule: only('after-school', scheduleInput),
+      signupUrl: only('after-school', signupInput),
+    };
+    const formData = new FormData();
+    Object.entries(fields).forEach(([key, value]) => formData.append(key, value));
+    if (logoInput.files[0]) formData.append('logo', logoInput.files[0]);
+    if (removeLogoInput.checked) formData.append('removeLogo', 'true');
+    return formData;
+  },
+  fill: (club) => {
+    document.querySelector(`input[name="club-type"][value="${club.type}"]`).checked = true;
+    updateVisibleFields();
+    nameInput.value = club.name;
+    missionInput.value = club.mission;
+    goalsInput.value = club.goals;
+    sdgsInput.value = club.sdgs.join(', ');
+    leadersInput.value = club.leaders;
+    contactsInput.value = club.contacts;
+    instagramInput.value = club.instagramUrl;
+    applicationInput.value = club.applicationFormUrl;
+    scheduleInput.value = club.schedule;
+    advisorInput.value = club.advisor;
+    signupInput.value = club.signupUrl;
+    logoInput.value = '';
+    removeLogoInput.checked = false;
+    removeLogoRow.hidden = !club.logoUrl;
+  },
+  onReset: () => {
+    updateVisibleFields();
+    removeLogoRow.hidden = true;
+  },
+  reload: () => loadClubs(),
+});
+
+function metaHtml(club) {
+  const link = (url, label) => `<a href="${escapeHtml(url)}" target="_blank" rel="noopener">${label}</a>`;
+  return [
+    club.advisor ? `<span>Advisor: ${escapeHtml(club.advisor)}</span>` : '',
+    club.instagramUrl ? link(club.instagramUrl, 'Instagram') : '',
+    club.applicationFormUrl ? link(club.applicationFormUrl, 'Application form') : '',
+    club.schedule ? `<span>${escapeHtml(club.schedule)}</span>` : '',
+    club.signupUrl ? link(club.signupUrl, 'Sign-up link') : '',
+  ].join('');
 }
 
 export async function loadClubs() {
-  const res = await fetch('/api/admin/clubs');
-  if (!res.ok) return;
-  const { clubs } = await res.json();
-  renderClubs(clubs);
-}
+  const data = await getJSON('/api/admin/clubs');
+  if (!data) return;
 
-function clubCard(club) {
-  const div = document.createElement('div');
-  div.className = 'cs-club-item';
-  const meta =
-    club.type === 'community-service'
-      ? [club.instagramUrl ? `<a href="${escapeHtml(club.instagramUrl)}" target="_blank" rel="noopener">Instagram</a>` : '', club.applicationFormUrl ? `<a href="${escapeHtml(club.applicationFormUrl)}" target="_blank" rel="noopener">Application form</a>` : '']
-      : [club.schedule ? escapeHtml(club.schedule) : '', club.advisor ? `Advisor: ${escapeHtml(club.advisor)}` : '', club.signupUrl ? `<a href="${escapeHtml(club.signupUrl)}" target="_blank" rel="noopener">Sign-up link</a>` : ''];
-  const metaHtml = meta.filter(Boolean).join(' · ');
+  Object.entries(LISTS).forEach(([type, { listEl, emptyEl }]) => {
+    listEl.querySelectorAll('.simple-item').forEach((el) => el.remove());
+    const clubs = data.clubs.filter((c) => c.type === type);
+    emptyEl.hidden = clubs.length > 0;
 
-  div.innerHTML = `
-    <div class="cs-club-item-head">
-      <div class="cs-club-item-identity">
-        ${club.logoUrl ? `<img class="cs-club-item-logo" src="${escapeHtml(club.logoUrl)}" alt="" />` : ''}
-        <span class="cs-club-item-name">${escapeHtml(club.name)}</span>
-      </div>
-      <div class="cs-club-item-actions">
-        <button class="edit-btn" aria-label="Edit club">Edit</button>
-        <button class="delete-btn" aria-label="Remove club"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7H20M9 7V4C9 3.4 9.4 3 10 3H14C14.6 3 15 3.4 15 4V7M18 7L17.3 19C17.2 19.6 16.7 20 16.1 20H7.9C7.3 20 6.8 19.6 6.7 19L6 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-      </div>
-    </div>
-    <p class="cs-club-item-body">${escapeHtml(club.description)}</p>
-    ${metaHtml ? `<div class="cs-club-item-links">${metaHtml}</div>` : ''}
-  `;
-
-  div.querySelector('.edit-btn').addEventListener('click', () => {
-    editingClubId = club.id;
-    document.querySelector(`input[name="club-type"][value="${club.type}"]`).checked = true;
-    updateVisibleFields();
-    clubNameInput.value = club.name;
-    clubDescriptionInput.value = club.description;
-    clubInstagramInput.value = club.instagramUrl || '';
-    clubApplicationInput.value = club.applicationFormUrl || '';
-    clubScheduleInput.value = club.schedule || '';
-    clubAdvisorInput.value = club.advisor || '';
-    clubSignupInput.value = club.signupUrl || '';
-    clubLogoInput.value = '';
-    clubError.hidden = true;
-    clubSubmit.textContent = 'Save changes';
-    clubCancelEdit.hidden = false;
-    clubForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    clubs.forEach((club) => {
+      const meta = metaHtml(club);
+      const div = document.createElement('div');
+      div.className = 'simple-item';
+      div.innerHTML = `
+        <div class="simple-item-head">
+          <div class="item-identity">
+            ${club.logoUrl ? `<img class="item-logo" src="${escapeHtml(club.logoUrl)}" alt="" />` : ''}
+            <span class="simple-item-title">${escapeHtml(club.name)}</span>
+          </div>
+          ${ITEM_ACTIONS_HTML}
+        </div>
+        ${club.mission ? `<p class="simple-item-body">${escapeHtml(club.mission)}</p>` : ''}
+        ${meta ? `<div class="item-meta">${meta}</div>` : ''}
+      `;
+      panel.bindRow(div, club, `Remove "${club.name}"?`);
+      listEl.appendChild(div);
+    });
   });
-  div.querySelector('.delete-btn').addEventListener('click', async () => {
-    if (!confirm(`Remove "${club.name}"?`)) return;
-    await del(`/api/admin/clubs/${club.id}`);
-    if (editingClubId === club.id) resetClubForm();
-    loadClubs();
-  });
-
-  return div;
 }
-
-function renderClubs(clubs) {
-  for (const type of Object.keys(listEls)) {
-    listEls[type].querySelectorAll('.cs-club-item').forEach((el) => el.remove());
-    const typeClubs = clubs.filter((c) => c.type === type);
-    emptyEls[type].hidden = typeClubs.length > 0;
-    typeClubs.forEach((club) => listEls[type].appendChild(clubCard(club)));
-  }
-}
-
-const viewMoreToggles = {
-  'community-service': { toggle: document.getElementById('club-community-service-toggle'), body: document.getElementById('club-community-service-body') },
-  'after-school': { toggle: document.getElementById('club-after-school-toggle'), body: document.getElementById('club-after-school-body') },
-};
-Object.values(viewMoreToggles).forEach(({ toggle, body }) => {
-  toggle.addEventListener('click', () => {
-    const nowOpen = body.hidden;
-    body.hidden = !nowOpen;
-    toggle.textContent = nowOpen ? 'View less' : 'View more';
-  });
-});
-
-clubCancelEdit.addEventListener('click', () => resetClubForm());
-
-clubForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  clubError.hidden = true;
-  clubSubmit.disabled = true;
-  clubSubmit.textContent = editingClubId ? 'Saving…' : 'Adding…';
-
-  try {
-    const formData = new FormData();
-    formData.append('type', currentType());
-    formData.append('name', clubNameInput.value.trim());
-    formData.append('description', clubDescriptionInput.value.trim());
-    formData.append('instagramUrl', clubInstagramInput.value.trim());
-    formData.append('applicationFormUrl', clubApplicationInput.value.trim());
-    formData.append('schedule', clubScheduleInput.value.trim());
-    formData.append('advisor', clubAdvisorInput.value.trim());
-    formData.append('signupUrl', clubSignupInput.value.trim());
-    if (clubLogoInput.files[0]) formData.append('logo', clubLogoInput.files[0]);
-
-    const url = editingClubId ? `/api/admin/clubs/${editingClubId}` : '/api/admin/clubs';
-    const { ok, data } = await sendForm(url, editingClubId ? 'PUT' : 'POST', formData);
-
-    if (!ok) {
-      clubError.textContent = data.error || 'Could not save club.';
-      clubError.hidden = false;
-      return;
-    }
-
-    resetClubForm();
-    loadClubs();
-  } catch {
-    clubError.textContent = 'Could not reach the server. Please try again.';
-    clubError.hidden = false;
-  } finally {
-    clubSubmit.disabled = false;
-    clubSubmit.textContent = editingClubId ? 'Save changes' : 'Add club';
-  }
-});

@@ -21,20 +21,17 @@ const DB_FILE = path.join(DATA_DIR, 'portal.db');
 
 // Text shown on the homepage that isn't a manageable collection: the current
 // weekly slide, this week's lunch menu (fixed Mon–Fri shape), and the lunch
-// schedule image. Everything else that used to live here (announcements,
-// calendar events, clubs, council, projects, quick links) is its own
-// collection below, each with full admin add/edit/delete.
+// schedule image. Everything else that used to live here (calendar events,
+// clubs, council, quick links) is its own collection below, each with full
+// admin add/edit/delete.
 const DEFAULT_CONTENT = {
-  lunchMenu: [
-    { weekday: 'Mon', item: '' },
-    { weekday: 'Tue', item: '' },
-    { weekday: 'Wed', item: '' },
-    { weekday: 'Thu', item: '' },
-    { weekday: 'Fri', item: '' },
-  ],
   weeklySlide: {
     weekLabel: '',
     canvaEmbedUrl: '',
+  },
+  calendarImage: {
+    label: '',
+    imageUrl: '',
   },
   lunchSchedule: {
     weekLabel: '',
@@ -65,8 +62,8 @@ db.exec(`
     data TEXT NOT NULL
   );
 
-  -- Every other admin-manageable list (clubs, announcements, calendar
-  -- events, council, projects, quick links, CS events, slide archive, voice
+  -- Every other admin-manageable list (clubs, calendar
+  -- events, council, quick links, CS events, slide archive, voice
   -- posts) is a JSON blob per row in one shared table, keyed by which
   -- collection it belongs to. This mirrors the old one-JSON-array-per-file
   -- model closely enough that the route files above didn't need to change
@@ -111,8 +108,6 @@ db.exec(`
     username TEXT NOT NULL UNIQUE,
     passwordHash TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'editor',
-    totpSecret TEXT,
-    totpEnabled INTEGER NOT NULL DEFAULT 0,
     createdAt TEXT NOT NULL
   );
 
@@ -124,25 +119,12 @@ db.exec(`
     createdAt TEXT NOT NULL
   );
   CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created ON admin_audit_log (createdAt);
-
-  -- One-time-use codes for an admin who enables 2FA and later loses their
-  -- authenticator device — without these, losing the device would mean
-  -- permanently losing access to that account (and, for the sole owner,
-  -- to admin account management entirely).
-  CREATE TABLE IF NOT EXISTS admin_recovery_codes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    adminId TEXT NOT NULL,
-    codeHash TEXT NOT NULL,
-    used INTEGER NOT NULL DEFAULT 0,
-    createdAt TEXT NOT NULL
-  );
-  CREATE INDEX IF NOT EXISTS idx_admin_recovery_codes_admin ON admin_recovery_codes (adminId);
 `);
 
 // Adds a column to an existing table if it's missing — needed because the
 // CREATE TABLE above only applies to a brand-new database; a database
-// created before role/totpSecret/totpEnabled existed needs them added in
-// place, without losing its existing admin rows.
+// created before role existed needs it added in place, without losing its
+// existing admin rows.
 // Returns true if the column had to be added (i.e. this is an existing
 // database created before it existed), false if it was already there.
 function ensureColumn(table, column, ddl) {
@@ -165,9 +147,9 @@ function renameColumnIfNeeded(table, oldName, newName) {
 renameColumnIfNeeded('admins', 'email', 'username');
 renameColumnIfNeeded('admin_audit_log', 'adminEmail', 'adminUsername');
 
+ensureColumn('students', 'nickname', "nickname TEXT NOT NULL DEFAULT ''");
+ensureColumn('students', 'middleName', "middleName TEXT NOT NULL DEFAULT ''");
 const roleColumnJustAdded = ensureColumn('admins', 'role', "role TEXT NOT NULL DEFAULT 'editor'");
-ensureColumn('admins', 'totpSecret', 'totpSecret TEXT');
-ensureColumn('admins', 'totpEnabled', 'totpEnabled INTEGER NOT NULL DEFAULT 0');
 
 // Every admin that already existed before roles did becomes an owner (not
 // silently downgraded to the new, more limited 'editor' default) — running
@@ -178,21 +160,28 @@ if (roleColumnJustAdded) {
   db.prepare("UPDATE admins SET role = 'owner'").run();
 }
 
-// The very first time this runs against a database with no admin accounts
-// yet, create one from ADMIN_PASSWORD so the existing single-password
-// workflow keeps working — after that, admins manage their own accounts
-// and this environment variable is no longer read for authentication.
-(function ensureAdminsBootstrap() {
-  const { c } = db.prepare('SELECT COUNT(*) AS c FROM admins').get();
-  if (c > 0) return;
-  // Always 'owner' — the very first admin has to be, since there'd
-  // otherwise be no owner at all to create one.
-  db.prepare("INSERT INTO admins (id, username, passwordHash, role, createdAt) VALUES (?, ?, ?, 'owner', ?)").run(
-    crypto.randomUUID(),
-    ADMIN_BOOTSTRAP_USERNAME.toLowerCase(),
-    bcrypt.hashSync(ADMIN_PASSWORD, 10),
-    new Date().toISOString()
-  );
+// The first (oldest) admin account's password is whatever ADMIN_PASSWORD in
+// .env says, and the only way to change it is to edit .env and restart:
+// there is deliberately no change-password screen. A database with no admins
+// yet gets that account created here. It is always an 'owner' — the very
+// first admin has to be, since there'd otherwise be no owner at all to
+// create one. The sync only runs when ADMIN_PASSWORD is explicitly set, so
+// removing it from .env can never reset the account to the insecure default.
+(function syncFirstAdminPassword() {
+  const first = db.prepare('SELECT id, passwordHash FROM admins ORDER BY createdAt LIMIT 1').get();
+  if (!first) {
+    db.prepare("INSERT INTO admins (id, username, passwordHash, role, createdAt) VALUES (?, ?, ?, 'owner', ?)").run(
+      crypto.randomUUID(),
+      ADMIN_BOOTSTRAP_USERNAME.toLowerCase(),
+      bcrypt.hashSync(ADMIN_PASSWORD, 10),
+      new Date().toISOString()
+    );
+    return;
+  }
+  if (process.env.ADMIN_PASSWORD && !bcrypt.compareSync(ADMIN_PASSWORD, first.passwordHash)) {
+    db.prepare('UPDATE admins SET passwordHash = ? WHERE id = ?').run(bcrypt.hashSync(ADMIN_PASSWORD, 10), first.id);
+    destroySessionsMatching((session) => session.adminId === first.id);
+  }
 })();
 
 function rowToStudent(row) {
@@ -201,6 +190,8 @@ function rowToStudent(row) {
     id: row.id,
     firstName: row.firstName,
     lastName: row.lastName,
+    middleName: row.middleName || '',
+    nickname: row.nickname || '',
     email: row.email,
     grade: row.grade,
     passwordHash: row.passwordHash,
@@ -215,42 +206,6 @@ function readStudents() {
   return db.prepare('SELECT * FROM students ORDER BY createdAt').all().map(rowToStudent);
 }
 
-function writeStudents(students) {
-  const upsert = db.prepare(`
-    INSERT INTO students (id, firstName, lastName, email, grade, passwordHash, mustChangePassword, failedLoginAttempts, locked, createdAt)
-    VALUES (@id, @firstName, @lastName, @email, @grade, @passwordHash, @mustChangePassword, @failedLoginAttempts, @locked, @createdAt)
-    ON CONFLICT(id) DO UPDATE SET
-      firstName = excluded.firstName,
-      lastName = excluded.lastName,
-      email = excluded.email,
-      grade = excluded.grade,
-      passwordHash = excluded.passwordHash,
-      mustChangePassword = excluded.mustChangePassword,
-      failedLoginAttempts = excluded.failedLoginAttempts,
-      locked = excluded.locked,
-      createdAt = excluded.createdAt
-  `);
-  const ids = students.map((s) => s.id);
-  const replaceAll = db.transaction((items) => {
-    db.prepare(`DELETE FROM students WHERE id NOT IN (${items.length ? items.map(() => '?').join(',') : "''"})`).run(...(items.length ? items : []));
-    for (const s of students) {
-      upsert.run({
-        id: s.id,
-        firstName: s.firstName,
-        lastName: s.lastName,
-        email: s.email,
-        grade: s.grade,
-        passwordHash: s.passwordHash,
-        mustChangePassword: s.mustChangePassword ? 1 : 0,
-        failedLoginAttempts: s.failedLoginAttempts || 0,
-        locked: s.locked ? 1 : 0,
-        createdAt: s.createdAt,
-      });
-    }
-  });
-  replaceAll(ids);
-}
-
 function findByEmail(email) {
   const normalized = email.trim().toLowerCase();
   return rowToStudent(db.prepare('SELECT * FROM students WHERE lower(email) = ?').get(normalized));
@@ -262,12 +217,14 @@ function findById(id) {
 
 function addStudent(student) {
   db.prepare(`
-    INSERT INTO students (id, firstName, lastName, email, grade, passwordHash, mustChangePassword, failedLoginAttempts, locked, createdAt)
-    VALUES (@id, @firstName, @lastName, @email, @grade, @passwordHash, @mustChangePassword, @failedLoginAttempts, @locked, @createdAt)
+    INSERT INTO students (id, firstName, middleName, lastName, nickname, email, grade, passwordHash, mustChangePassword, failedLoginAttempts, locked, createdAt)
+    VALUES (@id, @firstName, @middleName, @lastName, @nickname, @email, @grade, @passwordHash, @mustChangePassword, @failedLoginAttempts, @locked, @createdAt)
   `).run({
     id: student.id,
     firstName: student.firstName,
+    middleName: student.middleName || '',
     lastName: student.lastName,
+    nickname: student.nickname || '',
     email: student.email,
     grade: student.grade,
     passwordHash: student.passwordHash,
@@ -277,6 +234,15 @@ function addStudent(student) {
     createdAt: student.createdAt,
   });
   return student;
+}
+
+// Edits the details an admin can change on an account. The password, lock state
+// and creation date are deliberately not touched here.
+function updateStudent(id, { firstName, middleName, lastName, nickname, email, grade }) {
+  const result = db
+    .prepare('UPDATE students SET firstName = ?, middleName = ?, lastName = ?, nickname = ?, email = ?, grade = ? WHERE id = ?')
+    .run(firstName, middleName, lastName, nickname, email, grade, id);
+  return result.changes > 0 ? findById(id) : null;
 }
 
 function removeStudent(id) {
@@ -463,12 +429,12 @@ function readContent() {
   const row = db.prepare('SELECT data FROM content WHERE id = 1').get();
   let content;
   try {
-    content = row ? JSON.parse(row.data) : { ...DEFAULT_CONTENT };
+    content = row ? JSON.parse(row.data) : structuredClone(DEFAULT_CONTENT);
   } catch {
-    content = { ...DEFAULT_CONTENT };
+    content = structuredClone(DEFAULT_CONTENT);
   }
   for (const key of Object.keys(DEFAULT_CONTENT)) {
-    if (!(key in content)) content[key] = DEFAULT_CONTENT[key];
+    if (!(key in content)) content[key] = structuredClone(DEFAULT_CONTENT[key]);
   }
   return content;
 }
@@ -481,7 +447,7 @@ function writeContent(content) {
 }
 
 // A small SQLite-backed array collection: every admin-manageable list
-// (clubs, announcements, calendar events, council, projects, quick links,
+// (clubs, calendar events, council, quick links,
 // CS events, slide archive, voice posts) follows the same read-array/
 // write-array shape the routes already expect, so it's defined once here
 // instead of once per collection.
@@ -510,7 +476,6 @@ const voicePosts = jsonCollection('voicePosts');
 const slideArchive = jsonCollection('slideArchive');
 const clubs = jsonCollection('clubs');
 const csEvents = jsonCollection('csEvents');
-const announcements = jsonCollection('announcements');
 const calendarEvents = jsonCollection('calendarEvents');
 const council = jsonCollection('council');
 const quickLinks = jsonCollection('quickLinks');
@@ -529,16 +494,15 @@ function withSeedSync(writeFn) {
 
 module.exports = {
   readStudents,
-  writeStudents,
   findByEmail,
   findById,
   addStudent,
   removeStudent,
+  updateStudent,
   updateStudentPasswordHash,
   readContent,
   writeContent: withSeedSync(writeContent),
 
-  getThrottle,
   recordFailedAttempt,
   clearThrottle,
   getLockStatus,
@@ -561,14 +525,13 @@ module.exports = {
   readCsEvents: csEvents.read,
   writeCsEvents: withSeedSync(csEvents.write),
 
-  readAnnouncements: announcements.read,
-  writeAnnouncements: withSeedSync(announcements.write),
 
   readCalendarEvents: calendarEvents.read,
   writeCalendarEvents: withSeedSync(calendarEvents.write),
 
   readCouncil: council.read,
   writeCouncil: withSeedSync(council.write),
+
 
   readQuickLinks: quickLinks.read,
   writeQuickLinks: withSeedSync(quickLinks.write),
@@ -593,7 +556,7 @@ module.exports = {
     return db.prepare('SELECT * FROM admins WHERE id = ?').get(id) || null;
   },
   listAdmins() {
-    return db.prepare('SELECT id, username, role, totpEnabled, createdAt FROM admins ORDER BY createdAt').all();
+    return db.prepare('SELECT id, username, role, createdAt FROM admins ORDER BY createdAt').all();
   },
   adminCount() {
     return db.prepare('SELECT COUNT(*) AS c FROM admins').get().c;
@@ -612,52 +575,11 @@ module.exports = {
     db.prepare('INSERT INTO admins (id, username, passwordHash, role, createdAt) VALUES (@id, @username, @passwordHash, @role, @createdAt)').run(admin);
     return admin;
   },
-  updateAdminPasswordHash(id, passwordHash) {
-    return db.prepare('UPDATE admins SET passwordHash = ? WHERE id = ?').run(passwordHash, id).changes > 0;
-  },
   updateAdminRole(id, role) {
     return db.prepare('UPDATE admins SET role = ? WHERE id = ?').run(role === 'owner' ? 'owner' : 'editor', id).changes > 0;
   },
   deleteAdmin(id) {
     return db.prepare('DELETE FROM admins WHERE id = ?').run(id).changes > 0;
-  },
-
-  // ---- Admin two-factor authentication (TOTP) ----
-  // "Pending" setup: a secret generated but not yet confirmed with a code,
-  // so scanning the QR/entering the key doesn't turn on 2FA until the admin
-  // proves they actually saved it correctly.
-  setPendingTotpSecret(id, secret) {
-    db.prepare('UPDATE admins SET totpSecret = ?, totpEnabled = 0 WHERE id = ?').run(secret, id);
-  },
-  enableTotp(id) {
-    db.prepare('UPDATE admins SET totpEnabled = 1 WHERE id = ?').run(id);
-  },
-  disableTotp(id) {
-    db.prepare('UPDATE admins SET totpSecret = NULL, totpEnabled = 0 WHERE id = ?').run(id);
-    db.prepare('DELETE FROM admin_recovery_codes WHERE adminId = ?').run(id);
-  },
-  replaceRecoveryCodes(adminId, codeHashes) {
-    const del = db.prepare('DELETE FROM admin_recovery_codes WHERE adminId = ?');
-    const insert = db.prepare('INSERT INTO admin_recovery_codes (adminId, codeHash, createdAt) VALUES (?, ?, ?)');
-    const tx = db.transaction((hashes) => {
-      del.run(adminId);
-      const createdAt = new Date().toISOString();
-      for (const hash of hashes) insert.run(adminId, hash, createdAt);
-    });
-    tx(codeHashes);
-  },
-  // Marks a matching, unused recovery code as used and returns true — or
-  // returns false without changing anything if no unused code matches.
-  consumeRecoveryCode(adminId, codeHash) {
-    const row = db
-      .prepare('SELECT id FROM admin_recovery_codes WHERE adminId = ? AND codeHash = ? AND used = 0')
-      .get(adminId, codeHash);
-    if (!row) return false;
-    db.prepare('UPDATE admin_recovery_codes SET used = 1 WHERE id = ?').run(row.id);
-    return true;
-  },
-  countUnusedRecoveryCodes(adminId) {
-    return db.prepare('SELECT COUNT(*) AS c FROM admin_recovery_codes WHERE adminId = ? AND used = 0').get(adminId).c;
   },
 
   // ---- Admin audit log ----
@@ -692,9 +614,6 @@ module.exports = {
   // Same idea for admin accounts: used when an admin changes their own
   // password (keeps the current session, drops any others), and when an
   // admin account is deleted (no exceptSid — every session for it dies).
-  destroyOtherAdminSessions(adminId, exceptSid) {
-    destroySessionsMatching((session) => session.adminId === adminId, exceptSid);
-  },
   destroyAdminSessions(adminId) {
     destroySessionsMatching((session) => session.adminId === adminId);
   },

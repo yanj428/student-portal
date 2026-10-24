@@ -41,11 +41,13 @@ class SqliteSessionStore extends Store {
       this.destroyStmt.run(sid);
       return callback(null, null);
     }
+    let data;
     try {
-      callback(null, JSON.parse(row.data));
+      data = JSON.parse(row.data);
     } catch (err) {
-      callback(err);
+      return callback(err);
     }
+    callback(null, data);
   }
 
   set(sid, session, callback) {

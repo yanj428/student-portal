@@ -7,13 +7,15 @@ const PORT = process.env.PORT || 8791;
 const INSECURE_DEFAULT_ADMIN_PASSWORD = 'kpis-admin';
 const INSECURE_DEFAULT_SESSION_SECRET = 'dev-only-secret-change-me';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || INSECURE_DEFAULT_ADMIN_PASSWORD;
-// Only used once, to create the first admin account (see db.js's
-// ensureAdminsBootstrap) the first time the app runs against a database
-// with no admins table yet. After that, admin accounts and their own
-// hashed passwords live in the database, and ADMIN_PASSWORD is unused.
+// The first admin account's password. db.js creates that account from it and
+// re-syncs it on every start, so changing this in .env (and restarting) is the
+// only way to change that password. Admins an owner adds later keep the
+// password they were created with. Production refuses to start without a real
+// value below.
 const ADMIN_BOOTSTRAP_USERNAME = process.env.ADMIN_BOOTSTRAP_USERNAME || 'admin';
 const SESSION_SECRET = process.env.SESSION_SECRET || INSECURE_DEFAULT_SESSION_SECRET;
 const DEFAULT_STUDENT_PASSWORD = 'keerapat';
+const SESSION_COOKIE_NAME = 'kpis.sid';
 const ACCOUNT_LOCKED_MESSAGE =
   'This account has been locked after too many failed login attempts. Please contact the Student Council to regain access.';
 
@@ -40,12 +42,14 @@ const ADMIN_SESSION_ABSOLUTE_MINUTES = parseFloat(process.env.ADMIN_SESSION_ABSO
 // on by setting NODE_ENV=production (also see TRUST_PROXY below, needed
 // when a reverse proxy/tunnel sits in front of the app).
 const SESSION_COOKIE_SECURE = process.env.NODE_ENV === 'production';
-const TRUST_PROXY = process.env.TRUST_PROXY || false;
+// The string "false" or "0" means off, not a literal address to trust.
+const TRUST_PROXY = ['', 'false', '0'].includes(process.env.TRUST_PROXY || '') ? false : process.env.TRUST_PROXY;
 
-// Powers the optional "extract this lunch menu photo with AI" admin
-// feature (server/routes/lunch.js). Left unset, that feature just returns
-// a clear "not configured" error instead of the app failing to start —
-// it's an enhancement, not something the rest of the site depends on.
+// Powers the optional "Extract events with AI" feature on the School
+// Calendar admin page (server/utils/calendarEventsAi.js). Left unset, that
+// feature just returns a clear "not configured" error instead of the app
+// failing to start - it's an enhancement, not something the rest of the
+// site depends on.
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 
 // A fixed, precomputed hash with no matching password — compared against
@@ -59,7 +63,7 @@ const DUMMY_PASSWORD_HASH = bcrypt.hashSync('no-such-account', 10);
 if (process.env.NODE_ENV === 'production') {
   // These two protect, respectively, every admin account and every student
   // session cookie — starting in production with either still on its
-  // well-known, public (this is an open-source repo) default would make
+  // well-known default (it is written in this file) would make
   // every protection built on top of them pointless. Failing fast here
   // beats discovering it after something goes wrong.
   if (!process.env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD === INSECURE_DEFAULT_ADMIN_PASSWORD) {
@@ -74,7 +78,7 @@ if (process.env.NODE_ENV === 'production') {
   // rateLimit.js) behind a reverse proxy or tunnel, so it's worth flagging
   // loudly rather than only discovering it once a login lockout hits
   // everyone at once.
-  if (!process.env.TRUST_PROXY) {
+  if (!TRUST_PROXY) {
     console.warn(
       '[warn] Running in production without TRUST_PROXY set. If this site is behind a reverse proxy or tunnel, every visitor will look like the same IP address to the rate limiter — set TRUST_PROXY (see .env.example).'
     );
@@ -96,6 +100,7 @@ module.exports = {
   SESSION_SECRET,
   DEFAULT_STUDENT_PASSWORD,
   ACCOUNT_LOCKED_MESSAGE,
+  SESSION_COOKIE_NAME,
   LOGIN_LOCKOUT_THRESHOLD,
   LOGIN_LOCKOUT_WINDOW_MINUTES,
   LOGIN_LOCKOUT_BASE_MINUTES,

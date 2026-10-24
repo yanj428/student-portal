@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const db = require('../db');
 const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
 const { memoryImageUpload } = require('../uploads');
-const { extractCalendarEvents, isAiConfigured } = require('../utils/calendarEventsAi');
+const { extractCalendarEvents, isAiConfigured, NOT_CONFIGURED_MESSAGE } = require('../utils/calendarEventsAi');
 const { calendarAiLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
@@ -15,7 +15,7 @@ const router = express.Router();
 // route below, one at a time (or all at once from the UI).
 router.post('/api/admin/calendar-events/extract', requireAdmin, calendarAiLimiter, (req, res) => {
   if (!isAiConfigured()) {
-    return res.status(501).json({ error: 'AI event extraction is not set up yet. Add GEMINI_API_KEY to the server .env file.' });
+    return res.status(501).json({ error: NOT_CONFIGURED_MESSAGE });
   }
 
   memoryImageUpload.single('image')(req, res, async (err) => {
@@ -45,12 +45,13 @@ function lastDayNumber(day) {
   return Number(parts[parts.length - 1]) || 1;
 }
 
+// Sorts by the resolved end date (not just month and day) so next year's January sorts after this year's December. An unparseable month goes last.
 function sortByDate(items) {
-  return items.slice().sort((a, b) => {
-    const monthDiff = MONTHS.indexOf(a.month) - MONTHS.indexOf(b.month);
-    if (monthDiff !== 0) return monthDiff;
-    return lastDayNumber(a.day) - lastDayNumber(b.day);
-  });
+  const endOf = (e) => {
+    const end = resolveEventEndDate(e);
+    return end ? end.getTime() : Infinity;
+  };
+  return items.slice().sort((a, b) => endOf(a) - endOf(b));
 }
 
 // Events store day/month only, no year - so the year has to be inferred
@@ -90,36 +91,35 @@ function pruneExpiredEvents() {
   return remaining;
 }
 
-router.get('/api/calendar-events', requireActiveStudent, (req, res) => {
-  res.json({ calendarEvents: sortByDate(pruneExpiredEvents()).map(publicEvent) });
-});
+const listEvents = (req, res) => res.json({ calendarEvents: sortByDate(pruneExpiredEvents()).map(publicEvent) });
 
-router.get('/api/admin/calendar-events', requireAdmin, (req, res) => {
-  res.json({ calendarEvents: sortByDate(pruneExpiredEvents()).map(publicEvent) });
-});
+router.get('/api/calendar-events', requireActiveStudent, listEvents);
+router.get('/api/admin/calendar-events', requireAdmin, listEvents);
 
-function validateFields(body) {
+const TITLE_MAX = 200;
+const SUBTITLE_MAX = 300;
+
+// Month and day are free text in the admin form, so they're normalized here:
+// an unrecognised month would never expire and would sort wrongly, and a
+// non-numeric day would silently be treated as day 1.
+function readFields(body) {
   const { day, month, title, subtitle } = body || {};
-  if (typeof day !== 'string' || !day.trim()) return 'Day is required.';
-  if (typeof month !== 'string' || !month.trim()) return 'Month is required.';
-  if (typeof title !== 'string' || !title.trim()) return 'Title is required.';
-  if (typeof subtitle !== 'string') return 'Subtitle must be text (it can be blank).';
-  return null;
+  if (typeof day !== 'string' || !/^\d{1,2}(-\d{1,2})?$/.test(day.trim())) return { error: 'Day must be a number like 12, or a range like 19-20.' };
+  const monthName = typeof month === 'string' && MONTHS.find((m) => m.toLowerCase() === month.trim().slice(0, 3).toLowerCase());
+  if (!monthName) return { error: 'Month must be a month name like Sep or September.' };
+  if (typeof title !== 'string' || !title.trim()) return { error: 'Title is required.' };
+  if (typeof subtitle !== 'string') return { error: 'Subtitle must be text (it can be blank).' };
+  if (title.trim().length > TITLE_MAX) return { error: `Title must be ${TITLE_MAX} characters or fewer.` };
+  if (subtitle.trim().length > SUBTITLE_MAX) return { error: `Subtitle must be ${SUBTITLE_MAX} characters or fewer.` };
+  return { fields: { day: day.trim(), month: monthName, title: title.trim(), subtitle: subtitle.trim() } };
 }
 
 router.post('/api/admin/calendar-events', requireAdmin, (req, res) => {
-  const error = validateFields(req.body);
+  const { fields, error } = readFields(req.body);
   if (error) return res.status(400).json({ error });
 
   const items = pruneExpiredEvents();
-  const item = {
-    id: crypto.randomUUID(),
-    day: req.body.day.trim(),
-    month: req.body.month.trim(),
-    title: req.body.title.trim(),
-    subtitle: req.body.subtitle.trim(),
-    createdAt: new Date().toISOString(),
-  };
+  const item = { id: crypto.randomUUID(), ...fields, createdAt: new Date().toISOString() };
   items.push(item);
   db.writeCalendarEvents(items);
 
@@ -127,22 +127,18 @@ router.post('/api/admin/calendar-events', requireAdmin, (req, res) => {
 });
 
 router.put('/api/admin/calendar-events/:id', requireAdmin, (req, res) => {
-  const error = validateFields(req.body);
+  const { fields, error } = readFields(req.body);
   if (error) return res.status(400).json({ error });
 
   const items = pruneExpiredEvents();
   const item = items.find((e) => e.id === req.params.id);
   if (!item) return res.status(404).json({ error: 'Calendar event not found.' });
 
-  item.day = req.body.day.trim();
-  item.month = req.body.month.trim();
-  item.title = req.body.title.trim();
-  item.subtitle = req.body.subtitle.trim();
+  Object.assign(item, fields);
   db.writeCalendarEvents(items);
 
   res.json({ calendarEvent: publicEvent(item) });
 });
-
 router.delete('/api/admin/calendar-events/:id', requireAdmin, (req, res) => {
   const items = pruneExpiredEvents();
   const next = items.filter((e) => e.id !== req.params.id);

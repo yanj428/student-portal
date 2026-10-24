@@ -53,7 +53,7 @@ router.put('/api/admin/quick-links/reorder', requireAdmin, (req, res) => {
 
   const items = db.readQuickLinks();
   const byId = new Map(items.map((q) => [q.id, q]));
-  const sameSet = orderedIds.length === items.length && orderedIds.every((id) => byId.has(id));
+  const sameSet = orderedIds.length === items.length && new Set(orderedIds).size === orderedIds.length && orderedIds.every((id) => byId.has(id));
   if (!sameSet) return res.status(400).json({ error: 'orderedIds must match the current quick links exactly.' });
 
   db.writeQuickLinks(orderedIds.map((id) => byId.get(id)));

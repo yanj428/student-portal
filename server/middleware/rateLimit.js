@@ -5,58 +5,68 @@ const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 // from one IP address hammering many different emails or the shared admin
 // password. Overridable via env so tests don't have to send hundreds of
 // requests to prove the limiter works.
-// skipSuccessfulRequests means only failed attempts count toward the
-// limit — this is what a login rate limit should actually be protecting
-// against (repeated wrong guesses), rather than penalizing a shared school
-// IP where many students legitimately succeed in the same 15 minutes.
-const studentLoginLimiter = rateLimit({
-  windowMs: (parseFloat(process.env.STUDENT_LOGIN_RATE_WINDOW_MINUTES) || 15) * 60 * 1000,
-  limit: parseInt(process.env.STUDENT_LOGIN_RATE_LIMIT, 10) || 30,
-  standardHeaders: true,
-  legacyHeaders: false,
+function makeLimiter({ windowEnv, defaultWindowMinutes, limitEnv, defaultLimit, message, ...options }) {
+  return rateLimit({
+    windowMs: (parseFloat(windowEnv && process.env[windowEnv]) || defaultWindowMinutes) * 60 * 1000,
+    limit: parseInt(process.env[limitEnv], 10) || defaultLimit,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: message },
+    ...options,
+  });
+}
+
+// skipSuccessfulRequests means only failed attempts count toward the limit -
+// this is what a login rate limit should actually be protecting against
+// (repeated wrong guesses), rather than penalizing a shared school IP where
+// many students legitimately succeed in the same 15 minutes.
+const studentLoginLimiter = makeLimiter({
+  windowEnv: 'STUDENT_LOGIN_RATE_WINDOW_MINUTES',
+  defaultWindowMinutes: 15,
+  limitEnv: 'STUDENT_LOGIN_RATE_LIMIT',
+  defaultLimit: 30,
   skipSuccessfulRequests: true,
-  message: { error: 'Too many login attempts from this device. Please try again later.' },
+  message: 'Too many login attempts from this device. Please try again later.',
 });
 
-const adminLoginLimiter = rateLimit({
-  windowMs: (parseFloat(process.env.ADMIN_LOGIN_RATE_WINDOW_MINUTES) || 15) * 60 * 1000,
-  limit: parseInt(process.env.ADMIN_LOGIN_RATE_LIMIT, 10) || 5,
-  standardHeaders: true,
-  legacyHeaders: false,
+const adminLoginLimiter = makeLimiter({
+  windowEnv: 'ADMIN_LOGIN_RATE_WINDOW_MINUTES',
+  defaultWindowMinutes: 15,
+  limitEnv: 'ADMIN_LOGIN_RATE_LIMIT',
+  defaultLimit: 5,
   skipSuccessfulRequests: true,
-  message: { error: 'Too many admin login attempts from this device. Please try again later.' },
+  message: 'Too many admin login attempts from this device. Please try again later.',
 });
 
-const passwordChangeLimiter = rateLimit({
-  windowMs: (parseFloat(process.env.PASSWORD_CHANGE_RATE_WINDOW_MINUTES) || 60) * 60 * 1000,
-  limit: parseInt(process.env.PASSWORD_CHANGE_RATE_LIMIT, 10) || 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many password change attempts. Please try again later.' },
+// The limiters below run after authentication and are keyed by account (not
+// IP): the concern is spam from one account, and a school's shared wifi/NAT
+// would otherwise throttle every student or admin behind it together.
+const accountKey = (req) => req.session.studentId || req.session.adminId || ipKeyGenerator(req.ip);
+
+const passwordChangeLimiter = makeLimiter({
+  windowEnv: 'PASSWORD_CHANGE_RATE_WINDOW_MINUTES',
+  defaultWindowMinutes: 60,
+  limitEnv: 'PASSWORD_CHANGE_RATE_LIMIT',
+  defaultLimit: 10,
+  keyGenerator: accountKey,
+  message: 'Too many password change attempts. Please try again later.',
 });
 
-// Keyed by student id (not IP) since the concern here is spam from one
-// account, not one network address — a school's shared wifi/NAT would
-// otherwise throttle every student behind it together.
-const voicePostLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  limit: parseInt(process.env.VOICE_POST_RATE_LIMIT, 10) || 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => req.session.studentId || ipKeyGenerator(req.ip),
-  message: { error: 'Too many posts submitted. Please try again later.' },
+const voicePostLimiter = makeLimiter({
+  defaultWindowMinutes: 60,
+  limitEnv: 'VOICE_POST_RATE_LIMIT',
+  defaultLimit: 5,
+  keyGenerator: accountKey,
+  message: 'Too many posts submitted. Please try again later.',
 });
 
-// Keyed by admin id (not IP) so one admin session can't burn through the
-// Gemini free-tier quota, without penalizing other admins on the same
-// school network.
-const calendarAiLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  limit: parseInt(process.env.CALENDAR_AI_RATE_LIMIT, 10) || 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => req.session.adminId || ipKeyGenerator(req.ip),
-  message: { error: 'Too many AI extraction requests. Please try again later.' },
+// Keeps one admin session from burning through the Gemini free-tier quota.
+const calendarAiLimiter = makeLimiter({
+  defaultWindowMinutes: 60,
+  limitEnv: 'CALENDAR_AI_RATE_LIMIT',
+  defaultLimit: 20,
+  keyGenerator: accountKey,
+  message: 'Too many AI extraction requests. Please try again later.',
 });
 
 module.exports = {

@@ -8,7 +8,7 @@ A student portal for KPIS International School: Node/Express 5 backend,
 EJS server-rendered pages, vanilla HTML/CSS/JS on the frontend (no build
 step, no framework), SQLite (better-sqlite3) for storage. Two separate
 login systems — students (email/password) and admins (username/password,
-with roles and optional TOTP 2FA) — sharing one Express app and one
+with owner/editor roles) — sharing one Express app and one
 `kpis.sid` session cookie, backed by a SQLite-backed session store so
 sessions survive a server restart.
 
@@ -23,7 +23,7 @@ without thinking about it first.
 npm install
 npm run seed   # loads server/seed/content.json into a fresh local db (see below)
 npm start      # http://localhost:8791
-npm test       # node's built-in test runner + supertest, ~72 tests
+npm test       # node's built-in test runner + supertest
 ```
 
 `.env` (see `.env.example`) needs `ADMIN_PASSWORD` and `SESSION_SECRET` set
@@ -33,8 +33,8 @@ and only powers "Extract events with AI" on the School Calendar admin page.
 ## Data model
 
 Everything lives in one SQLite file (`data/portal.db`, gitignored).
-Most admin-managed lists — clubs, announcements, calendar events, council,
-projects, quick links, CS events, slide archive, Student Voice posts — are
+Most admin-managed lists — clubs, calendar events, council,
+quick links, CS events, slide archive, Student Voice posts — are
 generic JSON-blob rows via `jsonCollection()` in `server/db.js`, all
 sharing one `collection_items` table keyed by collection name. Adding or
 removing a field on one of these is just a JS object shape change — no
@@ -46,9 +46,12 @@ those need actual SQL lookups (login by email, uniqueness, etc.).
 `server/seedWriter.js` automatically regenerates `server/seed/content.json`
 (plus copies of any images those items reference) every time one of the
 content collections above is written — but **only** during a normal local
-dev run where `DATA_DIR` is unset. Both the test suite and any real
-deployment set `DATA_DIR` explicitly, so this can never overwrite the
-checked-in seed with test fixtures or clobber a live deployment's own data.
+dev run where `DATA_DIR` is unset and `NODE_ENV` is not `production`. The
+test suite sets `DATA_DIR` and a real deployment sets `NODE_ENV=production`,
+so this can never overwrite the checked-in seed with test fixtures or
+clobber a live deployment's own data. When copying referenced images it
+only reads files that resolve inside `uploads/` (an `/uploads/../` value
+once could have copied the live database into the seed).
 `npm run seed` loads that seed into a fresh database (skips any collection
 that already has data — never overwrites real content). This is what lets
 someone else clone the repo and see the same clubs/council/calendar/etc.
@@ -58,6 +61,18 @@ be shared.
 
 Never manually edit `server/seed/content.json` — it's generated. Run
 `npm run seed:export` only if you need to force a re-sync by hand.
+
+## Deploying (Fly.io)
+
+The live site runs on Fly.io: `fly.toml`, `Dockerfile` and
+`scripts/start-fly.sh`. Fly builds the image remotely, so Docker isn't
+needed locally. The database and uploaded images live on a Fly volume
+mounted at `/data` (`DATA_DIR=/data`; `server/uploads.js` keeps uploads
+under `DATA_DIR` whenever it's set). On the very first start against an
+empty volume, `start-fly.sh` runs the content seed once.
+`ADMIN_PASSWORD`, `SESSION_SECRET` and `GEMINI_API_KEY` are Fly secrets
+(`fly secrets set`), never files in the image — `.dockerignore` excludes
+`.env`, `data/` and `uploads/`. Deploy with `fly deploy`.
 
 ## Security patterns already in place — don't relax without a reason
 
@@ -80,9 +95,24 @@ Never manually edit `server/seed/content.json` — it's generated. Run
   another reorderable list with images in the rows, follow the same
   pointer-events pattern (see `public/admin/council.js`), not
   `draggable="true"`.
-- `PUT /:id`-style routes must be registered **before** any sibling
-  `PUT /reorder`-style route on the same base path, or Express matches
+- `PUT /reorder`-style routes must be registered **before** any sibling
+  `PUT /:id` route on the same base path, or Express matches
   `:id` = `"reorder"` first. Bit twice already (council, then quick links).
+- The first admin's password comes from `ADMIN_PASSWORD` in `.env` and is
+  re-synced on every start (`db.js`); there is deliberately no admin
+  change-password route or screen. Don't add one back without asking.
+- A route that accepts an upload writes the file before validating the
+  rest of the request, so every early return after it must call
+  `discardUpload(req)` (`server/uploads.js`), and replacing or deleting an
+  item must `removeUpload()` the old file.
+- Pages use clean URLs (`/clubs`, `/login`, `/admin`; the home page is `/`).
+  `server/middleware/cleanUrls.js` permanently redirects old `.html` and
+  trailing-slash URLs. Link with absolute clean paths (`href="/clubs"`), never
+  `.html`. `/admin` is served by an explicit route because `public/admin/` is
+  also a folder: leaving it to the static handler loops with the redirect.
+- Admin fetch helpers treat a 401 as an expired session and reload to the
+  login gate (`public/admin/api.js`). The admin login form therefore uses a
+  raw `fetch`: a wrong password is also a 401.
 
 ## Testing
 
@@ -100,8 +130,16 @@ before/after) — that guarantee is easy to accidentally break.
   constraint) — see the existing comments in `server/db.js` and
   `server/utils/validateUrl.js` for the house style.
 - Client-side admin panels: one `public/admin/<feature>.js` module per
-  panel, wired up from `public/admin/main.js`. Shared helpers
-  (`escapeHtml`, `sendJSON`, `sendForm`, `del`) live in `public/admin/api.js`.
+  panel, wired up from `public/admin/main.js`. Shared helpers live next to
+  them: `api.js` (fetch wrappers, `confirmDelete`, `withBusy`),
+  `crud.js` (`crudPanel`: the add/edit/cancel/delete form lifecycle),
+  `reorder.js` (pointer-based drag reorder) and `viewMore.js`. New list
+  panels should use these rather than copying the pattern again.
+- Student pages: `public/common.js` is loaded on every page (`escapeHtml`,
+  `fetchJson`, `renderList`, logout); `public/home.js` is the homepage
+  widgets only; each other page has its own `public/<page>.js`. Don't define
+  another `escapeHtml` per page. The CSP blocks inline `style=` attributes,
+  so set styles from script (`el.style.x`) instead.
 - Always run the full test suite before calling something done, and verify
   UI changes live (a throwaway test student/admin account, cleaned up
   after) rather than assuming a code read is enough.

@@ -1,6 +1,7 @@
 const express = require('express');
 
 const db = require('../db');
+const { fullName } = require('../utils/studentName');
 const { requireOwnerAdmin } = require('../middleware/auth');
 
 const router = express.Router();
@@ -12,7 +13,7 @@ function publicLockedEntry(entry) {
     lockoutCount: entry.lockoutCount,
     adminLocked: entry.adminLocked,
     student: entry.student
-      ? { id: entry.student.id, firstName: entry.student.firstName, lastName: entry.student.lastName }
+      ? { id: entry.student.id, fullName: fullName(entry.student) }
       : null,
   };
 }
@@ -37,15 +38,20 @@ router.post('/api/admin/security/unlock-all', requireOwnerAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
+// A negative LIMIT means "no limit" to SQLite, so anything below 1 is ignored
+// rather than passed through.
+function parseLimit(value) {
+  const n = parseInt(value, 10);
+  return n >= 1 ? n : undefined;
+}
+
 router.get('/api/admin/security/attempts', requireOwnerAdmin, (req, res) => {
   const { email, ip, limit } = req.query;
-  const attempts = db.listLoginAttempts({ email, ip, limit: limit ? parseInt(limit, 10) : undefined });
-  res.json({ attempts });
+  res.json({ attempts: db.listLoginAttempts({ email, ip, limit: parseLimit(limit) }) });
 });
 
 router.get('/api/admin/security/audit-log', requireOwnerAdmin, (req, res) => {
-  const { limit } = req.query;
-  res.json({ auditLog: db.listAuditLog({ limit: limit ? parseInt(limit, 10) : undefined }) });
+  res.json({ auditLog: db.listAuditLog({ limit: parseLimit(req.query.limit) }) });
 });
 
 module.exports = router;

@@ -1,8 +1,10 @@
 const db = require('../db');
+const { fullName } = require('../utils/studentName');
 const {
   SCHOOL_DOMAIN,
   STUDENT_SESSION_ABSOLUTE_MINUTES,
   ADMIN_SESSION_ABSOLUTE_MINUTES,
+  SESSION_COOKIE_NAME,
 } = require('../config');
 
 function isValidSchoolEmail(email) {
@@ -19,7 +21,7 @@ function sessionExpiredByAbsoluteLimit(session, absoluteMinutes) {
 
 function expireSession(req, res, message) {
   req.session.destroy(() => {
-    res.clearCookie('kpis.sid');
+    res.clearCookie(SESSION_COOKIE_NAME);
     res.status(401).json({ error: message });
   });
 }
@@ -52,7 +54,7 @@ function requireStudent(req, res, next) {
 function requireActiveStudent(req, res, next) {
   requireStudent(req, res, (err) => {
     if (err) return next(err);
-    if (publicStudent(req.student).mustChangePassword) {
+    if (req.student.mustChangePassword) {
       return res.status(403).json({ error: 'Please change your password before continuing.' });
     }
     next();
@@ -101,8 +103,14 @@ function publicStudent(student) {
     id: student.id,
     firstName: student.firstName,
     lastName: student.lastName,
+    middleName: student.middleName || '',
+    nickname: student.nickname || '',
+    fullName: fullName(student),
     email: student.email,
     grade: student.grade,
+    // Grades are stored as typed ("Grade 12" from the admin form, or just "12"),
+    // so the word is only added when it's missing.
+    gradeLabel: /^grade( |$)/i.test(student.grade) ? student.grade : `Grade ${student.grade}`,
     createdAt: student.createdAt,
     mustChangePassword: !!student.mustChangePassword,
     locked: db.getLockStatus(student.email).locked,

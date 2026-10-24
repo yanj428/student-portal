@@ -27,7 +27,6 @@ const seed = JSON.parse(fs.readFileSync(SEED_FILE, 'utf8'));
 const collections = [
   ['clubs', db.readClubs, db.writeClubs],
   ['council', db.readCouncil, db.writeCouncil],
-  ['announcements', db.readAnnouncements, db.writeAnnouncements],
   ['calendarEvents', db.readCalendarEvents, db.writeCalendarEvents],
   ['quickLinks', db.readQuickLinks, db.writeQuickLinks],
   ['csEvents', db.readCsEvents, db.writeCsEvents],
@@ -49,13 +48,12 @@ for (const [name, read, write] of collections) {
 }
 
 const content = db.readContent();
-const contentIsDefault =
-  content.lunchMenu.every((d) => !d.item) && !content.weeklySlide.canvaEmbedUrl && !content.lunchSchedule.imageUrl;
+const contentIsDefault = !content.weeklySlide.canvaEmbedUrl && !content.lunchSchedule.imageUrl && !content.calendarImage.imageUrl;
 if (contentIsDefault && seed.content) {
   db.writeContent({ ...content, ...seed.content });
-  console.log('Loaded lunch menu / weekly slide / lunch schedule text.');
+  console.log('Loaded weekly slide / lunch schedule / calendar image.');
 } else if (!contentIsDefault) {
-  console.log('Skipping lunch menu / weekly slide - content already set.');
+  console.log('Skipping weekly slide / lunch schedule - content already set.');
 }
 
 if (fs.existsSync(SEED_ASSETS_DIR)) {
@@ -78,4 +76,6 @@ if (fs.existsSync(SEED_ASSETS_DIR)) {
 }
 
 console.log('Seed load complete.');
-db.close();
+// Closed on the next tick: the writes above each schedule a seed-file refresh
+// for the next tick, and closing now would make that refresh hit a closed db.
+setImmediate(() => db.close());

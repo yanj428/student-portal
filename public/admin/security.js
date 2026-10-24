@@ -1,4 +1,4 @@
-import { escapeHtml, getJSON, sendJSON } from './api.js';
+import { escapeHtml, getJSON, sendJSON, confirmDelete, withBusy, TRASH_ICON } from './api.js';
 
 const lockedList = document.getElementById('security-locked-list');
 const lockedEmpty = document.getElementById('security-locked-empty');
@@ -20,6 +20,20 @@ const auditLogBody = document.getElementById('audit-log-body');
 
 let currentAdminId = null;
 
+// POSTs an action and reloads on success; failures are reported, not ignored.
+async function postAction(url, body, failureMessage, onDone) {
+  try {
+    const { ok, data } = await sendJSON(url, 'POST', body);
+    if (!ok) {
+      alert(data.error || failureMessage);
+      return;
+    }
+    onDone();
+  } catch {
+    alert('Could not reach the server. Please try again.');
+  }
+}
+
 function formatTime(iso) {
   return new Date(iso).toLocaleString('en-US', {
     month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
@@ -30,9 +44,8 @@ function minutesUntil(iso) {
   return Math.max(1, Math.ceil((new Date(iso).getTime() - Date.now()) / 60000));
 }
 
-export async function loadSecurity() {
-  const session = await getJSON('/api/admin/session');
-  if (session) currentAdminId = session.id;
+export async function loadSecurity(session) {
+  currentAdminId = session.id;
   await Promise.all([loadLockedAccounts(), loadAttempts(), loadAdmins(), loadAuditLog()]);
 }
 
@@ -47,7 +60,7 @@ function renderLocked(entries) {
   lockedEmpty.hidden = entries.length > 0;
 
   entries.forEach((entry) => {
-    const name = entry.student ? `${entry.student.firstName} ${entry.student.lastName}` : '(no matching account)';
+    const name = entry.student ? entry.student.fullName : '(no matching account)';
     const reason = entry.adminLocked
       ? 'Locked by an admin'
       : `Auto-locked, clears in about ${minutesUntil(entry.lockedUntil)} min`;
@@ -58,23 +71,21 @@ function renderLocked(entries) {
       <div class="simple-item-head">
         <span class="simple-item-title">${escapeHtml(entry.email)}</span>
         <div class="simple-item-actions">
-          <button class="edit-btn security-unlock-btn" data-email="${escapeHtml(entry.email)}">Unlock</button>
+          <button class="edit-btn security-unlock-btn">Unlock</button>
         </div>
       </div>
       <p class="simple-item-body">${escapeHtml(name)} &middot; ${escapeHtml(reason)}</p>
     `;
-    div.querySelector('.security-unlock-btn').addEventListener('click', async () => {
-      await sendJSON('/api/admin/security/unlock', 'POST', { email: entry.email });
-      loadLockedAccounts();
-    });
+    div.querySelector('.security-unlock-btn').addEventListener('click', () =>
+      postAction('/api/admin/security/unlock', { email: entry.email }, 'Could not unlock this account.', loadLockedAccounts)
+    );
     lockedList.appendChild(div);
   });
 }
 
-unlockAllBtn.addEventListener('click', async () => {
+unlockAllBtn.addEventListener('click', () => {
   if (!confirm('Unlock every locked account? This clears both timed lockouts and admin locks.')) return;
-  await sendJSON('/api/admin/security/unlock-all', 'POST', {});
-  loadLockedAccounts();
+  postAction('/api/admin/security/unlock-all', {}, 'Could not unlock the accounts.', loadLockedAccounts);
 });
 
 async function loadAttempts() {
@@ -128,54 +139,59 @@ function renderAdmins(admins) {
       <div class="simple-item-head">
         <span class="simple-item-title">${escapeHtml(admin.username)}${isSelf ? ' (you)' : ''}</span>
         <div class="simple-item-actions">
-          <button class="edit-btn role-toggle-btn">Make ${toggleRole}</button>
-          ${isSelf ? '' : '<button class="delete-btn" aria-label="Remove admin"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7H20M9 7V4C9 3.4 9.4 3 10 3H14C14.6 3 15 3.4 15 4V7M18 7L17.3 19C17.2 19.6 16.7 20 16.1 20H7.9C7.3 20 6.8 19.6 6.7 19L6 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'}
+          ${isSelf ? '' : `<button class="edit-btn role-toggle-btn">Make ${toggleRole}</button>
+          <button class="delete-btn" aria-label="Remove admin">${TRASH_ICON}</button>`}
         </div>
       </div>
       <p class="simple-item-body">${admin.role === 'owner' ? 'Owner' : 'Editor'}</p>
     `;
-    div.querySelector('.role-toggle-btn').addEventListener('click', async () => {
-      if (!confirm(`Make ${admin.username} ${toggleRole === 'owner' ? 'an owner' : 'an editor'}?`)) return;
-      const { ok, data } = await sendJSON(`/api/admin/admins/${admin.id}/role`, 'PATCH', { role: toggleRole });
-      if (!ok) {
-        alert(data.error || 'Could not change this admin’s role.');
-        return;
-      }
-      loadAdmins();
-    });
+    // Your own row has neither button: demoting yourself would lock this tab
+    // out mid-session, and removing yourself is refused by the server anyway.
     if (!isSelf) {
-      div.querySelector('.delete-btn').addEventListener('click', async () => {
-        if (!confirm(`Remove admin access for ${admin.username}?`)) return;
-        const { ok, data } = await sendJSON(`/api/admin/admins/${admin.id}`, 'DELETE', {});
-        if (!ok) {
-          alert(data.error || 'Could not remove this admin.');
-          return;
+      div.querySelector('.role-toggle-btn').addEventListener('click', async () => {
+        if (!confirm(`Make ${admin.username} ${toggleRole === 'owner' ? 'an owner' : 'an editor'}?`)) return;
+        try {
+          const { ok, data } = await sendJSON(`/api/admin/admins/${admin.id}/role`, 'PATCH', { role: toggleRole });
+          if (!ok) {
+            alert(data.error || 'Could not change this admin’s role.');
+            return;
+          }
+          loadAdmins();
+        } catch {
+          alert('Could not reach the server. Please try again.');
         }
-        loadAdmins();
       });
+      div.querySelector('.delete-btn').addEventListener('click', () =>
+        confirmDelete(`/api/admin/admins/${admin.id}`, `Remove admin access for ${admin.username}?`, loadAdmins)
+      );
     }
     adminList.appendChild(div);
   });
 }
 
-adminCreateForm.addEventListener('submit', async (e) => {
+adminCreateForm.addEventListener('submit', (e) => {
   e.preventDefault();
   adminCreateError.hidden = true;
 
-  const { ok, data } = await sendJSON('/api/admin/admins', 'POST', {
-    username: newAdminUsername.value.trim(),
-    password: newAdminPassword.value,
-    role: newAdminRole.value,
+  withBusy(adminCreateForm.querySelector('button[type="submit"]'), 'Adding…', async () => {
+    try {
+      const { ok, data } = await sendJSON('/api/admin/admins', 'POST', {
+        username: newAdminUsername.value.trim(),
+        password: newAdminPassword.value,
+        role: newAdminRole.value,
+      });
+      if (!ok) {
+        adminCreateError.textContent = data.error || 'Could not add this admin.';
+        adminCreateError.hidden = false;
+        return;
+      }
+      adminCreateForm.reset();
+      loadAdmins();
+    } catch {
+      adminCreateError.textContent = 'Could not reach the server. Please try again.';
+      adminCreateError.hidden = false;
+    }
   });
-
-  if (!ok) {
-    adminCreateError.textContent = data.error || 'Could not add this admin.';
-    adminCreateError.hidden = false;
-    return;
-  }
-
-  adminCreateForm.reset();
-  loadAdmins();
 });
 
 async function loadAuditLog() {

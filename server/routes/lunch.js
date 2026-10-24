@@ -1,12 +1,12 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
 
 const db = require('../db');
 const { requireAdmin } = require('../middleware/auth');
-const { UPLOADS_DIR, lunchImageUpload } = require('../uploads');
+const { LUNCH_SUBDIR, lunchImageUpload, removeUpload, discardUpload } = require('../uploads');
 
 const router = express.Router();
+
+const WEEK_LABEL_MAX = 100;
 
 router.post('/api/admin/lunch-image', requireAdmin, (req, res) => {
   lunchImageUpload.single('image')(req, res, (err) => {
@@ -14,16 +14,17 @@ router.post('/api/admin/lunch-image', requireAdmin, (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No image was uploaded.' });
 
     const weekLabel = typeof req.body.weekLabel === 'string' ? req.body.weekLabel.trim() : '';
+    if (weekLabel.length > WEEK_LABEL_MAX) {
+      discardUpload(req);
+      return res.status(400).json({ error: `Week label must be ${WEEK_LABEL_MAX} characters or fewer.` });
+    }
+
     const content = db.readContent();
     const previousImageUrl = content.lunchSchedule.imageUrl;
 
-    content.lunchSchedule = { weekLabel, imageUrl: `/uploads/lunch/${req.file.filename}` };
+    content.lunchSchedule = { weekLabel, imageUrl: `/uploads/${LUNCH_SUBDIR}/${req.file.filename}` };
     db.writeContent(content);
-
-    if (previousImageUrl && previousImageUrl.startsWith('/uploads/lunch/')) {
-      const previousPath = path.join(UPLOADS_DIR, 'lunch', path.basename(previousImageUrl));
-      fs.unlink(previousPath, () => {});
-    }
+    removeUpload(previousImageUrl, LUNCH_SUBDIR);
 
     res.status(201).json({ lunchSchedule: content.lunchSchedule });
   });
@@ -35,11 +36,7 @@ router.delete('/api/admin/lunch-image', requireAdmin, (req, res) => {
 
   content.lunchSchedule = { weekLabel: '', imageUrl: '' };
   db.writeContent(content);
-
-  if (imageUrl && imageUrl.startsWith('/uploads/lunch/')) {
-    const imagePath = path.join(UPLOADS_DIR, 'lunch', path.basename(imageUrl));
-    fs.unlink(imagePath, () => {});
-  }
+  removeUpload(imageUrl, LUNCH_SUBDIR);
 
   res.json({ lunchSchedule: content.lunchSchedule });
 });

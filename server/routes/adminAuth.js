@@ -2,8 +2,14 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 
 const db = require('../db');
-const { ADMIN_SESSION_IDLE_MINUTES, ACCOUNT_LOCKED_MESSAGE, DUMMY_PASSWORD_HASH } = require('../config');
+const {
+  ADMIN_SESSION_IDLE_MINUTES,
+  ADMIN_SESSION_ABSOLUTE_MINUTES,
+  DUMMY_PASSWORD_HASH,
+} = require('../config');
 const { adminLoginLimiter } = require('../middleware/rateLimit');
+const { sessionExpiredByAbsoluteLimit } = require('../middleware/auth');
+const { lockedResponse, logout } = require('../utils/authResponses');
 
 const router = express.Router();
 
@@ -13,22 +19,6 @@ const router = express.Router();
 // state of) a student account whose email happens to match the same text.
 function throttleKey(username) {
   return `admin:${username.trim().toLowerCase()}`;
-}
-
-function minutesUntil(isoTimestamp) {
-  return Math.max(1, Math.ceil((new Date(isoTimestamp).getTime() - Date.now()) / 60000));
-}
-
-function lockedResponse(res, key, ip, lockedUntil) {
-  db.recordLoginAttempt({ email: key, ip, success: false, reason: 'locked' });
-  const retryAfterMinutes = lockedUntil ? minutesUntil(lockedUntil) : null;
-  return res.status(403).json({
-    error: retryAfterMinutes
-      ? `${ACCOUNT_LOCKED_MESSAGE} You can try again in about ${retryAfterMinutes} minute${retryAfterMinutes === 1 ? '' : 's'}.`
-      : ACCOUNT_LOCKED_MESSAGE,
-    locked: true,
-    retryAfterMinutes,
-  });
 }
 
 function completeLogin(req, res, admin) {
@@ -46,7 +36,7 @@ function completeLogin(req, res, admin) {
 router.post('/api/admin/login', adminLoginLimiter, (req, res) => {
   const { username, password } = req.body || {};
   const ip = req.ip;
-  if (typeof password !== 'string') {
+  if (typeof password !== 'string' || (username !== undefined && typeof username !== 'string')) {
     return res.status(401).json({ error: 'Incorrect username or password.' });
   }
 
@@ -59,7 +49,7 @@ router.post('/api/admin/login', adminLoginLimiter, (req, res) => {
   if (username) {
     admin = db.findAdminByUsername(username);
   } else if (db.adminCount() === 1) {
-    admin = db.findAdminByUsername(db.listAdmins()[0].username);
+    admin = db.findAdminById(db.listAdmins()[0].id);
   }
 
   // The lockout key needs a real username even when one wasn't submitted
@@ -95,24 +85,16 @@ router.post('/api/admin/login', adminLoginLimiter, (req, res) => {
   completeLogin(req, res, admin);
 });
 
-router.post('/api/admin/logout', (req, res) => {
-  req.session.destroy(() => {
-    res.clearCookie('kpis.sid');
-    res.json({ ok: true });
-  });
-});
+router.post('/api/admin/logout', logout);
 
 router.get('/api/admin/session', (req, res) => {
-  if (!req.session.isAdmin) {
-    return res.json({ isAdmin: false, username: null, id: null, role: null });
+  const signedOut = { isAdmin: false, username: null, id: null, role: null };
+  if (!req.session.isAdmin || sessionExpiredByAbsoluteLimit(req.session, ADMIN_SESSION_ABSOLUTE_MINUTES)) {
+    return res.json(signedOut);
   }
   const admin = db.findAdminById(req.session.adminId);
-  res.json({
-    isAdmin: true,
-    username: req.session.adminUsername || null,
-    id: req.session.adminId || null,
-    role: admin ? admin.role : null,
-  });
+  if (!admin) return res.json(signedOut);
+  res.json({ isAdmin: true, username: admin.username, id: admin.id, role: admin.role });
 });
 
 module.exports = router;

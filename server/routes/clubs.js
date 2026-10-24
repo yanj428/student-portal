@@ -5,10 +5,22 @@ const crypto = require('crypto');
 
 const db = require('../db');
 const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
-const { UPLOADS_DIR, clubLogoUpload } = require('../uploads');
+const { CLUB_LOGO_SUBDIR, clubLogoUpload, removeUpload, discardUpload } = require('../uploads');
 const { validateOptionalUrl, normalizeUrl } = require('../utils/validateUrl');
 
 const router = express.Router();
+
+// The badge image for SDG <n> is whichever of public/assets/sdg/<n>.<ext> exists.
+// A goal with no image yet gets no badge, so the card never shows a broken picture.
+const SDG_DIR = path.join(__dirname, '..', '..', 'public', 'assets', 'sdg');
+const SDG_EXTENSIONS = ['png', 'webp', 'jpg'];
+
+function sdgBadges(numbers) {
+  return numbers.flatMap((number) => {
+    const ext = SDG_EXTENSIONS.find((e) => fs.existsSync(path.join(SDG_DIR, `${number}.${e}`)));
+    return ext ? [{ number, url: `assets/sdg/${number}.${ext}` }] : [];
+  });
+}
 
 const CLUB_TYPES = ['community-service', 'after-school'];
 
@@ -17,7 +29,12 @@ function publicClub(club) {
     id: club.id,
     type: club.type,
     name: club.name,
-    description: club.description,
+    mission: club.mission || '',
+    goals: club.goals || '',
+    sdgs: club.sdgs || [],
+    sdgBadges: sdgBadges(club.sdgs || []),
+    leaders: club.leaders || '',
+    contacts: club.contacts || '',
     logoUrl: club.logoUrl || '',
     instagramUrl: club.instagramUrl || '',
     applicationFormUrl: club.applicationFormUrl || '',
@@ -32,31 +49,49 @@ function filterByType(clubs, type) {
   return type ? clubs.filter((c) => c.type === type) : clubs;
 }
 
-router.get('/api/clubs', requireActiveStudent, (req, res) => {
+function listClubs(req, res) {
   const clubs = filterByType(db.readClubs(), req.query.type)
     .sort((a, b) => a.name.localeCompare(b.name))
     .map(publicClub);
   res.json({ clubs });
-});
+}
 
-router.get('/api/admin/clubs', requireAdmin, (req, res) => {
-  const clubs = filterByType(db.readClubs(), req.query.type)
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .map(publicClub);
-  res.json({ clubs });
-});
+router.get('/api/clubs', requireActiveStudent, listClubs);
+router.get('/api/admin/clubs', requireAdmin, listClubs);
+
+const TEXT_LIMITS = { mission: 2000, goals: 2000, leaders: 500, contacts: 500, advisor: 200, schedule: 200 };
+
+// UN Sustainable Development Goal numbers, typed as "4, 9". The badge image for
+// each lives at public/assets/sdg/<number>.png; a goal with no image yet is
+// simply not shown on the club's card.
+function parseSdgs(value) {
+  if (value === undefined || value === '') return { sdgs: [] };
+  if (typeof value !== 'string') return { error: 'SDG goals must be numbers separated by commas.' };
+  const numbers = value.split(',').map((s) => s.trim()).filter(Boolean).map(Number);
+  if (!numbers.every((n) => Number.isInteger(n) && n >= 1 && n <= 17)) {
+    return { error: 'SDG goals must be numbers from 1 to 17, separated by commas.' };
+  }
+  return { sdgs: [...new Set(numbers)] };
+}
 
 function readClubFields(body) {
-  const { type, name, description, instagramUrl, applicationFormUrl, schedule, advisor, signupUrl } = body || {};
+  const { type, name, mission, goals, sdgs, leaders, contacts, instagramUrl, applicationFormUrl, schedule, advisor, signupUrl } = body || {};
   if (!CLUB_TYPES.includes(type)) {
     return { error: 'Club type must be either community-service or after-school.' };
   }
   if (typeof name !== 'string' || !name.trim()) {
     return { error: 'Club name is required.' };
   }
-  if (typeof description !== 'string' || !description.trim()) {
-    return { error: 'Description is required.' };
+
+  const texts = { mission, goals, leaders, contacts, advisor, schedule };
+  for (const [field, value] of Object.entries(texts)) {
+    if (value === undefined || value === '') continue;
+    if (typeof value !== 'string') return { error: `${field} must be text.` };
+    if (value.trim().length > TEXT_LIMITS[field]) return { error: `${field} must be ${TEXT_LIMITS[field]} characters or fewer.` };
   }
+
+  const parsedSdgs = parseSdgs(sdgs);
+  if (parsedSdgs.error) return { error: parsedSdgs.error };
 
   const urlError =
     validateOptionalUrl(instagramUrl, { fieldName: 'Instagram link', allowedHosts: ['instagram.com'] }) ||
@@ -68,7 +103,11 @@ function readClubFields(body) {
     fields: {
       type,
       name: name.trim(),
-      description: description.trim(),
+      mission: typeof mission === 'string' ? mission.trim() : '',
+      goals: typeof goals === 'string' ? goals.trim() : '',
+      sdgs: parsedSdgs.sdgs,
+      leaders: typeof leaders === 'string' ? leaders.trim() : '',
+      contacts: typeof contacts === 'string' ? contacts.trim() : '',
       instagramUrl: normalizeUrl(instagramUrl),
       applicationFormUrl: normalizeUrl(applicationFormUrl),
       schedule: typeof schedule === 'string' ? schedule.trim() : '',
@@ -83,13 +122,16 @@ router.post('/api/admin/clubs', requireAdmin, (req, res) => {
     if (err) return res.status(400).json({ error: err.message || 'Could not upload logo.' });
 
     const { fields, error } = readClubFields(req.body);
-    if (error) return res.status(400).json({ error });
+    if (error) {
+      discardUpload(req);
+      return res.status(400).json({ error });
+    }
 
     const clubs = db.readClubs();
     const club = {
       id: crypto.randomUUID(),
       ...fields,
-      logoUrl: req.file ? `/uploads/club-logos/${req.file.filename}` : '',
+      logoUrl: req.file ? `/uploads/${CLUB_LOGO_SUBDIR}/${req.file.filename}` : '',
       createdAt: new Date().toISOString(),
     };
     clubs.push(club);
@@ -104,22 +146,25 @@ router.put('/api/admin/clubs/:id', requireAdmin, (req, res) => {
     if (err) return res.status(400).json({ error: err.message || 'Could not upload logo.' });
 
     const { fields, error } = readClubFields(req.body);
-    if (error) return res.status(400).json({ error });
+    if (error) {
+      discardUpload(req);
+      return res.status(400).json({ error });
+    }
 
     const clubs = db.readClubs();
     const club = clubs.find((c) => c.id === req.params.id);
-    if (!club) return res.status(404).json({ error: 'Club not found.' });
+    if (!club) {
+      discardUpload(req);
+      return res.status(404).json({ error: 'Club not found.' });
+    }
 
     const previousLogoUrl = club.logoUrl;
     Object.assign(club, fields);
-    if (req.file) {
-      club.logoUrl = `/uploads/club-logos/${req.file.filename}`;
-    }
+    if (req.file) club.logoUrl = `/uploads/${CLUB_LOGO_SUBDIR}/${req.file.filename}`;
+    else if (req.body.removeLogo === 'true') club.logoUrl = '';
     db.writeClubs(clubs);
 
-    if (req.file && previousLogoUrl && previousLogoUrl.startsWith('/uploads/club-logos/')) {
-      fs.unlink(path.join(UPLOADS_DIR, 'club-logos', path.basename(previousLogoUrl)), () => {});
-    }
+    if (club.logoUrl !== previousLogoUrl) removeUpload(previousLogoUrl, CLUB_LOGO_SUBDIR);
 
     res.json({ club: publicClub(club) });
   });
@@ -133,9 +178,7 @@ router.delete('/api/admin/clubs/:id', requireAdmin, (req, res) => {
   const next = clubs.filter((c) => c.id !== req.params.id);
   db.writeClubs(next);
 
-  if (club.logoUrl && club.logoUrl.startsWith('/uploads/club-logos/')) {
-    fs.unlink(path.join(UPLOADS_DIR, 'club-logos', path.basename(club.logoUrl)), () => {});
-  }
+  removeUpload(club.logoUrl, CLUB_LOGO_SUBDIR);
 
   res.json({ ok: true });
 });

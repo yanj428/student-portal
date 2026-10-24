@@ -17,7 +17,9 @@ const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : pat
 const DB_FILE = path.join(DATA_DIR, 'portal.db');
 const BACKUP_DIR = process.env.BACKUP_DIR ? path.resolve(process.env.BACKUP_DIR) : path.join(__dirname, '..', 'backups');
 
-const KEEP_DAILY = parseInt(process.env.BACKUP_KEEP_DAILY, 10) || 14;
+// Keeps the newest N backups, however many were made per day (the env var
+// keeps its old name so existing setups don't break).
+const KEEP_COUNT = parseInt(process.env.BACKUP_KEEP_DAILY, 10) || 14;
 
 function timestamp() {
   return new Date().toISOString().replace(/[:.]/g, '-');
@@ -40,7 +42,7 @@ async function main() {
     .readdirSync(BACKUP_DIR)
     .filter((f) => f.startsWith('portal-') && f.endsWith('.db'))
     .sort(); // filenames are ISO timestamps, so lexical sort is chronological
-  const toDelete = backups.slice(0, Math.max(0, backups.length - KEEP_DAILY));
+  const toDelete = backups.slice(0, Math.max(0, backups.length - KEEP_COUNT));
   for (const file of toDelete) {
     // Opening a backup file (even read-only, e.g. to verify it) can leave
     // WAL/SHM sidecar files next to it — remove those along with it.

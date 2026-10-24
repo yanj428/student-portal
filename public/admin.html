@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Portal | KPIS International School</title>
-  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <link rel="icon" type="image/png" href="assets/kpis-logo.png" />
   <link rel="stylesheet" href="admin.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -79,7 +79,7 @@
             <span>Student Voice</span>
             <span class="nav-badge" id="nav-voice-badge" hidden>0</span>
           </button>
-          <button class="nav-item" data-page="security" id="nav-security" type="button">
+          <button class="nav-item" data-page="security" id="nav-security" type="button" hidden>
             <svg viewBox="0 0 24 24" fill="none"><path d="M12 3L19 6V11C19 15.4 16 19.4 12 21C8 19.4 5 15.4 5 11V6L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 11.5L11 13.5L15 9.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span>Security</span>
           </button>
@@ -127,7 +127,8 @@
               </div>
             </div>
           </div>
-          <p class="overview-hint">Use the sidebar to manage student accounts, edit homepage content, update the lunch schedule, and moderate Student Voice.</p>
+          <p class="overview-hint">Use the sidebar to manage student accounts, post calendar events, update clubs, council and Quick Links, and moderate Student Voice.</p>
+
         </section>
 
       <section class="admin-page-section" data-section="students" hidden>
@@ -144,6 +145,18 @@
             <div class="form-field">
               <label class="field-label" for="last-name">Last name</label>
               <input class="field-input" type="text" id="last-name" required />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="middle-name">Middle name (optional)</label>
+              <input class="field-input" type="text" id="middle-name" maxlength="60" />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="nickname">Nickname (optional)</label>
+              <input class="field-input" type="text" id="nickname" placeholder="e.g. Tim" maxlength="60" />
+              <p class="field-hint">Shown in brackets, like Kittichet Somchai (Tim) Maklin.</p>
             </div>
           </div>
 
@@ -167,12 +180,15 @@
             </div>
           </div>
 
-          <p class="field-hint">New accounts are created with the default password <strong>keerapat</strong>.</p>
+          <p class="field-hint">New accounts start with the shared default password and must change it on first login. It's shown here once the account is created.</p>
 
           <p class="field-error" id="create-error" hidden></p>
           <p class="field-success" id="create-success" hidden></p>
 
-          <button type="submit" class="btn primary" id="create-submit">Create account</button>
+          <div class="form-actions">
+            <button type="submit" class="btn primary" id="create-submit">Create account</button>
+            <button type="button" class="btn ghost" id="create-cancel-edit" hidden>Cancel edit</button>
+          </div>
         </form>
       </section>
 
@@ -193,10 +209,11 @@
                 <th></th>
                 <th></th>
                 <th></th>
+                <th></th>
               </tr>
             </thead>
             <tbody id="student-rows">
-              <tr class="empty-row" id="empty-row"><td colspan="7">No student accounts yet.</td></tr>
+              <tr class="empty-row" id="empty-row"><td colspan="8">No student accounts yet.</td></tr>
             </tbody>
           </table>
         </div>
@@ -208,9 +225,9 @@
         <h2>Lunch schedule</h2>
         <p class="panel-hint">Upload this week's lunch menu picture. Uploading a new one replaces the current image.</p>
 
-        <div class="lunch-current" id="lunch-current" hidden>
+        <div class="current-image" id="lunch-current" hidden>
           <img id="lunch-current-image" alt="Current lunch schedule" />
-          <div class="lunch-current-info">
+          <div class="current-image-info">
             <span id="lunch-current-label"></span>
             <button type="button" class="btn reject" id="lunch-remove-btn">Remove</button>
           </div>
@@ -245,11 +262,11 @@
               <input class="field-input" type="text" id="current-slide-week-label" placeholder="e.g. Week of Sep 8" />
             </div>
             <div class="form-field">
-              <label class="field-label" for="current-slide-embed-url">Canva link</label>
-              <input class="field-input" type="text" id="current-slide-embed-url" placeholder="Paste the Canva share link" />
+              <label class="field-label" for="current-slide-embed-url">Canva embed URL</label>
+              <input class="field-input" type="text" id="current-slide-embed-url" placeholder="Paste the Canva 'Embed' share link" />
             </div>
           </div>
-          <p class="field-hint">In Canva: Share &rarr; set to "anyone with the link can view" &rarr; copy the link. Students open it in a new tab.</p>
+          <p class="field-hint">In Canva: Share &rarr; More &rarr; Embed &rarr; copy the embed link (it ends in ?embed). A normal share link or the page address ending in /view will not display here: Canva refuses to be shown inside other sites.</p>
           <p class="field-error" id="current-slide-error" hidden></p>
           <p class="field-success" id="current-slide-success" hidden></p>
           <div class="form-actions">
@@ -296,33 +313,37 @@
         </div>
       </section>
 
-      <section class="panel">
-        <h2>Announcement items</h2>
-        <p class="panel-hint">Shown in "Latest Announcements" on the homepage (most recent 3) and on the student Announcements page.</p>
-
-        <form id="announcement-form" class="archive-form">
-          <div class="form-field">
-            <label class="field-label" for="announcement-title">Title</label>
-            <input class="field-input" type="text" id="announcement-title" placeholder="e.g. Prelim payment due" required />
-          </div>
-          <div class="form-field">
-            <label class="field-label" for="announcement-body">Body</label>
-            <textarea class="field-input" id="announcement-body" rows="3" placeholder="Details for students" required></textarea>
-          </div>
-          <p class="field-error" id="announcement-error" hidden></p>
-          <div class="form-actions">
-            <button type="submit" class="btn primary" id="announcement-submit">Add announcement</button>
-            <button type="button" class="btn ghost" id="announcement-cancel-edit" hidden>Cancel edit</button>
-          </div>
-        </form>
-
-        <div class="simple-list" id="announcement-list">
-          <p class="empty-hint" id="announcement-empty-hint">No announcements yet.</p>
-        </div>
-      </section>
       </section>
 
       <section class="admin-page-section" data-section="calendar" hidden>
+      <section class="panel">
+        <h2>School year calendar picture</h2>
+        <p class="panel-hint">The picture of the full school year calendar shown at the top of the School Calendar page. Uploading a new one replaces the current picture.</p>
+
+        <div class="current-image" id="calendar-image-current" hidden>
+          <img id="calendar-image-preview" alt="Current school year calendar" />
+          <div class="current-image-info">
+            <span id="calendar-image-current-label"></span>
+            <button type="button" class="btn reject" id="calendar-image-remove-btn">Remove</button>
+          </div>
+        </div>
+
+        <form id="calendar-image-form" class="archive-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="calendar-image-label-input">Label</label>
+              <input class="field-input" type="text" id="calendar-image-label-input" placeholder="e.g. ACY 2026-2027 school calendar" />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="calendar-image-input">Calendar picture</label>
+              <input class="field-input" type="file" id="calendar-image-input" accept="image/png,image/jpeg,image/webp,image/gif" required />
+            </div>
+          </div>
+          <p class="field-error" id="calendar-image-error" hidden></p>
+          <button type="submit" class="btn primary" id="calendar-image-submit">Upload calendar</button>
+        </form>
+      </section>
+
       <section class="panel">
         <h2>Extract events with AI</h2>
         <p class="panel-hint">Upload a photo of a school calendar or events list and review the events it finds before adding them below.</p>
@@ -339,7 +360,7 @@
         <p class="field-error" id="calendar-ai-error" hidden></p>
         <p class="field-hint" id="calendar-ai-duplicates-hint" hidden></p>
 
-        <div id="calendar-ai-results" class="voice-pending-list" hidden>
+        <div id="calendar-ai-results" class="mod-list" hidden>
           <div class="form-actions ai-results-actions">
             <button type="button" class="btn primary" id="calendar-ai-add-all">Add all</button>
           </div>
@@ -404,33 +425,50 @@
             <div class="form-field">
               <label class="field-label" for="club-logo">Logo (optional)</label>
               <input class="field-input" type="file" id="club-logo" accept="image/png,image/jpeg,image/webp,image/gif" />
+              <label class="radio-option" id="club-remove-logo-row" hidden><input type="checkbox" id="club-remove-logo" /> Remove current logo</label>
             </div>
           </div>
           <div class="form-field">
-            <label class="field-label" for="club-description">Description</label>
-            <textarea class="field-input" id="club-description" rows="3" placeholder="What does this club do, and how can students get involved?" required></textarea>
+            <label class="field-label" for="club-mission">Mission</label>
+            <textarea class="field-input" id="club-mission" rows="3" placeholder="What the club exists to do"></textarea>
           </div>
-          <div class="form-row club-type-fields" data-for="community-service">
+          <div class="form-field">
+            <label class="field-label" for="club-goals">Goals</label>
+            <textarea class="field-input" id="club-goals" rows="3" placeholder="What the club aims to achieve"></textarea>
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="club-sdgs">UN SDG goals (optional)</label>
+            <input class="field-input" type="text" id="club-sdgs" placeholder="Goal numbers, separated by commas, e.g. 4, 9" />
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="club-leaders">Leader(s)</label>
+            <input class="field-input" type="text" id="club-leaders" placeholder="Names, separated by commas, e.g. Inaya, Aiji" />
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="club-advisor">Teacher advisor</label>
+              <input class="field-input" type="text" id="club-advisor" placeholder="e.g. Mr. Patrick" />
+            </div>
             <div class="form-field">
               <label class="field-label" for="club-instagram">Instagram link</label>
               <input class="field-input" type="text" id="club-instagram" placeholder="https://instagram.com/..." />
             </div>
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="club-contacts">Contacts</label>
+            <textarea class="field-input" id="club-contacts" rows="2" placeholder="One per line, e.g. Name: email@kpis.ac.th"></textarea>
+          </div>
+          <div class="form-row club-type-fields" data-for="community-service">
             <div class="form-field">
-              <label class="field-label" for="club-application">Application form link</label>
+              <label class="field-label" for="club-application">Application form link (optional)</label>
               <input class="field-input" type="text" id="club-application" placeholder="Google Form, sheet, etc." />
             </div>
           </div>
           <div class="form-row club-type-fields" data-for="after-school" hidden>
             <div class="form-field">
-              <label class="field-label" for="club-schedule">Meeting schedule</label>
+              <label class="field-label" for="club-schedule">Meeting schedule (optional)</label>
               <input class="field-input" type="text" id="club-schedule" placeholder="e.g. Tue & Thu · 3:30–5:00 PM · STEM Lab" />
             </div>
-            <div class="form-field">
-              <label class="field-label" for="club-advisor">Advisor</label>
-              <input class="field-input" type="text" id="club-advisor" placeholder="e.g. Mr. Anan" />
-            </div>
-          </div>
-          <div class="form-row club-type-fields" data-for="after-school" hidden>
             <div class="form-field">
               <label class="field-label" for="club-signup">Sign-up link (optional)</label>
               <input class="field-input" type="text" id="club-signup" placeholder="Google Form, sheet, etc." />
@@ -492,10 +530,13 @@
             <textarea class="field-input" id="cs-event-description" rows="3" placeholder="What will volunteers do? How many are needed?" required></textarea>
           </div>
           <p class="field-error" id="cs-event-error" hidden></p>
-          <button type="submit" class="btn primary" id="cs-event-submit">Post opportunity</button>
+          <div class="form-actions">
+            <button type="submit" class="btn primary" id="cs-event-submit">Post opportunity</button>
+            <button type="button" class="btn ghost" id="cs-event-cancel-edit" hidden>Cancel edit</button>
+          </div>
         </form>
 
-        <div class="cs-event-admin-list" id="cs-event-admin-list">
+        <div class="simple-list" id="cs-event-admin-list">
           <p class="empty-hint" id="cs-event-empty-hint">No events or opportunities posted yet.</p>
         </div>
       </section>
@@ -504,7 +545,7 @@
       <section class="admin-page-section" data-section="council" hidden>
       <section class="panel">
         <h2>Council members</h2>
-        <p class="panel-hint">Shown in "Meet Your Council" on the homepage and on the Meet Your Council page.</p>
+        <p class="panel-hint">Shown on the Meet Your Council page.</p>
 
         <form id="council-form" class="archive-form">
           <div class="form-row">
@@ -515,6 +556,7 @@
             <div class="form-field">
               <label class="field-label" for="council-photo">Photo</label>
               <input class="field-input" type="file" id="council-photo" accept="image/png,image/jpeg,image/webp,image/gif" />
+              <label class="radio-option" id="council-remove-photo-row" hidden><input type="checkbox" id="council-remove-photo" /> Remove current photo</label>
             </div>
           </div>
           <div class="form-row">
@@ -623,7 +665,7 @@
 
           <input class="field-input voice-search" type="text" id="voice-pending-search" placeholder="Search by title, author, or content…" />
 
-          <div id="voice-pending-list" class="voice-pending-list">
+          <div id="mod-list" class="mod-list">
             <p class="empty-hint" id="voice-pending-empty">Nothing waiting for review.</p>
           </div>
         </div>
@@ -638,7 +680,7 @@
 
           <input class="field-input voice-search" type="text" id="voice-approved-search" placeholder="Search by title, author, or content…" />
 
-          <div id="voice-approved-list" class="voice-pending-list">
+          <div id="voice-approved-list" class="mod-list">
             <p class="empty-hint" id="voice-approved-empty">Nothing approved yet.</p>
           </div>
         </div>
@@ -653,7 +695,7 @@
 
           <input class="field-input voice-search" type="text" id="voice-rejected-search" placeholder="Search by title, author, or content…" />
 
-          <div id="voice-rejected-list" class="voice-pending-list">
+          <div id="voice-rejected-list" class="mod-list">
             <p class="empty-hint" id="voice-rejected-empty">Nothing rejected.</p>
           </div>
         </div>

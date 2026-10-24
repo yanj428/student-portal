@@ -77,7 +77,7 @@ html, body {
   font-size: 26px;
   margin: 0 0 5.2px 0;
 }
-.gate-card p {
+.gate-card > p:not(.field-error) {
   font-size: 17.55px;
   color: var(--text-muted);
   margin: 0 0 23.4px 0;
@@ -121,28 +121,6 @@ html, body {
   color: var(--text-muted);
   margin: 7.8px 0 0 0;
 }
-.totp-secret {
-  font-family: monospace;
-  font-size: 19.5px;
-  letter-spacing: 0.06em;
-  background: var(--primary-tint);
-  color: var(--primary);
-  padding: 13px 18.2px;
-  border-radius: var(--radius-sm, 10.4px);
-  margin: 10.4px 0;
-  word-break: break-all;
-}
-.recovery-codes {
-  font-family: monospace;
-  font-size: 17.55px;
-  line-height: 1.9;
-  background: var(--bg, #f6f6f6);
-  border: 1.3px solid var(--border, #e2e2e2);
-  border-radius: var(--radius-sm, 10.4px);
-  padding: 15.6px 20.8px;
-  margin: 10.4px 0;
-  white-space: pre-wrap;
-}
 .field-success {
   font-size: 16.25px;
   color: #2F7A3C;
@@ -164,14 +142,13 @@ html, body {
   color: #fff;
 }
 .btn.primary:hover { background: var(--primary-dark); }
-.btn.primary:disabled { opacity: 0.7; cursor: default; }
+.btn:disabled { opacity: 0.7; cursor: default; }
 .btn.ghost {
   background: #fff;
   border-color: var(--border);
   color: var(--text);
 }
 .btn.ghost:hover { border-color: var(--primary-light); }
-.btn.small { padding: 10.4px 18.2px; font-size: 16.25px; flex-shrink: 0; }
 
 /* Admin shell — the sidebar is pinned to the left edge of the actual
    browser viewport (not just its own scrolling container), and the content
@@ -409,7 +386,7 @@ html, body {
 }
 .archive-table-wrap { margin-top: 26px; }
 
-.lunch-current {
+.current-image {
   display: flex;
   align-items: center;
   gap: 20.8px;
@@ -419,15 +396,15 @@ html, body {
   padding: 18.2px;
   margin-bottom: 26px;
 }
-.lunch-current[hidden] { display: none; }
-.lunch-current img {
+.current-image[hidden] { display: none; }
+.current-image img {
   width: 117px;
   height: 117px;
   object-fit: cover;
   border-radius: var(--radius-sm);
   flex-shrink: 0;
 }
-.lunch-current-info {
+.current-image-info {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -443,10 +420,6 @@ html, body {
 }
 .form-row[hidden] { display: none; }
 .form-row.single-col { grid-template-columns: 1fr; }
-.password-row {
-  display: flex;
-  gap: 10.4px;
-}
 .create-form .btn.primary { align-self: flex-start; margin-top: 5.2px; }
 .form-actions {
   display: flex;
@@ -530,7 +503,8 @@ tr:last-child td { border-bottom: none; }
 }
 .delete-btn:hover { color: #C0392B; }
 .delete-btn svg { width: 20.8px; height: 20.8px; }
-.reset-btn {
+.reset-btn,
+.lock-toggle-btn {
   background: #fff;
   border: 1.3px solid var(--border);
   color: var(--text);
@@ -542,114 +516,35 @@ tr:last-child td { border-bottom: none; }
   font-weight: 600;
   white-space: nowrap;
 }
-.reset-btn:hover { border-color: var(--primary-light); color: var(--primary); }
+.reset-btn:hover,
+.lock-toggle-btn:hover { border-color: var(--primary-light); color: var(--primary); }
 
-/* Homepage content editor */
-.content-form {
-  display: flex;
-  flex-direction: column;
-  gap: 33.8px;
-}
-.content-section h3 {
-  font-size: 18.2px;
-  margin: 0 0 15.6px 0;
-}
-.content-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 13px;
-}
-.content-row {
-  display: grid;
-  grid-template-columns: 117px 1fr;
-  gap: 13px;
-  align-items: start;
-}
-.content-row.stacked {
-  grid-template-columns: 1fr;
-}
-.content-row.two-col {
-  grid-template-columns: 117px 1fr 1fr;
-}
-.content-row.calendar-row {
-  grid-template-columns: 72.8px 83.2px 1fr 1fr;
-}
-.content-row.project-row {
-  grid-template-columns: 1fr 117px;
-}
-.content-row .row-label {
-  font-size: 16.25px;
-  font-weight: 600;
-  color: var(--text-muted);
-  padding-top: 14.3px;
-}
-.content-row-view {
-  display: grid;
-  grid-template-columns: 208px 1fr;
-  gap: 13px;
-  padding: 13px 0;
-  border-bottom: 1.3px solid var(--border);
-}
-.content-row-view:last-child { border-bottom: none; }
-.content-row-view .row-label {
-  font-size: 16.25px;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-.content-row-view .row-value {
-  font-size: 17.55px;
-  color: var(--text);
-}
-.content-row textarea.field-input {
-  resize: vertical;
-  min-height: 57.2px;
-  font-family: inherit;
-}
-.content-form .btn.primary { align-self: flex-start; }
-
-/* Community Service clubs (admin) */
-.cs-club-admin-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15.6px;
-  margin-top: 26px;
-}
-.cs-club-item {
-  border: 1.3px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 20.8px;
-  display: flex;
-  flex-direction: column;
-  gap: 10.4px;
-}
-.cs-club-item-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 13px;
-}
-.cs-club-item-identity {
+/* Rows in the generic list panels (clubs, council, quick links, etc.) */
+.item-identity {
   display: flex;
   align-items: center;
   gap: 13px;
 }
-.cs-club-item-logo {
+.item-logo {
   width: 41.6px;
   height: 41.6px;
   border-radius: 10.4px;
-  object-fit: cover;
+  background: #fff;
+  object-fit: contain;
   flex-shrink: 0;
   border: 1.3px solid var(--border);
 }
-.cs-club-item-name {
-  font-size: 18.2px;
-  font-weight: 700;
-}
-.cs-club-item-actions {
+.item-meta {
   display: flex;
-  align-items: center;
-  gap: 5.2px;
-  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 18.2px;
+  font-size: 16.25px;
+  color: var(--text-muted);
+}
+.item-meta a {
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: underline;
 }
 .edit-btn {
   background: none;
@@ -676,60 +571,9 @@ tr:last-child td { border-bottom: none; }
 }
 .drag-handle:active { cursor: grabbing; }
 .simple-item.dragging { opacity: 0.4; }
-.cs-club-item-links {
-  display: flex;
-  gap: 18.2px;
-}
-.cs-club-item-links a {
-  font-size: 16.25px;
-  font-weight: 600;
-  color: var(--primary);
-  text-decoration: underline;
-}
-.cs-club-item-body {
-  font-size: 16.9px;
-  line-height: 1.5;
-  color: var(--text-muted);
-  white-space: pre-wrap;
-}
 
-.cs-event-admin-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15.6px;
-  margin-top: 26px;
-}
-.cs-event-item {
-  border: 1.3px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 20.8px;
-  display: flex;
-  flex-direction: column;
-  gap: 7.8px;
-}
-.cs-event-item-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 13px;
-}
-.cs-event-item-title {
-  font-size: 18.2px;
-  font-weight: 700;
-}
-.cs-event-item-meta {
-  font-size: 15.6px;
-  color: var(--text-muted);
-}
-.cs-event-item-body {
-  font-size: 16.9px;
-  line-height: 1.5;
-  color: var(--text-muted);
-  white-space: pre-wrap;
-}
-
-/* Generic simple-list CRUD panels (announcements, calendar events, council,
-   projects, quick links) */
+/* Generic simple-list CRUD panels (calendar events, council,
+   quick links, clubs, community service events) */
 .simple-list-heading {
   font-size: 16.9px;
   font-weight: 700;
@@ -813,12 +657,12 @@ tr:last-child td { border-bottom: none; }
 .voice-search {
   margin-bottom: 18.2px;
 }
-.voice-pending-list {
+.mod-list {
   display: flex;
   flex-direction: column;
   gap: 13px;
 }
-.voice-pending-list[hidden] { display: none; }
+.mod-list[hidden] { display: none; }
 .empty-hint {
   color: var(--text-muted);
   font-size: 16.9px;
@@ -906,11 +750,6 @@ tr:last-child td { border-bottom: none; }
   border-radius: 1298.7px;
   background: var(--primary-tint);
   color: var(--primary);
-}
-.mod-item-context {
-  font-size: 15.6px;
-  color: var(--text-muted);
-  font-style: italic;
 }
 .mod-item-body {
   font-size: 17.55px;

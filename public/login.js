@@ -96,7 +96,7 @@ if (form) {
         return;
       }
 
-      window.location.href = 'index.html';
+      window.location.href = '/';
     } catch {
       showError('Could not reach the server. Please try again.');
     } finally {

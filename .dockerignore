@@ -1,0 +1,13 @@
+# Never ship secrets, the local database, local uploads or logs in the image.
+# The live data lives on the Fly volume (mounted at /data), and secrets are
+# set with `fly secrets set`.
+.env
+data
+uploads
+backups
+node_modules
+*.log
+.git
+.github
+.claude
+tests

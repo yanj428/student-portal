@@ -1,36 +1,20 @@
-function csEscapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  // See voice.js's copy of this helper for why quotes need handling
-  // separately from the &/</> the textContent/innerHTML round-trip covers.
-  return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
+(async function loadCsEvents() {
+  const data = await fetchJson('/api/cs-events');
+  if (!data) return;
 
-async function loadCsEvents() {
-  const res = await fetch('/api/cs-events');
-  if (!res.ok) return;
-  const { events } = await res.json();
-
-  const listEl = document.getElementById('cs-events-list');
-  const emptyEl = document.getElementById('cs-events-empty');
-
-  listEl.querySelectorAll('.cs-event-card').forEach((el) => el.remove());
-  emptyEl.hidden = events.length > 0;
-
-  events.forEach((event) => {
-    const article = document.createElement('article');
-    article.className = 'cs-event-card';
-    article.innerHTML = `
+  renderList(
+    document.getElementById('cs-events-list'),
+    document.getElementById('cs-events-empty'),
+    data.events,
+    'article',
+    'cs-event-card',
+    (event) => `
       <div class="cs-event-head">
-        <h3 class="cs-event-title">${csEscapeHtml(event.title)}</h3>
-        <span class="cs-event-date">${csEscapeHtml(event.eventDate)}</span>
+        <h3 class="cs-event-title">${escapeHtml(event.title)}</h3>
+        <span class="cs-event-date">${escapeHtml(event.eventDate)}</span>
       </div>
-      <p class="cs-event-club">Hosted by ${csEscapeHtml(event.club)}</p>
-      <p class="cs-event-desc">${csEscapeHtml(event.description)}</p>
-      ${event.signupUrl ? `<a class="cs-event-signup" href="${csEscapeHtml(event.signupUrl)}" target="_blank" rel="noopener">Sign up</a>` : ''}
-    `;
-    listEl.appendChild(article);
-  });
-}
-
-loadCsEvents();
+      <p class="cs-event-club">Hosted by ${escapeHtml(event.club)}</p>
+      <p class="cs-event-desc">${escapeHtml(event.description)}</p>
+      ${event.signupUrl ? `<a class="cs-event-signup" href="${escapeHtml(event.signupUrl)}" target="_blank" rel="noopener">Sign up</a>` : ''}`
+  );
+})();

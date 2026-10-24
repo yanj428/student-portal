@@ -1,11 +1,9 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
 const crypto = require('crypto');
 
 const db = require('../db');
 const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
-const { UPLOADS_DIR, councilPhotoUpload } = require('../uploads');
+const { COUNCIL_PHOTO_SUBDIR, councilPhotoUpload, removeUpload, discardUpload } = require('../uploads');
 
 const router = express.Router();
 
@@ -30,13 +28,10 @@ function bucketOf(m) {
   return `${m.level === 'ms' ? 'ms' : 'hs'}-${m.group === 'general-council' ? 'general-council' : 'student-council'}`;
 }
 
-router.get('/api/council', requireActiveStudent, (req, res) => {
-  res.json({ council: db.readCouncil().map(publicMember) });
-});
+const listCouncil = (req, res) => res.json({ council: db.readCouncil().map(publicMember) });
 
-router.get('/api/admin/council', requireAdmin, (req, res) => {
-  res.json({ council: db.readCouncil().map(publicMember) });
-});
+router.get('/api/council', requireActiveStudent, listCouncil);
+router.get('/api/admin/council', requireAdmin, listCouncil);
 
 function readFields(body) {
   const { name, role, grade, group, level } = body || {};
@@ -59,13 +54,16 @@ router.post('/api/admin/council', requireAdmin, (req, res) => {
     if (err) return res.status(400).json({ error: err.message || 'Could not upload photo.' });
 
     const { fields, error } = readFields(req.body);
-    if (error) return res.status(400).json({ error });
+    if (error) {
+      discardUpload(req);
+      return res.status(400).json({ error });
+    }
 
     const items = db.readCouncil();
     const item = {
       id: crypto.randomUUID(),
       ...fields,
-      photoUrl: req.file ? `/uploads/council-photos/${req.file.filename}` : '',
+      photoUrl: req.file ? `/uploads/${COUNCIL_PHOTO_SUBDIR}/${req.file.filename}` : '',
       createdAt: new Date().toISOString(),
     };
     items.push(item);
@@ -85,7 +83,7 @@ router.put('/api/admin/council/reorder', requireAdmin, (req, res) => {
   const items = db.readCouncil();
   const bucketItems = items.filter((m) => bucketOf(m) === bucket);
   const bucketIds = new Set(bucketItems.map((m) => m.id));
-  const sameSet = orderedIds.length === bucketItems.length && orderedIds.every((id) => bucketIds.has(id));
+  const sameSet = orderedIds.length === bucketItems.length && new Set(orderedIds).size === orderedIds.length && orderedIds.every((id) => bucketIds.has(id));
   if (!sameSet) return res.status(400).json({ error: 'orderedIds must match the current members of that council exactly.' });
 
   const byId = new Map(bucketItems.map((m) => [m.id, m]));
@@ -102,22 +100,25 @@ router.put('/api/admin/council/:id', requireAdmin, (req, res) => {
     if (err) return res.status(400).json({ error: err.message || 'Could not upload photo.' });
 
     const { fields, error } = readFields(req.body);
-    if (error) return res.status(400).json({ error });
+    if (error) {
+      discardUpload(req);
+      return res.status(400).json({ error });
+    }
 
     const items = db.readCouncil();
     const item = items.find((m) => m.id === req.params.id);
-    if (!item) return res.status(404).json({ error: 'Council member not found.' });
+    if (!item) {
+      discardUpload(req);
+      return res.status(404).json({ error: 'Council member not found.' });
+    }
 
     const previousPhotoUrl = item.photoUrl;
     Object.assign(item, fields);
-    if (req.file) {
-      item.photoUrl = `/uploads/council-photos/${req.file.filename}`;
-    }
+    if (req.file) item.photoUrl = `/uploads/${COUNCIL_PHOTO_SUBDIR}/${req.file.filename}`;
+    else if (req.body.removePhoto === 'true') item.photoUrl = '';
     db.writeCouncil(items);
 
-    if (req.file && previousPhotoUrl && previousPhotoUrl.startsWith('/uploads/council-photos/')) {
-      fs.unlink(path.join(UPLOADS_DIR, 'council-photos', path.basename(previousPhotoUrl)), () => {});
-    }
+    if (item.photoUrl !== previousPhotoUrl) removeUpload(previousPhotoUrl, COUNCIL_PHOTO_SUBDIR);
 
     res.json({ member: publicMember(item) });
   });
@@ -131,9 +132,7 @@ router.delete('/api/admin/council/:id', requireAdmin, (req, res) => {
   const next = items.filter((m) => m.id !== req.params.id);
   db.writeCouncil(next);
 
-  if (item.photoUrl && item.photoUrl.startsWith('/uploads/council-photos/')) {
-    fs.unlink(path.join(UPLOADS_DIR, 'council-photos', path.basename(item.photoUrl)), () => {});
-  }
+  removeUpload(item.photoUrl, COUNCIL_PHOTO_SUBDIR);
 
   res.json({ ok: true });
 });

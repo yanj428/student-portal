@@ -18,6 +18,9 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "engines": {
+    "node": ">=22"
+  },
   "bugs": {
     "url": "https://github.com/yanj428/student-portal/issues"
   },
@@ -25,7 +28,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^13.0.3",
+    "better-sqlite3": "^12.11.1",
     "dotenv": "^17.4.2",
     "ejs": "^6.0.1",
     "express": "^5.2.1",

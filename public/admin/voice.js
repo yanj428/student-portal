@@ -1,4 +1,5 @@
-import { escapeHtml } from './api.js';
+import { escapeHtml, getJSON, sendJSON, confirmDelete, withBusy } from './api.js';
+import { bindViewMore } from './viewMore.js';
 
 // Each status gets its own list/empty-state/search trio in the DOM, and
 // each item gets both actions (Approve/Reject) regardless of which list
@@ -23,21 +24,18 @@ export async function loadVoicePending() {
 }
 
 async function loadSection(status) {
-  const res = await fetch(`/api/admin/voice/${status}`);
-  if (!res.ok) return;
-  const { items } = await res.json();
+  const data = await getJSON(`/api/admin/voice/${status}`);
+  if (!data) return;
+  const { items } = data;
   state[status] = items;
   renderSection(status);
 
   if (status === 'pending') {
     voicePendingCount.textContent = items.length;
-    const statVoice = document.getElementById('stat-voice');
-    if (statVoice) statVoice.textContent = items.length;
+    document.getElementById('stat-voice').textContent = items.length;
     const navVoiceBadge = document.getElementById('nav-voice-badge');
-    if (navVoiceBadge) {
-      navVoiceBadge.textContent = items.length;
-      navVoiceBadge.hidden = items.length === 0;
-    }
+    navVoiceBadge.textContent = items.length;
+    navVoiceBadge.hidden = items.length === 0;
   }
 }
 
@@ -103,27 +101,26 @@ function renderSection(status) {
       expanded[status] = nowOpen ? item.id : null;
     });
 
-    const approveBtn = div.querySelector('.approve-btn');
-    if (approveBtn) {
-      approveBtn.addEventListener('click', async (e) => {
+    // Approve and Reject share one handler: only the endpoint and busy label differ.
+    [['.approve-btn', 'approve'], ['.reject-btn', 'reject']].forEach(([selector, action]) => {
+      const button = div.querySelector(selector);
+      if (!button) return;
+      button.addEventListener('click', (e) => {
         e.stopPropagation();
-        await fetch(`/api/admin/voice/posts/${item.id}/approve`, { method: 'POST' });
-        loadVoicePending();
+        withBusy(button, 'Saving…', async () => {
+          try {
+            const { ok, data } = await sendJSON(`/api/admin/voice/posts/${item.id}/${action}`, 'POST', {});
+            if (!ok) alert(data.error || 'Could not update this suggestion.');
+          } catch {
+            alert('Could not reach the server. Please try again.');
+          }
+          loadVoicePending();
+        });
       });
-    }
-    const rejectBtn = div.querySelector('.reject-btn');
-    if (rejectBtn) {
-      rejectBtn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        await fetch(`/api/admin/voice/posts/${item.id}/reject`, { method: 'POST' });
-        loadVoicePending();
-      });
-    }
-    div.querySelector('.delete-btn').addEventListener('click', async (e) => {
+    });
+    div.querySelector('.delete-btn').addEventListener('click', (e) => {
       e.stopPropagation();
-      if (!confirm('Permanently delete this suggestion? This cannot be undone.')) return;
-      await fetch(`/api/admin/voice/posts/${item.id}`, { method: 'DELETE' });
-      loadVoicePending();
+      confirmDelete(`/api/admin/voice/posts/${item.id}`, 'Permanently delete this suggestion? This cannot be undone.', loadVoicePending);
     });
 
     listEl.appendChild(div);
@@ -135,11 +132,5 @@ Object.entries(SECTIONS).forEach(([status, { empty, search, body, toggle }]) => 
   emptyEl.dataset.defaultText = emptyEl.textContent;
   document.getElementById(search).addEventListener('input', () => renderSection(status));
 
-  const bodyEl = document.getElementById(body);
-  const toggleEl = document.getElementById(toggle);
-  toggleEl.addEventListener('click', () => {
-    const nowOpen = bodyEl.hidden;
-    bodyEl.hidden = !nowOpen;
-    toggleEl.textContent = nowOpen ? 'View less' : 'View more';
-  });
+  bindViewMore(document.getElementById(toggle), document.getElementById(body));
 });

@@ -4,36 +4,20 @@ const bcrypt = require('bcryptjs');
 const db = require('../db');
 const { requireStudent, publicStudent } = require('../middleware/auth');
 const { studentLoginLimiter, passwordChangeLimiter } = require('../middleware/rateLimit');
+const { lockedResponse, logout } = require('../utils/authResponses');
 const {
   DEFAULT_STUDENT_PASSWORD,
-  ACCOUNT_LOCKED_MESSAGE,
   STUDENT_SESSION_IDLE_MINUTES,
   DUMMY_PASSWORD_HASH,
 } = require('../config');
 
 const router = express.Router();
 
-function minutesUntil(isoTimestamp) {
-  return Math.max(1, Math.ceil((new Date(isoTimestamp).getTime() - Date.now()) / 60000));
-}
-
-function lockedResponse(res, email, ip, lockedUntil) {
-  db.recordLoginAttempt({ email, ip, success: false, reason: 'locked' });
-  const retryAfterMinutes = lockedUntil ? minutesUntil(lockedUntil) : null;
-  return res.status(403).json({
-    error: retryAfterMinutes
-      ? `${ACCOUNT_LOCKED_MESSAGE} You can try again in about ${retryAfterMinutes} minute${retryAfterMinutes === 1 ? '' : 's'}.`
-      : ACCOUNT_LOCKED_MESSAGE,
-    locked: true,
-    retryAfterMinutes,
-  });
-}
-
 router.post('/api/login', studentLoginLimiter, (req, res) => {
   const { email, password } = req.body || {};
   const ip = req.ip;
 
-  if (!email || !password) {
+  if (typeof email !== 'string' || typeof password !== 'string' || !email || !password) {
     return res.status(400).json({ error: 'Email and password are required.' });
   }
 
@@ -73,22 +57,15 @@ router.post('/api/login', studentLoginLimiter, (req, res) => {
   });
 });
 
-router.post('/api/logout', (req, res) => {
-  req.session.destroy(() => {
-    res.clearCookie('kpis.sid');
-    res.json({ ok: true });
-  });
-});
+router.post('/api/logout', logout);
 
 router.get('/api/me', requireStudent, (req, res) => {
-  const student = db.findById(req.session.studentId);
-  if (!student) return res.status(401).json({ error: 'Not logged in.' });
-  res.json({ student: publicStudent(student) });
+  res.json({ student: publicStudent(req.student) });
 });
 
-router.post('/api/change-password', passwordChangeLimiter, requireStudent, (req, res) => {
+router.post('/api/change-password', requireStudent, passwordChangeLimiter, (req, res) => {
   const { currentPassword, newPassword } = req.body || {};
-  if (!currentPassword || !newPassword) {
+  if (typeof currentPassword !== 'string' || typeof newPassword !== 'string' || !currentPassword || !newPassword) {
     return res.status(400).json({ error: 'Current and new password are required.' });
   }
   if (newPassword.length < 8) {
@@ -98,9 +75,7 @@ router.post('/api/change-password', passwordChangeLimiter, requireStudent, (req,
     return res.status(400).json({ error: "You can't use the default password. Please choose a different password." });
   }
 
-  const student = db.findById(req.session.studentId);
-  if (!student) return res.status(401).json({ error: 'Not logged in.' });
-
+  const student = req.student;
   if (!bcrypt.compareSync(currentPassword, student.passwordHash)) {
     return res.status(401).json({ error: 'Current password is incorrect.' });
   }

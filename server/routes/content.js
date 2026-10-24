@@ -2,27 +2,27 @@ const express = require('express');
 
 const db = require('../db');
 const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
-const { validateOptionalUrl, normalizeUrl, isHttpsUrl } = require('../utils/validateUrl');
+const { validateOptionalUrl, normalizeUrl } = require('../utils/validateUrl');
 
-// The lunch schedule image is normally set via the upload endpoint
+// The lunch schedule image is set via the upload endpoint
 // (server/routes/lunch.js), which produces a relative /uploads/lunch/...
-// path rather than a full URL — so this accepts either that, or (since an
-// admin could also PUT this endpoint directly) a real https:// URL.
+// path. External URLs aren't accepted: the CSP only allows same-origin
+// images, so they would render broken. Path segments like ".." are rejected
+// so the value can't point outside the uploads folder.
 function isValidImageValue(value) {
   if (value === '') return true;
   if (typeof value !== 'string') return false;
-  return value.startsWith('/uploads/') || isHttpsUrl(value);
+  return value.startsWith('/uploads/') && !value.includes('..') && !value.includes('\\');
 }
 
 const router = express.Router();
 
 const WEEK_LABEL_MAX = 100;
-const LUNCH_ITEM_MAX = 200;
 
-// ---- Homepage content: the weekly slide, lunch menu, and lunch schedule
-// image. Everything else that used to live here (announcements, calendar
-// events, clubs, council, projects, quick links) is now its own collection
-// with full admin add/edit/delete — see the other route files.
+// ---- Page content: the weekly slide, the lunch schedule image and the
+// school year calendar image. Everything else that used to live here
+// (calendar events, clubs, council, quick links) is now its
+// own collection with full admin add/edit/delete — see the other route files.
 function validateContent(content) {
   const shape = db.DEFAULT_CONTENT;
   if (!content || typeof content !== 'object') return { error: 'Invalid content.' };
@@ -54,13 +54,15 @@ function validateContent(content) {
   }
   if (lunchWeekLabel.length > WEEK_LABEL_MAX) return { error: `Week label must be ${WEEK_LABEL_MAX} characters or fewer.` };
   if (!isValidImageValue(imageUrl)) {
-    return { error: 'Lunch schedule image must be an uploaded image or a valid https:// link.' };
+    return { error: 'Lunch schedule image must be an uploaded image.' };
   }
 
-  for (const l of content.lunchMenu) {
-    if (typeof l.weekday !== 'string' || typeof l.item !== 'string') return { error: 'Each lunch entry needs a weekday and item.' };
-    if (l.item.length > LUNCH_ITEM_MAX) return { error: `Lunch item must be ${LUNCH_ITEM_MAX} characters or fewer.` };
+  const { label: calendarLabel, imageUrl: calendarImageUrl } = content.calendarImage;
+  if (typeof calendarLabel !== 'string' || typeof calendarImageUrl !== 'string') {
+    return { error: 'Calendar image needs a label and image (both can be blank).' };
   }
+  if (calendarLabel.length > WEEK_LABEL_MAX) return { error: `Calendar label must be ${WEEK_LABEL_MAX} characters or fewer.` };
+  if (!isValidImageValue(calendarImageUrl)) return { error: 'Calendar image must be an uploaded image.' };
 
   // Rebuilt from only the fields above rather than passed through as-is —
   // an admin session is trusted to manage this content, but not to add
@@ -69,7 +71,7 @@ function validateContent(content) {
     fields: {
       weeklySlide: { weekLabel: slideWeekLabel.trim(), canvaEmbedUrl: normalizeUrl(canvaEmbedUrl) },
       lunchSchedule: { weekLabel: lunchWeekLabel.trim(), imageUrl },
-      lunchMenu: content.lunchMenu.map((l) => ({ weekday: l.weekday, item: l.item.trim() })),
+      calendarImage: { label: calendarLabel.trim(), imageUrl: calendarImageUrl },
     },
   };
 }

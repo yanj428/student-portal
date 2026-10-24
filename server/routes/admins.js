@@ -3,7 +3,6 @@ const bcrypt = require('bcryptjs');
 
 const db = require('../db');
 const { requireAdmin, requireOwnerAdmin } = require('../middleware/auth');
-const { passwordChangeLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
 
@@ -74,29 +73,6 @@ router.delete('/api/admin/admins/:id', requireOwnerAdmin, (req, res) => {
   // ends it immediately instead of leaving that window open at all.
   db.destroyAdminSessions(admin.id);
   db.logAuditEvent(req.session.adminUsername, 'admin.delete', { deletedUsername: admin.username });
-  res.json({ ok: true });
-});
-
-// ---- Self-service: any admin manages their own password ----
-
-router.post('/api/admin/change-password', passwordChangeLimiter, requireAdmin, (req, res) => {
-  const { currentPassword, newPassword } = req.body || {};
-  if (!currentPassword || !newPassword) {
-    return res.status(400).json({ error: 'Current and new password are required.' });
-  }
-  if (newPassword.length < 8) {
-    return res.status(400).json({ error: 'New password must be at least 8 characters.' });
-  }
-
-  const admin = db.findAdminById(req.session.adminId);
-  if (!admin) return res.status(401).json({ error: 'Not logged in.' });
-  if (!bcrypt.compareSync(currentPassword, admin.passwordHash)) {
-    return res.status(401).json({ error: 'Current password is incorrect.' });
-  }
-
-  db.updateAdminPasswordHash(admin.id, bcrypt.hashSync(newPassword, 10));
-  db.destroyOtherAdminSessions(admin.id, req.sessionID);
-  db.logAuditEvent(admin.username, 'admin.password_change', null);
   res.json({ ok: true });
 });
 

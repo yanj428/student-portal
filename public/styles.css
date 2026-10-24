@@ -174,32 +174,9 @@ html, body {
 .topbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 26px;
 }
-
-.search {
-  flex: 1;
-  max-width: 832px;
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  background: var(--surface);
-  border-radius: 1298.7px;
-  padding: 16.9px 26px;
-  box-shadow: var(--shadow);
-}
-.search svg { width: 23.4px; height: 23.4px; color: var(--text-muted); flex-shrink: 0; }
-.search input {
-  border: none;
-  outline: none;
-  background: transparent;
-  font-family: inherit;
-  font-size: 18.2px;
-  width: 100%;
-  color: var(--text);
-}
-.search input::placeholder { color: var(--text-muted); }
 
 .user-block {
   display: flex;
@@ -233,32 +210,6 @@ html, body {
   font-family: inherit;
 }
 .avatar:hover { background: var(--primary-dark); }
-
-.bell {
-  width: 57.2px;
-  height: 57.2px;
-  border-radius: 50%;
-  background: var(--surface);
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  position: relative;
-  box-shadow: var(--shadow);
-  color: var(--primary);
-}
-.bell svg { width: 24.7px; height: 24.7px; }
-.bell-dot {
-  position: absolute;
-  top: 14.3px;
-  right: 15.6px;
-  width: 10.4px;
-  height: 10.4px;
-  border-radius: 50%;
-  background: var(--primary);
-  border: 2.6px solid var(--surface);
-}
 
 .banner {
   background: linear-gradient(120deg, var(--primary) 0%, var(--primary-dark) 100%);
@@ -318,119 +269,6 @@ html, body {
   text-decoration: none;
 }
 
-.finance-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20.8px;
-}
-
-.fcard {
-  background: var(--surface);
-  border-radius: var(--radius-md);
-  padding: 26px;
-  box-shadow: var(--shadow);
-  border: 2.6px solid transparent;
-}
-.fcard.highlight {
-  border-color: var(--primary);
-}
-
-.fcard-icon {
-  width: 54.6px;
-  height: 41.6px;
-  margin-bottom: 18.2px;
-  border-radius: 10.4px;
-  background: var(--primary-tint);
-  position: relative;
-}
-.fcard-icon.coins::after {
-  content: "";
-  position: absolute;
-  inset: 7.8px 13px;
-  border-radius: 50%;
-  background: var(--primary-light);
-}
-.fcard-icon.cash::after {
-  content: "$";
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--primary);
-  font-weight: 800;
-  font-size: 20.8px;
-}
-.fcard-icon.chart::after {
-  content: "";
-  position: absolute;
-  right: 10.4px;
-  bottom: 5.2px;
-  width: 5.2px;
-  height: 26px;
-  background: var(--primary-light);
-  box-shadow: -10.4px 7.8px 0 -2.6px var(--primary-light), -20.8px 13px 0 -5.2px var(--primary-light);
-}
-
-.fcard-amount {
-  font-size: 24.7px;
-  font-weight: 800;
-  margin-bottom: 5.2px;
-}
-.fcard-label {
-  font-size: 16.25px;
-  color: var(--text-muted);
-}
-
-.course-cards {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20.8px;
-}
-
-.course-card {
-  position: relative;
-  background: var(--primary-tint);
-  border-radius: var(--radius-md);
-  padding: 28.6px;
-  overflow: hidden;
-  min-height: 169px;
-  border: 2.6px solid transparent;
-}
-.course-card.active {
-  border-color: var(--primary);
-}
-.course-title {
-  font-weight: 700;
-  font-size: 19.5px;
-  color: var(--text);
-  margin-bottom: 23.4px;
-  max-width: 62%;
-  line-height: 1.35;
-}
-.view-btn {
-  background: var(--primary);
-  color: #fff;
-  border: none;
-  padding: 11.7px 26px;
-  border-radius: 1298.7px;
-  font-family: inherit;
-  font-size: 16.9px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.view-btn:hover { background: var(--primary-dark); }
-
-.course-illustration {
-  position: absolute;
-  right: 18.2px;
-  bottom: 18.2px;
-  width: 75.4px;
-  height: 75.4px;
-  border-radius: 15.6px;
-  background: rgba(150,30,32,0.14);
-}
-
 .notice-card {
   background: var(--surface);
   border-radius: var(--radius-md);
@@ -451,11 +289,17 @@ html, body {
   margin: 0 0 7.8px 0;
   line-height: 1.5;
 }
-.notice-item .see-more {
+.notice-card .see-more {
   font-size: 16.25px;
   color: var(--primary);
   font-weight: 600;
   text-decoration: none;
+}
+
+.home-empty {
+  font-size: 16.25px;
+  color: var(--text-muted);
+  margin: 0;
 }
 
 /* Upcoming calendar */
@@ -497,32 +341,34 @@ html, body {
 .calendar-info p { font-size: 15.6px; color: var(--text-muted); margin: 0; }
 
 /* Lunch menu */
-.lunch-days {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 13px;
+
+/* Page header and section headings shared by the content pages */
+.page-header {
+  margin-bottom: 4px;
 }
-.lunch-day {
-  background: var(--surface);
-  border-radius: var(--radius-md);
-  padding: 18.2px 13px;
-  box-shadow: var(--shadow);
-  display: flex;
-  flex-direction: column;
-  gap: 10.4px;
-  text-align: center;
+.page-header h1 {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 0 4px 0;
 }
-.lunch-weekday {
-  font-size: 14.3px;
+.page-header p {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  margin: 0;
+}
+.section-heading,
+.archive-heading {
+  font-size: 15px;
   font-weight: 700;
-  color: var(--primary);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  margin: 0 0 14px 0;
 }
-.lunch-item {
-  font-size: 15.6px;
-  color: var(--text);
-  line-height: 1.4;
+.week-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-tint);
+  padding: 4px 10px;
+  border-radius: 999px;
 }
 
 /* Club chips */
@@ -585,8 +431,5 @@ html, body {
   .topbar { flex-wrap: wrap; }
   .user-info { display: none; }
   .banner { flex-direction: column; align-items: flex-start; text-align: left; }
-  .finance-cards { grid-template-columns: 1fr; }
-  .course-cards { grid-template-columns: 1fr; }
-  .lunch-days { grid-template-columns: repeat(2, 1fr); }
   .quicklinks-grid { grid-template-columns: 1fr; }
 }

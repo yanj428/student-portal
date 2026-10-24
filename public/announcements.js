@@ -1,61 +1,32 @@
-function announcementsEscapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  // See voice.js's copy of this helper for why quotes need handling
-  // separately from the &/</> the textContent/innerHTML round-trip covers.
-  return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
+(async function loadWeeklySlide() {
+  const data = await fetchJson('/api/content');
+  if (!data) return;
 
-async function loadAnnouncementsPage() {
-  const res = await fetch('/api/content');
-  if (!res.ok) return;
-  const { content } = await res.json();
+  const slide = data.content.weeklySlide || {};
+  if (slide.canvaEmbedUrl) document.getElementById('slide-embed').src = slide.canvaEmbedUrl;
+  document.getElementById('slide-embed-wrap').hidden = !slide.canvaEmbedUrl;
+  document.getElementById('slide-empty').hidden = !!slide.canvaEmbedUrl;
 
   const weekLabelEl = document.getElementById('week-label');
-  const linkWrap = document.getElementById('slide-link-wrap');
-  const slideLink = document.getElementById('slide-link');
-  const slideEmpty = document.getElementById('slide-empty');
+  weekLabelEl.textContent = slide.weekLabel || '';
+  weekLabelEl.hidden = !slide.weekLabel;
+})();
 
-  const slide = content.weeklySlide || {};
-  if (slide.canvaEmbedUrl) {
-    slideLink.href = slide.canvaEmbedUrl;
-    linkWrap.hidden = false;
-    slideEmpty.hidden = true;
-  } else {
-    linkWrap.hidden = true;
-    slideEmpty.hidden = false;
-  }
+(async function loadSlideArchive() {
+  const data = await fetchJson('/api/slide-archive');
+  if (!data) return;
 
-  if (slide.weekLabel) {
-    weekLabelEl.textContent = slide.weekLabel;
-    weekLabelEl.hidden = false;
-  } else {
-    weekLabelEl.hidden = true;
-  }
-}
-
-async function loadSlideArchive() {
-  const res = await fetch('/api/slide-archive');
-  if (!res.ok) return;
-  const { slides } = await res.json();
-
-  const archiveList = document.getElementById('archive-list');
-  const archiveEmpty = document.getElementById('archive-empty');
-
-  archiveList.querySelectorAll('.archive-item').forEach((el) => el.remove());
-  archiveEmpty.hidden = slides.length > 0;
-
-  slides.forEach((slide) => {
-    const archived = new Date(slide.archivedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const div = document.createElement('div');
-    div.className = 'archive-item';
-    div.innerHTML = `
-      <span class="archive-item-label">${announcementsEscapeHtml(slide.weekLabel)}<span class="archive-item-date">Archived ${archived}</span></span>
-      <a class="archive-view-link" href="${announcementsEscapeHtml(slide.canvaEmbedUrl)}" target="_blank" rel="noopener">View slide</a>
-    `;
-    archiveList.appendChild(div);
-  });
-}
-
-loadAnnouncementsPage();
-loadSlideArchive();
+  renderList(
+    document.getElementById('archive-list'),
+    document.getElementById('archive-empty'),
+    data.slides,
+    'div',
+    'archive-item',
+    (slide) => {
+      const archived = new Date(slide.archivedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      return `
+        <span class="archive-item-label">${escapeHtml(slide.weekLabel)}<span class="archive-item-date">Archived ${archived}</span></span>
+        <a class="archive-view-link" href="${escapeHtml(slide.canvaEmbedUrl)}" target="_blank" rel="noopener">View slide</a>`;
+    }
+  );
+})();

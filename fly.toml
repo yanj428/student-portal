@@ -1,0 +1,34 @@
+# Fly.io configuration. `app` is replaced by the name chosen at `fly launch`.
+app = "kpis-student-portal"
+primary_region = "sin"
+
+[build]
+
+[env]
+  NODE_ENV = "production"
+  PORT = "8080"
+  # Fly's proxy sits in front of the app: trust it for the visitor's real IP
+  # (rate limits, login logs) and for knowing the request came in over HTTPS.
+  TRUST_PROXY = "1"
+  # The database and uploaded images live on the volume, not in the image.
+  DATA_DIR = "/data"
+  # Username of the admin account created on the first start; its password is
+  # the ADMIN_PASSWORD secret.
+  ADMIN_BOOTSTRAP_USERNAME = "admin@kpis.ac.th"
+
+[mounts]
+  source = "portal_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # Stops the machine when nobody is using the site and starts it again on the
+  # next visit (a few seconds' delay), so idle hours cost almost nothing.
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

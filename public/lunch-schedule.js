@@ -1,29 +1,16 @@
-async function loadLunchSchedule() {
-  const res = await fetch('/api/content');
-  if (!res.ok) return;
-  const { content } = await res.json();
+(async function loadLunchSchedule() {
+  const data = await fetchJson('/api/content');
+  if (!data) return;
 
   const weekLabelEl = document.getElementById('week-label');
   const imageWrap = document.getElementById('lunch-image-wrap');
-  const image = document.getElementById('lunch-image');
   const empty = document.getElementById('lunch-empty');
 
-  const schedule = content.lunchSchedule || {};
-  if (schedule.imageUrl) {
-    image.src = schedule.imageUrl;
-    imageWrap.hidden = false;
-    empty.hidden = true;
-  } else {
-    imageWrap.hidden = true;
-    empty.hidden = false;
-  }
+  const schedule = data.content.lunchSchedule || {};
+  if (schedule.imageUrl) document.getElementById('lunch-image').src = schedule.imageUrl;
+  imageWrap.hidden = !schedule.imageUrl;
+  empty.hidden = !!schedule.imageUrl;
 
-  if (schedule.weekLabel) {
-    weekLabelEl.textContent = schedule.weekLabel;
-    weekLabelEl.hidden = false;
-  } else {
-    weekLabelEl.hidden = true;
-  }
-}
-
-loadLunchSchedule();
+  weekLabelEl.textContent = schedule.weekLabel || '';
+  weekLabelEl.hidden = !schedule.weekLabel;
+})();

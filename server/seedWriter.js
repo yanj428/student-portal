@@ -3,11 +3,11 @@
 // up-to-date snapshot to pick up without anyone having to remember to run
 // `npm run seed:export` by hand.
 //
-// Deliberately does nothing unless DATA_DIR is unset (i.e. this is a normal
-// local dev run against the project's own default ./data folder) - both the
-// test suite and any real deployment set DATA_DIR explicitly (see db.js),
-// and neither should ever have its writes silently overwrite the seed file
-// this repo ships. require('./db') is done lazily, inside the scheduled
+// Deliberately does nothing unless DATA_DIR is unset and NODE_ENV is not
+// production (i.e. this is a normal local dev run against the project's own
+// default ./data folder) - the test suite sets DATA_DIR and a real
+// deployment sets NODE_ENV=production, and neither should ever have its
+// writes silently overwrite the seed file this repo ships. require('./db') is done lazily, inside the scheduled
 // callback rather than at module load time, because db.js requires this
 // module - by the time the callback actually runs, db.js's own exports are
 // already fully set up, so this only avoids a require-cycle deadlock rather
@@ -15,7 +15,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const ENABLED = !process.env.DATA_DIR;
+const ENABLED = !process.env.DATA_DIR && process.env.NODE_ENV !== 'production';
 
 const SEED_DIR = path.join(__dirname, 'seed');
 const SEED_FILE = path.join(SEED_DIR, 'content.json');
@@ -33,27 +33,28 @@ function writeSeedSnapshotNow() {
   const content = db.readContent();
   const seed = {
     content: {
-      lunchMenu: content.lunchMenu,
       weeklySlide: content.weeklySlide,
       lunchSchedule: content.lunchSchedule,
+      calendarImage: content.calendarImage,
     },
     clubs: db.readClubs(),
     council: db.readCouncil(),
-    announcements: db.readAnnouncements(),
     calendarEvents: db.readCalendarEvents(),
     quickLinks: db.readQuickLinks(),
     csEvents: db.readCsEvents(),
     slideArchive: db.readSlideArchive(),
   };
 
-  fs.mkdirSync(SEED_ASSETS_DIR, { recursive: true });
   fs.rmSync(SEED_ASSETS_DIR, { recursive: true, force: true });
   fs.mkdirSync(SEED_ASSETS_DIR, { recursive: true });
 
   const copyIfReferenced = (url) => {
     if (!url || !url.startsWith('/uploads/')) return;
     const relative = url.slice('/uploads/'.length);
-    const source = path.join(UPLOADS_DIR, relative);
+    const source = path.resolve(UPLOADS_DIR, relative);
+    // A stored value like "/uploads/../data/portal.db" must never make this
+    // copy files from outside the uploads folder into the committed seed.
+    if (!source.startsWith(path.resolve(UPLOADS_DIR) + path.sep)) return;
     if (!fs.existsSync(source)) return;
     const destination = path.join(SEED_ASSETS_DIR, relative);
     fs.mkdirSync(path.dirname(destination), { recursive: true });
@@ -64,6 +65,7 @@ function writeSeedSnapshotNow() {
     for (const item of seed[collection]) copyIfReferenced(item[field]);
   }
   copyIfReferenced(content.lunchSchedule.imageUrl);
+  copyIfReferenced(content.calendarImage.imageUrl);
 
   fs.writeFileSync(SEED_FILE, JSON.stringify(seed, null, 2));
 }
@@ -85,4 +87,4 @@ function scheduleSeedSnapshot() {
   });
 }
 
-module.exports = { scheduleSeedSnapshot, writeSeedSnapshotNow, ENABLED };
+module.exports = { scheduleSeedSnapshot, writeSeedSnapshotNow };

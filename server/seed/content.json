@@ -1,27 +1,5 @@
 {
   "content": {
-    "lunchMenu": [
-      {
-        "weekday": "Mon",
-        "item": ""
-      },
-      {
-        "weekday": "Tue",
-        "item": ""
-      },
-      {
-        "weekday": "Wed",
-        "item": ""
-      },
-      {
-        "weekday": "Thu",
-        "item": ""
-      },
-      {
-        "weekday": "Fri",
-        "item": ""
-      }
-    ],
     "weeklySlide": {
       "weekLabel": "week of sep 14",
       "canvaEmbedUrl": "https://canva.com/o30roeu2n1609zn"
@@ -29,86 +7,187 @@
     "lunchSchedule": {
       "weekLabel": "",
       "imageUrl": ""
+    },
+    "calendarImage": {
+      "label": "ACY 2026-2027 school calendar",
+      "imageUrl": "/uploads/calendar/1791055743655-7d2ffe03f607.jpg"
     }
   },
   "clubs": [
     {
-      "id": "707909ee-43cd-40e0-a2c4-d482ffcba996",
+      "id": "83356805-f7f6-4efd-8de7-c702cd507f7f",
       "type": "community-service",
-      "name": "Beach Cleanup Club",
-      "description": "Monthly beach cleanups — final edit test.",
-      "logoUrl": "",
-      "instagramUrl": "https://instagram.com/kpisbeach",
-      "applicationFormUrl": "https://forms.gle/test123",
+      "name": "Younify",
+      "mission": "Project Younify, a student-led organization and community service club, aims to unify all countries by bringing awareness through student led-initiatives and solving pressing issues that affect certain marginalized communities worldwide.\n\nSDG: Project Younify’s core concept connects to SDG 17, “Partnerships for the Goals”. The purpose of SDG 17 is to strengthen the implementation of the SDGs through a strong alliance across countries in the United Nations.",
+      "goals": "In a world where crises are increasing and media coverage is decreasing, society needs a leading voice to start change. Project Younify’s purpose is not only to bring countries together, but also to globally and collaboratively raise awareness towards pressing issues until action is finally taken. With this, we strive to encourage youths to come together and help the underprivileged as much as they can.",
+      "leaders": "Kavya, Karynne",
+      "contacts": "",
+      "instagramUrl": "https://instagram.com/projectyounify_th",
+      "applicationFormUrl": "",
       "schedule": "",
-      "advisor": "",
+      "advisor": "Mr. Patrick",
       "signupUrl": "",
-      "createdAt": "2026-09-11T15:25:41.353Z"
+      "logoUrl": "/uploads/club-logos/1791053313674-85c84401e312.png",
+      "createdAt": "2026-10-03T13:53:44.585Z",
+      "sdgs": [
+        17
+      ]
     },
     {
-      "id": "d7f9cb5d-1a9c-4967-9411-5f695baa9d64",
+      "id": "736b89ad-4576-4d61-90f6-4ebd95363135",
       "type": "community-service",
-      "name": "Robotics Club",
-      "description": "We build robots.",
-      "logoUrl": "/uploads/club-logos/1789140417983-bfb8682f3ab6.png",
-      "instagramUrl": "https://instagram.com/kpisrobotics",
-      "applicationFormUrl": "https://forms.gle/robotics",
+      "name": "BetterWorldThailand",
+      "mission": "To empower students to translate their compassion into action by giving them opportunities to serve and uplift poor communities in need. We hope to achieve this through volunteering, fundraising, education, donations, and student initiatives that will help us provide meaningful support to these people.",
+      "goals": "In line with the United Nation’s Sustainable Development Goals, with special attention to SDG 1: No Poverty. In meeting the needs of the community through education, donation, outreach, and service, we hope to inspire students to become socially responsible change makers.",
+      "leaders": "Santa",
+      "contacts": "20110466@kpis.ac.th",
+      "instagramUrl": "https://instagram.com/thebwt_kpis",
+      "applicationFormUrl": "",
       "schedule": "",
-      "advisor": "",
+      "advisor": "Mr. Patrick",
       "signupUrl": "",
-      "createdAt": "2026-09-11T15:26:57.986Z"
+      "logoUrl": "/uploads/club-logos/1791122531752-995bbb800c47.png",
+      "createdAt": "2026-10-03T13:53:44.586Z",
+      "sdgs": [
+        1
+      ]
     },
     {
-      "id": "a961ebb2-feaa-4c63-b9ac-1a9e958ce2d3",
-      "type": "after-school",
-      "name": "Robotics",
-      "description": "Design, build, and program competition robots.",
-      "logoUrl": "",
-      "instagramUrl": "",
+      "id": "dde98b43-4943-435e-b157-2b372d5820cc",
+      "type": "community-service",
+      "name": "Voice of Society",
+      "mission": "To empower and support people with disabilities, especially deaf and non-speaking individuals by promoting inclusion,awareness, and equal opportunities in society while creating a welcoming and supportive community for everyone.",
+      "goals": "Our goal is to reduce inequality within the society towards disabled individuals. We want to ensure that everyone gets equal opportunities through raising awareness, educational initiatives about sign language, and fundraisers. We also foster communication through art which is a form of communication that doesn’t require hearing or speech to be understood or experienced.",
+      "leaders": "Thanya, Aiji",
+      "contacts": "",
+      "instagramUrl": "https://instagram.com/voiceofsociety.kpis",
       "applicationFormUrl": "",
-      "schedule": "Tue & Thu · 3:30–5:00 PM · STEM Lab",
-      "advisor": "Mr. Anan",
+      "schedule": "",
+      "advisor": "Ms. Geraldine",
       "signupUrl": "",
-      "createdAt": "2026-09-14T12:08:10.638Z"
+      "logoUrl": "/uploads/club-logos/1791053535733-7bed65bb4caf.png",
+      "createdAt": "2026-10-03T13:53:44.589Z",
+      "sdgs": [
+        10
+      ]
     },
     {
-      "id": "a90b3886-6703-43bf-9321-b7fcc934d440",
-      "type": "after-school",
-      "name": "Debate",
-      "description": "Practice argumentation and compete in regional tournaments.",
-      "logoUrl": "",
-      "instagramUrl": "",
+      "id": "db33995c-a024-4fcb-af8d-215126e6aca6",
+      "type": "community-service",
+      "name": "Pawservation Club",
+      "mission": "To make a meaningful difference in the lives of animals in need by promoting animal welfare, raising awareness, and providing opportunities for students to take action in their community. We aim to support animals through volunteering, fundraising, donations, and partnerships with animal shelters, while inspiring students to become passionate and responsible advocates for animals.",
+      "goals": "Aims to organize volunteering activities and community service projects that directly support animals in need, while working with animal shelters and organizations to provide meaningful assistance. We also aim to raise awareness about animal welfare through educational initiatives and campaigns, as well as organize fundraising and donation drives to gather resources for animals in need.",
+      "leaders": "Inaya, Aiji",
+      "contacts": "",
+      "instagramUrl": "https://instagram.com/thepawervationclub.kpis",
       "applicationFormUrl": "",
-      "schedule": "Mon & Wed · 3:30–4:30 PM · Room 204",
-      "advisor": "Ms. Preecha",
+      "schedule": "",
+      "advisor": "Mr. Patrick",
       "signupUrl": "",
-      "createdAt": "2026-09-14T12:08:10.638Z"
+      "logoUrl": "/uploads/club-logos/1791053199897-560b61682b9d.png",
+      "createdAt": "2026-10-03T13:53:44.591Z",
+      "sdgs": [
+        15
+      ]
     },
     {
-      "id": "364297a4-a172-4953-9277-fcacbe54c24a",
-      "type": "after-school",
-      "name": "Art & Design",
-      "description": "Explore painting, digital art, and design fundamentals.",
-      "logoUrl": "",
-      "instagramUrl": "",
+      "id": "2502a0e1-c350-4df6-9182-0763922a4be4",
+      "type": "community-service",
+      "name": "Youth of Change",
+      "mission": "Empower young people to use engineering, innovation, and technology to develop practical solutions that create positive change in their communities.",
+      "goals": "Give students opportunities to apply engineering and STEM skills to real-world challenges through hands-on projects and community service.",
+      "leaders": "Tim, Yanita",
+      "contacts": "Tim: 20160985@kpis.ac.th\nYanita: 20211462@kpis.ac.th",
+      "instagramUrl": "https://instagram.com/youthofchange_th",
       "applicationFormUrl": "",
-      "schedule": "Fri · 3:30–5:00 PM · Art Studio",
-      "advisor": "Ms. Kanya",
+      "schedule": "",
+      "advisor": "Ms. Gia",
       "signupUrl": "",
-      "createdAt": "2026-09-14T12:08:10.638Z"
+      "logoUrl": "/uploads/club-logos/1791053478959-45793f7064f5.png",
+      "createdAt": "2026-10-03T13:53:44.593Z",
+      "sdgs": [
+        9
+      ]
     },
     {
-      "id": "16c5efe8-8f4b-447f-aadf-47438c6def4b",
+      "id": "c6c17f6c-ee22-48ba-aae3-a6c7e49002e5",
       "type": "after-school",
-      "name": "Basketball",
-      "description": "Open practice and inter-school friendlies.",
-      "logoUrl": "",
+      "name": "Media Club",
+      "mission": "To create informative, entertaining, and enjoyable content to connect the KPIS community through social media and school platforms. We aim to capture important school events, activities, and highlight students' achievements, while developing members’ skills in production, editing, creativity, photography, filming, time management, and communication.",
+      "goals": "Our goal is to create a space for students to create high quality content that engages and connects the school community. Giving opportunities for students to grow and improve their skills, as well as, showcasing the school in a positive and creative manner.",
+      "leaders": "Miley",
+      "contacts": "20171085@kpis.ac.th\r\nSupasiri.tha@kpis.ac.th",
+      "instagramUrl": "https://instagram.com/mediaclub.kpis",
+      "applicationFormUrl": "",
+      "schedule": "",
+      "advisor": "Mr. Patrick",
+      "signupUrl": "",
+      "logoUrl": "/uploads/club-logos/1791053399993-277daa2f1f5e.png",
+      "createdAt": "2026-10-03T13:53:44.595Z"
+    },
+    {
+      "id": "dcafe926-f458-498e-9dd9-afdfa5699c99",
+      "type": "after-school",
+      "name": "TedEd Club",
+      "mission": "We aim to create a supportive environment where students can share meaningful ideas, learn from one another, and express themselves through TED-style talks.",
+      "goals": "The club’s goal is to develop students’ public speaking and communication skills, build confidence, encourage creativity and critical thinking, and inspire students to share ideas that can make a positive impact on others.",
+      "leaders": "Aiji, Kavya, Yanita",
+      "contacts": "",
+      "instagramUrl": "https://instagram.com/kpisteded",
+      "applicationFormUrl": "",
+      "schedule": "",
+      "advisor": "Mr. Earl",
+      "signupUrl": "",
+      "logoUrl": "/uploads/club-logos/1791055187370-0c4bb95e1508.png",
+      "createdAt": "2026-10-03T13:53:44.597Z"
+    },
+    {
+      "id": "842bb3af-5860-478d-9102-4b71aca8f945",
+      "type": "after-school",
+      "name": "Debate Club",
+      "mission": "Our mission is to make debate an accessible platform for students to develop critical thinking, communication, confidence, and intellectual curiosity, while creating a pathway from learning the fundamentals to competing at the highest levels.",
+      "goals": "Our goal is to develop confident, critical, and articulate students through debate. We aim to provide a supportive environment where students can strengthen their public speaking, analytical thinking, teamwork, and argumentation skills, while creating opportunities for students to compete and grow at school and national levels.",
+      "leaders": "AJ, Jinjine",
+      "contacts": "20150793@kpis.ac.th\n20160970@kpis.ac.th",
       "instagramUrl": "",
       "applicationFormUrl": "",
-      "schedule": "Mon, Wed & Fri · 4:00–5:30 PM · Gym",
-      "advisor": "Coach Somchai",
+      "schedule": "",
+      "advisor": "Ms. Marita",
       "signupUrl": "",
-      "createdAt": "2026-09-14T12:08:10.638Z"
+      "logoUrl": "/uploads/club-logos/1791728564568-f2f1d1a518d2.webp",
+      "createdAt": "2026-10-03T13:53:44.599Z"
+    },
+    {
+      "id": "372579cd-b751-484c-9834-a05e9a06b1ed",
+      "type": "after-school",
+      "name": "Yearbook Publication Club",
+      "mission": "To create a meaningful and lasting record of the school community by documenting the people, experiences, achievements, and memorable events of each academic year. We aim to revive and develop the school yearbook after several years without an updated edition, while giving students the opportunity to contribute their ideas, creativity, and perspectives to a publication that can be treasured for years to come.",
+      "goals": "Aims to revive and publish an updated yearbook that captures the people, events, achievements, and memories of the school year. We plan to organize photography and content collection, design and develop the yearbook, and encourage students to contribute. We also aim to establish relationships with sponsors and businesses to help fund the production of the yearbook, while exploring ways to make the publication sustainable for future years.",
+      "leaders": "Inaya, Thonkla",
+      "contacts": "",
+      "instagramUrl": "",
+      "applicationFormUrl": "",
+      "schedule": "",
+      "advisor": "Ms. Shalom",
+      "signupUrl": "",
+      "logoUrl": "/uploads/club-logos/1791053499256-552e4ff0cb33.webp",
+      "createdAt": "2026-10-03T13:53:44.601Z"
+    },
+    {
+      "id": "8c608dca-6c40-4988-bea0-9f372cc1f612",
+      "type": "after-school",
+      "name": "School Newspaper Club",
+      "mission": "Our mission is to create a space where students can give a voice to the school community through documenting school events, student life, and current topics, combining journalism, research, design, and photography. We entourage storytelling and open discussions on stories that matter to the school community.",
+      "goals": "Our goal is to build students into becoming lifelong readers and writers. We intend to change the ideas of traditional news and curate it to represent student voice by providing an open space to inform students about school news, develop journalism and writing skills, develop creativity, and connect the school community.",
+      "leaders": "Angie, Thanya",
+      "contacts": "",
+      "instagramUrl": "",
+      "applicationFormUrl": "",
+      "schedule": "",
+      "advisor": "Mr. Cody",
+      "signupUrl": "",
+      "logoUrl": "/uploads/club-logos/1791121775802-d478274b7dea.png",
+      "createdAt": "2026-10-03T13:53:44.602Z"
     }
   ],
   "council": [
@@ -240,85 +319,49 @@
       "level": "ms",
       "photoUrl": "",
       "createdAt": "2026-09-15T13:59:34.204Z"
-    }
-  ],
-  "announcements": [
-    {
-      "id": "3006a65c-9670-44fd-84b2-471566a6ac6a",
-      "title": "Prelim payment due",
-      "body": "Please clear your prelim payment before the end of this week to avoid late fees.",
-      "createdAt": "2026-09-14T12:08:10.639Z"
     },
     {
-      "id": "5a41c7c1-abca-4149-9ec7-41956287f9a1",
-      "title": "Exam schedule posted",
-      "body": "The final exam schedule has been posted. Check your dashboard for your exact dates and rooms.",
-      "createdAt": "2026-09-14T12:08:10.639Z"
+      "id": "61fe4c61-ddf9-4b16-ab53-e47f657a80e7",
+      "name": "Rapiya (Preme) Intrayota",
+      "role": "Secretary",
+      "grade": "Grade 8",
+      "group": "student-council",
+      "level": "ms",
+      "photoUrl": "",
+      "createdAt": "2026-10-03T15:54:46.541Z"
     },
     {
-      "id": "c0913a36-a4c7-4a4e-8dbd-6f9bce0f835c",
-      "title": "Community Service sign-ups open",
-      "body": "Sign up for this term's community service projects before spots fill up.",
-      "createdAt": "2026-09-14T12:08:10.639Z"
+      "id": "6cec6046-7040-4cac-bcbf-025f3348ae3e",
+      "name": "Tatchapon (Juzz) Rachatachainan",
+      "role": "IT Manager",
+      "grade": "Grade 8",
+      "group": "student-council",
+      "level": "ms",
+      "photoUrl": "",
+      "createdAt": "2026-10-03T15:54:46.541Z"
+    },
+    {
+      "id": "f127faae-9128-4741-8534-2cb6d430a1c7",
+      "name": "Pimpraewproud (Proud) Udomsompong",
+      "role": "Treasurer",
+      "grade": "Grade 8",
+      "group": "student-council",
+      "level": "ms",
+      "photoUrl": "",
+      "createdAt": "2026-10-03T15:54:46.541Z"
+    },
+    {
+      "id": "c3146188-38bf-45fa-8452-835a4fe952db",
+      "name": "Chanidapa (Pear) Rojwongjaras",
+      "role": "Spirit Leader",
+      "grade": "Grade 8",
+      "group": "student-council",
+      "level": "ms",
+      "photoUrl": "",
+      "createdAt": "2026-10-03T15:54:46.541Z"
     }
   ],
   "calendarEvents": [
-    {
-      "id": "77b1e73f-0292-464f-9c2a-5052a337075e",
-      "day": "1",
-      "month": "Oct",
-      "title": "SOP Session (Statement of Purpose)",
-      "subtitle": "Gr. 11-12",
-      "createdAt": "2026-09-15T14:23:47.532Z"
-    },
-    {
-      "id": "e7d19ae2-e8c0-4567-83c1-927f8391b77f",
-      "day": "2",
-      "month": "Oct",
-      "title": "Literacy Day",
-      "subtitle": "Activity block",
-      "createdAt": "2026-09-15T14:23:47.535Z"
-    },
-    {
-      "id": "8397d34c-2f56-468d-9808-d1b5636ad379",
-      "day": "3",
-      "month": "Oct",
-      "title": "SAT Test Day",
-      "subtitle": "",
-      "createdAt": "2026-09-15T14:23:47.539Z"
-    },
-    {
-      "id": "4646051e-4a3d-4e61-9d9e-bf43ff20300e",
-      "day": "9",
-      "month": "Oct",
-      "title": "Mini Hackathon and Coding with Humanoid with UTCC University",
-      "subtitle": "Grade 9-12 13:45-15:15 at KX Center",
-      "createdAt": "2026-09-15T14:23:47.541Z"
-    },
-    {
-      "id": "524517b8-b9d2-4b5e-bf3d-83300367acc9",
-      "day": "13",
-      "month": "Oct",
-      "title": "School Holidays",
-      "subtitle": "",
-      "createdAt": "2026-09-15T14:23:47.544Z"
-    },
-    {
-      "id": "17aca9d3-97b8-421b-8447-c7a7a69fc196",
-      "day": "15",
-      "month": "Oct",
-      "title": "SS Fall PTC - MS / Remote learning for HS",
-      "subtitle": "",
-      "createdAt": "2026-09-15T14:23:47.547Z"
-    },
-    {
-      "id": "1ed14c4b-b41d-4407-8ee4-176ab6c6ac27",
-      "day": "16",
-      "month": "Oct",
-      "title": "SS Fall PTC - MS and HS",
-      "subtitle": "",
-      "createdAt": "2026-09-15T14:23:47.549Z"
-    },
     {
       "id": "a3e94f52-079d-43a6-bc43-bf22569700d7",
       "day": "19",
@@ -344,56 +387,42 @@
       "createdAt": "2026-09-15T14:23:47.555Z"
     }
   ],
-  "projects": [
-    {
-      "id": "c86926a1-3f74-4196-9961-c65411120973",
-      "title": "Spirit Week Planning",
-      "percent": 70,
-      "status": "On Track",
-      "lead": "StuCo Events Team",
-      "description": "Organizing daily themes, activities, and the closing pep rally.",
-      "createdAt": "2026-09-14T12:08:10.640Z"
-    },
-    {
-      "id": "a5a907d7-bc1d-4460-bda7-5ba1c919fd74",
-      "title": "Recycling Drive",
-      "percent": 35,
-      "status": "On Track",
-      "lead": "StuCo Sustainability Team",
-      "description": "Setting up recycling bins across campus and a collection schedule.",
-      "createdAt": "2026-09-14T12:08:10.640Z"
-    }
-  ],
   "quickLinks": [
     {
-      "id": "c00153a9-bcb6-4672-9244-5a2722fbb3e9",
-      "label": "Student Email",
-      "url": "#",
-      "createdAt": "2026-09-14T12:08:10.640Z"
+      "id": "e2380384-fb8a-45e0-9626-8ae96afdfd4d",
+      "label": "Community Service Website",
+      "url": "https://sites.google.com/kpis.ac.th/kpiscommunityservice/home",
+      "createdAt": "2026-10-03T14:28:00.528Z"
     },
     {
-      "id": "ed5e1dec-f7ff-4abf-92a2-9ea746fee826",
-      "label": "Library Catalog",
-      "url": "#",
-      "createdAt": "2026-09-14T12:08:10.640Z"
-    },
-    {
-      "id": "649b4182-a255-4e08-9d7e-8e75893cd69b",
-      "label": "Student Handbook",
-      "url": "#",
-      "createdAt": "2026-09-14T12:08:10.640Z"
-    },
-    {
-      "id": "76b1dcd8-685b-4363-b0fd-c2aeb9852b0c",
-      "label": "Print Center",
-      "url": "#",
-      "createdAt": "2026-09-14T12:08:10.640Z"
-    },
-    {
-      "id": "876321ed-0b6d-436b-943b-b0759f6f3240",
-      "label": "College & Career Counseling",
+      "id": "d06df381-cbc4-4bec-b63b-ba328fcc4683",
+      "label": "College and Career Counseling",
       "url": "https://sites.google.com/view/kpis-college-career-counseling/home",
-      "createdAt": "2026-09-15T15:04:32.895Z"
+      "createdAt": "2026-10-03T14:28:00.528Z"
+    },
+    {
+      "id": "5fcb4393-e38e-4773-b429-cdc5670f6ffa",
+      "label": "Secondary Photos Drive",
+      "url": "https://drive.google.com/drive/folders/1bK6Dt2OVJ71zboYFo5I159f7kS2_m5YW",
+      "createdAt": "2026-10-03T19:25:19.030Z"
+    },
+    {
+      "id": "3f84e03c-e556-4866-a3d6-75fa9099ed24",
+      "label": "Secondary Families Drive",
+      "url": "https://drive.google.com/drive/folders/1L6KZnxYNCjmygM6jfWCocBdOw2HQL8xj",
+      "createdAt": "2026-10-03T19:26:24.620Z"
+    },
+    {
+      "id": "2684da01-dac7-44fd-a87b-4a5b8bef3e8f",
+      "label": "PowerSchool",
+      "url": "https://ps.kpis.ac.th/",
+      "createdAt": "2026-10-03T19:28:02.039Z"
+    },
+    {
+      "id": "0c1d73dd-e66d-4707-893b-4753de8dd209",
+      "label": "Club Proposal Form",
+      "url": "https://docs.google.com/document/d/17WCRNpKduLjeA3T4BKjTYHKyFtHZRI3F8n_6eyTt0yI/edit?tab=t.0",
+      "createdAt": "2026-10-03T19:31:56.975Z"
     }
   ],
   "csEvents": [],

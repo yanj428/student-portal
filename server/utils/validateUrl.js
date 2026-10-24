@@ -51,4 +51,4 @@ function normalizeUrl(value) {
   return new URL(value.trim()).toString();
 }
 
-module.exports = { isHttpsUrl, hostMatches, validateOptionalUrl, normalizeUrl };
+module.exports = { isHttpsUrl, validateOptionalUrl, normalizeUrl };

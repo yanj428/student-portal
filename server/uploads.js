@@ -3,13 +3,19 @@ const path = require('path');
 const crypto = require('crypto');
 const multer = require('multer');
 
-const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
-const LUNCH_UPLOADS_DIR = path.join(UPLOADS_DIR, 'lunch');
-const CLUB_LOGO_UPLOADS_DIR = path.join(UPLOADS_DIR, 'club-logos');
-const COUNCIL_PHOTO_UPLOADS_DIR = path.join(UPLOADS_DIR, 'council-photos');
-fs.mkdirSync(LUNCH_UPLOADS_DIR, { recursive: true });
-fs.mkdirSync(CLUB_LOGO_UPLOADS_DIR, { recursive: true });
-fs.mkdirSync(COUNCIL_PHOTO_UPLOADS_DIR, { recursive: true });
+// Kept next to the database when DATA_DIR is set (tests, and the Fly.io
+// deployment, where only the mounted volume survives a redeploy), so uploads
+// are never lost with the app image and tests never write into the repo.
+const UPLOADS_DIR = process.env.DATA_DIR
+  ? path.join(path.resolve(process.env.DATA_DIR), 'uploads')
+  : path.join(__dirname, '..', 'uploads');
+const LUNCH_SUBDIR = 'lunch';
+const CLUB_LOGO_SUBDIR = 'club-logos';
+const COUNCIL_PHOTO_SUBDIR = 'council-photos';
+const CALENDAR_SUBDIR = 'calendar';
+for (const subdir of [LUNCH_SUBDIR, CLUB_LOGO_SUBDIR, COUNCIL_PHOTO_SUBDIR, CALENDAR_SUBDIR]) {
+  fs.mkdirSync(path.join(UPLOADS_DIR, subdir), { recursive: true });
+}
 
 // Identifies a file by its actual bytes (the "magic number" every image
 // format starts with), not by the Content-Type header the browser sent —
@@ -35,8 +41,10 @@ function detectImageType(buffer) {
 // Uploads go to memory first (these are small, capped well under 10MB) so
 // the real file type can be checked before anything touches disk, and the
 // file is saved under an extension based on what it actually is rather
-// than whatever extension or Content-Type the upload claimed.
-function makeImageUpload(destinationDir, maxSizeMb) {
+// than whatever extension or Content-Type the upload claimed. With no
+// `subdir` the image is only ever sent on to an external API (the calendar
+// extractor) and never written to disk or served back from our own domain.
+function makeImageUpload(maxSizeMb, subdir) {
   const memoryUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: maxSizeMb * 1024 * 1024 } });
 
   return {
@@ -49,13 +57,15 @@ function makeImageUpload(destinationDir, maxSizeMb) {
 
           const detected = detectImageType(req.file.buffer);
           if (!detected) return next(new Error('Only JPEG, PNG, WEBP, or GIF images are allowed.'));
+          req.file.mimetype = detected.mimetype;
+          if (!subdir) return next();
 
           const filename = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}${detected.ext}`;
-          fs.writeFile(path.join(destinationDir, filename), req.file.buffer, (writeErr) => {
+          const destination = path.join(UPLOADS_DIR, subdir, filename);
+          fs.writeFile(destination, req.file.buffer, (writeErr) => {
             if (writeErr) return next(writeErr);
             req.file.filename = filename;
-            req.file.path = path.join(destinationDir, filename);
-            req.file.mimetype = detected.mimetype;
+            req.file.path = destination;
             next();
           });
         });
@@ -64,45 +74,34 @@ function makeImageUpload(destinationDir, maxSizeMb) {
   };
 }
 
-const lunchImageUpload = makeImageUpload(LUNCH_UPLOADS_DIR, 8);
-const clubLogoUpload = makeImageUpload(CLUB_LOGO_UPLOADS_DIR, 4);
-const councilPhotoUpload = makeImageUpload(COUNCIL_PHOTO_UPLOADS_DIR, 4);
-
-// Same real-content-type check as makeImageUpload, but for a one-off image
-// that's only ever sent on to an external API (the AI menu extractor) and
-// never written to disk or served back from our own domain.
-function makeMemoryImageUpload(maxSizeMb) {
-  const memoryUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: maxSizeMb * 1024 * 1024 } });
-
-  return {
-    single(fieldName) {
-      const inner = memoryUpload.single(fieldName);
-      return (req, res, next) => {
-        inner(req, res, (err) => {
-          if (err) return next(err);
-          if (!req.file) return next();
-
-          const detected = detectImageType(req.file.buffer);
-          if (!detected) return next(new Error('Only JPEG, PNG, WEBP, or GIF images are allowed.'));
-
-          req.file.mimetype = detected.mimetype;
-          next();
-        });
-      };
-    },
-  };
+// Deletes a previously saved upload by its public URL, ignoring anything
+// that isn't a file this server saved under /uploads/<subdir>/.
+function removeUpload(url, subdir) {
+  const prefix = `/uploads/${subdir}/`;
+  if (typeof url === 'string' && url.startsWith(prefix)) {
+    fs.unlink(path.join(UPLOADS_DIR, subdir, path.basename(url)), () => {});
+  }
 }
 
-const memoryImageUpload = makeMemoryImageUpload(8);
+// For a request that already wrote its upload to disk but then failed
+// validation (or found nothing to attach it to), so the file isn't orphaned.
+function discardUpload(req) {
+  if (req.file && req.file.path) fs.unlink(req.file.path, () => {});
+}
 
 module.exports = {
   UPLOADS_DIR,
-  LUNCH_UPLOADS_DIR,
-  CLUB_LOGO_UPLOADS_DIR,
-  COUNCIL_PHOTO_UPLOADS_DIR,
-  lunchImageUpload,
-  clubLogoUpload,
-  councilPhotoUpload,
-  memoryImageUpload,
+  LUNCH_SUBDIR,
+  CLUB_LOGO_SUBDIR,
+  COUNCIL_PHOTO_SUBDIR,
+  CALENDAR_SUBDIR,
+  lunchImageUpload: makeImageUpload(8, LUNCH_SUBDIR),
+  clubLogoUpload: makeImageUpload(4, CLUB_LOGO_SUBDIR),
+  councilPhotoUpload: makeImageUpload(4, COUNCIL_PHOTO_SUBDIR),
+  // A full-page calendar scan, so a larger cap than the logos and photos.
+  calendarImageUpload: makeImageUpload(10, CALENDAR_SUBDIR),
+  memoryImageUpload: makeImageUpload(8),
+  removeUpload,
+  discardUpload,
   detectImageType,
 };

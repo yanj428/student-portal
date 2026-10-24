@@ -3,9 +3,10 @@ const express = require('express');
 const session = require('express-session');
 const helmet = require('helmet');
 
-const { PORT, SESSION_SECRET, SESSION_COOKIE_SECURE, TRUST_PROXY } = require('./config');
+const { PORT, SESSION_SECRET, SESSION_COOKIE_SECURE, SESSION_COOKIE_NAME, TRUST_PROXY } = require('./config');
 const { UPLOADS_DIR } = require('./uploads');
 const db = require('./db');
+const { cleanUrls } = require('./middleware/cleanUrls');
 const SqliteSessionStore = require('./sessionStore');
 const { csrfProtection } = require('./middleware/csrf');
 
@@ -37,7 +38,8 @@ app.use(
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         imgSrc: ["'self'", 'data:'],
         connectSrc: ["'self'"],
-        frameSrc: ['https://www.canva.com', 'https://canva.com', 'https://canva.link'],
+        // Matches the hosts content.js and slideArchive.js accept for a Canva link.
+        frameSrc: ['https://canva.com', 'https://*.canva.com', 'https://canva.link', 'https://*.canva.link'],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
         frameAncestors: ["'none'"],
@@ -57,7 +59,7 @@ app.use(express.json({ limit: '100kb' }));
 app.use(csrfProtection);
 app.use(
   session({
-    name: 'kpis.sid',
+    name: SESSION_COOKIE_NAME,
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
@@ -72,10 +74,10 @@ app.use(require('./routes/admins'));
 app.use(require('./routes/students'));
 app.use(require('./routes/content'));
 app.use(require('./routes/lunch'));
+app.use(require('./routes/calendarImage'));
 app.use(require('./routes/slideArchive'));
 app.use(require('./routes/clubs'));
 app.use(require('./routes/csEvents'));
-app.use(require('./routes/announcements'));
 app.use(require('./routes/calendarEvents'));
 app.use(require('./routes/council'));
 app.use(require('./routes/quickLinks'));
@@ -87,6 +89,7 @@ app.use(require('./routes/security'));
 // priority over the static handler below, which now only serves assets:
 // css, client-side js, images, and the standalone login/admin/change-password
 // pages that aren't part of the shared sidebar layout.
+app.use(cleanUrls);
 app.use(require('./routes/pages'));
 
 // ---- Static site ----
@@ -94,8 +97,15 @@ app.use(require('./routes/pages'));
 // hashes, student PII), server/, .env, package.json, node_modules/ — lives
 // outside it and is never reachable through the static handler, so no
 // blocklist is needed here.
+const PUBLIC_DIR = path.join(__dirname, '..', 'public');
+
+// public/admin/ is also a folder (the admin panel's scripts), so the static
+// handler would redirect /admin to /admin/ - which the clean-URL rule sends
+// straight back, looping forever. The admin page is served explicitly instead.
+app.get('/admin', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'admin.html')));
+
 app.use('/uploads', express.static(UPLOADS_DIR));
-app.use(express.static(path.join(__dirname, '..', 'public'), { extensions: ['html'] }));
+app.use(express.static(PUBLIC_DIR, { extensions: ['html'] }));
 
 // Catches everything above, including body-parser's SyntaxError on
 // malformed JSON — without this, Express's default handler sends back a

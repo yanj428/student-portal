@@ -107,6 +107,14 @@ app.get('/admin', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'admin.html')
 app.use('/uploads', express.static(UPLOADS_DIR));
 app.use(express.static(PUBLIC_DIR, { extensions: ['html'] }));
 
+// Anything nothing above answered. Pages get a proper "page not found" screen
+// with a way back; API calls and non-page requests keep a short JSON reply.
+app.use((req, res) => {
+  const isPageRequest = (req.method === 'GET' || req.method === 'HEAD') && !req.path.startsWith('/api/');
+  if (!isPageRequest) return res.status(404).json({ error: 'Not found.' });
+  return res.status(404).sendFile(path.join(PUBLIC_DIR, 'not-found.html'));
+});
+
 // Catches everything above, including body-parser's SyntaxError on
 // malformed JSON — without this, Express's default handler sends back a
 // full stack trace with file paths (visible during earlier manual testing).

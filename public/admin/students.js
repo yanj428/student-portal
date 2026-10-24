@@ -24,10 +24,34 @@ export async function loadStudents() {
     return;
   }
 
-  students
+  // Lowest grade first (a grade with no number sorts last), then by name, with
+  // a heading row above each grade showing how many accounts it has.
+  const gradeNumber = (grade) => {
+    const n = parseInt(String(grade).replace(/\D+/g, ''), 10);
+    return Number.isNaN(n) ? Infinity : n;
+  };
+  const sortedStudents = students
     .slice()
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .sort(
+      (a, b) =>
+        gradeNumber(a.grade) - gradeNumber(b.grade) ||
+        String(a.grade).localeCompare(String(b.grade)) ||
+        a.fullName.localeCompare(b.fullName)
+    );
+  const gradeCounts = new Map();
+  sortedStudents.forEach((s) => gradeCounts.set(s.grade, (gradeCounts.get(s.grade) || 0) + 1));
+  let lastGrade = null;
+
+  sortedStudents
     .forEach((student) => {
+      if (student.grade !== lastGrade) {
+        lastGrade = student.grade;
+        const count = gradeCounts.get(student.grade);
+        const headerRow = document.createElement('tr');
+        headerRow.className = 'grade-group-row';
+        headerRow.innerHTML = `<td colspan="8">${escapeHtml(student.grade)} <span class="grade-group-count">${count} ${count === 1 ? 'account' : 'accounts'}</span></td>`;
+        studentRows.appendChild(headerRow);
+      }
       const name = student.fullName;
       const created = new Date(student.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
       const tr = document.createElement('tr');

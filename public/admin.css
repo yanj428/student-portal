@@ -776,3 +776,17 @@ tr:last-child td { border-bottom: none; }
   .form-row { grid-template-columns: 1fr; }
   .content-row, .content-row.two-col { grid-template-columns: 1fr; }
 }
+
+/* Grade headings in the Student Accounts table */
+.grade-group-row td {
+  background: #FAF1F0;
+  color: #9a1b1f;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 14px;
+}
+.grade-group-count {
+  margin-left: 8px;
+  font-weight: 600;
+  color: var(--text-muted, #6b6b6b);
+}

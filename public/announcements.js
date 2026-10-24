@@ -12,17 +12,17 @@ async function loadAnnouncementsPage() {
   const { content } = await res.json();
 
   const weekLabelEl = document.getElementById('week-label');
-  const embedWrap = document.getElementById('slide-embed-wrap');
-  const embedFrame = document.getElementById('slide-embed');
+  const linkWrap = document.getElementById('slide-link-wrap');
+  const slideLink = document.getElementById('slide-link');
   const slideEmpty = document.getElementById('slide-empty');
 
   const slide = content.weeklySlide || {};
   if (slide.canvaEmbedUrl) {
-    embedFrame.src = slide.canvaEmbedUrl;
-    embedWrap.hidden = false;
+    slideLink.href = slide.canvaEmbedUrl;
+    linkWrap.hidden = false;
     slideEmpty.hidden = true;
   } else {
-    embedWrap.hidden = true;
+    linkWrap.hidden = true;
     slideEmpty.hidden = false;
   }
 

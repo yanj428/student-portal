@@ -41,22 +41,29 @@
 }
 .week-label[hidden] { display: none; }
 
-.slide-embed-wrap {
-  position: relative;
-  width: 100%;
-  padding-top: 56.25%;
+.slide-link-wrap {
+  text-align: center;
+  padding: 40px 20px;
+  background: #FAF7F6;
   border-radius: var(--radius-sm);
-  overflow: hidden;
   border: 1px solid var(--border);
 }
-.slide-embed-wrap[hidden] { display: none; }
-.slide-embed-wrap iframe {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: none;
+.slide-link-wrap[hidden] { display: none; }
+.slide-link-text {
+  margin: 0 0 18px;
+  color: var(--text-muted);
+  font-size: 13.5px;
 }
+.slide-link-btn {
+  display: inline-block;
+  padding: 12px 28px;
+  border-radius: 999px;
+  background: #9a1b1f;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+.slide-link-btn:hover { background: #7e1519; }
 
 .slide-empty {
   text-align: center;

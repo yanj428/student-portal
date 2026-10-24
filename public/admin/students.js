@@ -9,6 +9,17 @@ const createSubmit = document.getElementById('create-submit');
 const studentRows = document.getElementById('student-rows');
 const emptyRow = document.getElementById('empty-row');
 const studentCount = document.getElementById('student-count');
+const gradeSummary = document.getElementById('grade-summary');
+const listToggle = document.getElementById('student-list-toggle');
+const listBody = document.getElementById('student-list-body');
+
+// The full list is long, so it stays folded away until the button is pressed.
+listToggle.addEventListener('click', () => {
+  const opening = listBody.hidden;
+  listBody.hidden = !opening;
+  listToggle.setAttribute('aria-expanded', String(opening));
+  listToggle.textContent = opening ? 'Hide accounts' : 'View all accounts';
+});
 
 export async function loadStudents() {
   const data = await getJSON('/api/admin/students');
@@ -18,6 +29,7 @@ export async function loadStudents() {
   studentCount.textContent = students.length;
   document.getElementById('stat-students').textContent = students.length;
   studentRows.innerHTML = '';
+  gradeSummary.innerHTML = '';
 
   if (students.length === 0) {
     studentRows.appendChild(emptyRow);
@@ -40,6 +52,9 @@ export async function loadStudents() {
     );
   const gradeCounts = new Map();
   sortedStudents.forEach((s) => gradeCounts.set(s.grade, (gradeCounts.get(s.grade) || 0) + 1));
+  gradeSummary.innerHTML = [...gradeCounts]
+    .map(([grade, count]) => `<span class="grade-chip"><strong>${escapeHtml(grade)}</strong> ${count}</span>`)
+    .join('');
   let lastGrade = null;
 
   sortedStudents

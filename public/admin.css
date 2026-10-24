@@ -790,3 +790,21 @@ tr:last-child td { border-bottom: none; }
   font-weight: 600;
   color: var(--text-muted, #6b6b6b);
 }
+
+/* Student Accounts: per-grade summary and the button that opens the full list */
+.grade-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 14px;
+}
+.grade-chip {
+  background: #FAF1F0;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: var(--text-muted, #6b6b6b);
+}
+.grade-chip strong { color: #9a1b1f; margin-right: 4px; }
+.student-list-toggle { margin-bottom: 16px; }
+.table-wrap[hidden] { display: none; }

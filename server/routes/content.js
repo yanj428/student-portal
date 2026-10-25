@@ -39,11 +39,11 @@ function validateContent(content) {
 
   const { weekLabel: slideWeekLabel, canvaEmbedUrl } = content.weeklySlide;
   if (typeof slideWeekLabel !== 'string' || typeof canvaEmbedUrl !== 'string') {
-    return { error: 'Weekly slide needs a week label and a Canva embed URL (both can be blank).' };
+    return { error: 'Weekly slide needs a week label and a Canva link (both can be blank).' };
   }
   if (slideWeekLabel.length > WEEK_LABEL_MAX) return { error: `Week label must be ${WEEK_LABEL_MAX} characters or fewer.` };
   const canvaError = validateOptionalUrl(canvaEmbedUrl, {
-    fieldName: 'Canva embed URL',
+    fieldName: 'Canva link',
     allowedHosts: ['canva.com', 'canva.link'],
   });
   if (canvaError) return { error: canvaError };

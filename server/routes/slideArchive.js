@@ -33,9 +33,9 @@ router.post('/api/admin/slide-archive', requireAdmin, (req, res) => {
     return res.status(400).json({ error: 'Week label is required.' });
   }
   if (typeof canvaEmbedUrl !== 'string' || !canvaEmbedUrl.trim()) {
-    return res.status(400).json({ error: 'Canva embed URL is required.' });
+    return res.status(400).json({ error: 'Canva link is required.' });
   }
-  const urlError = validateOptionalUrl(canvaEmbedUrl, { fieldName: 'Canva embed URL', allowedHosts: ['canva.com', 'canva.link'] });
+  const urlError = validateOptionalUrl(canvaEmbedUrl, { fieldName: 'Canva link', allowedHosts: ['canva.com', 'canva.link'] });
   if (urlError) return res.status(400).json({ error: urlError });
 
   const slides = db.readSlideArchive();

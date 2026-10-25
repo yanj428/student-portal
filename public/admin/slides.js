@@ -72,7 +72,7 @@ currentSlideToArchive.addEventListener('click', () => {
   showSlideMessage();
   const { weekLabel, canvaEmbedUrl } = savedSlide;
   if (!weekLabel || !canvaEmbedUrl) {
-    showSlideMessage(currentSlideError, 'Save a week label and Canva embed URL before archiving.');
+    showSlideMessage(currentSlideError, 'Save a week label and Canva link before archiving.');
     return;
   }
   if (!confirm(`Move "${weekLabel}" to the archive and clear the current slide?`)) return;

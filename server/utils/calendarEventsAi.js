@@ -110,6 +110,22 @@ async function generateWithRetry(model, parts) {
   throw lastErr;
 }
 
+// What to tell the admin when the AI service refuses or fails. The real error is
+// in the server log; this turns the common causes into something they can act on.
+function friendlyAiError(err) {
+  const message = (err && err.message) || '';
+  if (/API_KEY_INVALID|API key not valid|API key expired/i.test(message)) {
+    return 'The AI service key is not valid. The site owner needs to replace GEMINI_API_KEY.';
+  }
+  if (/429|RESOURCE_EXHAUSTED|quota/i.test(message)) {
+    return 'The AI service has reached its limit for now. Please try again later.';
+  }
+  if (/404|is not found|not supported for generateContent/i.test(message)) {
+    return 'The AI model this site uses is no longer available. The site needs an update.';
+  }
+  return 'Could not reach the AI service. Please try again in a moment.';
+}
+
 // Reads a calendar/events photo and returns candidate {day, month, title,
 // subtitle} events for an admin to review before adding any of them.
 // Throws with a message safe to show an admin directly.
@@ -124,7 +140,7 @@ async function extractCalendarEvents(imageBuffer, mimeType) {
     response = await generateWithRetry(model, [{ inlineData: { data: imageBuffer.toString('base64'), mimeType } }, PROMPT]);
   } catch (err) {
     console.error('[calendarEventsAi] Gemini request failed:', err.message);
-    throw new Error('Could not reach the AI service. Please try again in a moment.');
+    throw new Error(friendlyAiError(err));
   }
 
   let parsed;
@@ -141,4 +157,4 @@ async function extractCalendarEvents(imageBuffer, mimeType) {
   return events;
 }
 
-module.exports = { extractCalendarEvents, isAiConfigured, NOT_CONFIGURED_MESSAGE };
+module.exports = { extractCalendarEvents, isAiConfigured, friendlyAiError, NOT_CONFIGURED_MESSAGE };

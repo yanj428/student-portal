@@ -12,44 +12,55 @@
 
       <section class="page-header">
         <h1>Student Voice</h1>
-        <p>Share suggestions, concerns, or questions directly with the Student Council. Only StuCo sees what you submit.</p>
+        <p>Share suggestions, concerns, or questions directly with the Student Council.</p>
       </section>
 
-      <section class="composer">
-        <h2 class="composer-title" id="composer-title">Share something</h2>
-        <form id="post-form">
-          <label class="field-label" for="post-title">Title</label>
-          <input class="field-input" type="text" id="post-title" placeholder="Sum it up in a few words" maxlength="120" required />
-
-          <label class="field-label" for="post-category">Category</label>
-          <select class="field-input" id="post-category" required>
-            <option value="" disabled selected>Select a category</option>
-            <option value="Suggestion">Suggestion</option>
-            <option value="Concern">Concern</option>
-            <option value="Question">Question</option>
-            <option value="Shoutout">Shoutout</option>
-            <option value="Other">Other</option>
-          </select>
-
-          <label class="field-label" for="post-input">Message</label>
-          <textarea id="post-input" class="composer-input" placeholder="Share the details…" maxlength="2000" required></textarea>
-
-          <div class="composer-footer">
-            <span class="composer-hint" id="composer-hint">Only StuCo can see what you submit. Other students never will.</span>
-            <div class="composer-buttons">
-              <button type="button" class="btn ghost" id="post-cancel" hidden>Cancel</button>
-              <button type="submit" class="btn primary" id="post-submit">Submit</button>
+      <div class="voice-layout">
+        <section class="composer">
+          <h2 class="composer-title" id="composer-title">Share something</h2>
+          <form id="post-form">
+            <p class="voice-step">1. What kind of message?</p>
+            <div class="voice-cats" role="radiogroup" aria-label="Category">
+            <label class="voice-cat"><input type="radio" name="post-category" value="Suggestion" required /><span class="voice-cat-box"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 18H15M10 21H14M12 3C8.7 3 6 5.5 6 8.6C6 10.6 7 12 8.3 13.2C8.8 13.7 9 14.3 9 15H15C15 14.3 15.2 13.7 15.7 13.2C17 12 18 10.6 18 8.6C18 5.5 15.3 3 12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Suggestion</span></label>
+            <label class="voice-cat"><input type="radio" name="post-category" value="Concern" required /><span class="voice-cat-box"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 8V13M12 16.2V16.3M12 21C16.97 21 21 16.97 21 12C21 7.03 16.97 3 12 3C7.03 3 3 7.03 3 12C3 16.97 7.03 21 12 21Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Concern</span></label>
+            <label class="voice-cat"><input type="radio" name="post-category" value="Question" required /><span class="voice-cat-box"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9.5 9C9.5 7.6 10.6 6.5 12 6.5C13.4 6.5 14.5 7.6 14.5 9C14.5 10.4 13.4 10.9 12.7 11.6C12.2 12.1 12 12.6 12 13.5M12 17V17.1M12 21C16.97 21 21 16.97 21 12C21 7.03 16.97 3 12 3C7.03 3 3 7.03 3 12C3 16.97 7.03 21 12 21Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Question</span></label>
+            <label class="voice-cat"><input type="radio" name="post-category" value="Shoutout" required /><span class="voice-cat-box"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 20L8 9L15 16L4 20ZM13 4V6M19 6L17.5 7.5M20 12H18M15 9.5C16.2 8.3 17.8 7.6 19.5 7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Shoutout</span></label>
+            <label class="voice-cat"><input type="radio" name="post-category" value="Other" required /><span class="voice-cat-box"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 12H6.01M12 12H12.01M18 12H18.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Other</span></label>
             </div>
+
+            <p class="voice-step">2. Tell us about it</p>
+            <label class="sr-only" for="post-title">Title</label>
+            <input class="field-input" type="text" id="post-title" placeholder="Sum it up in a few words" maxlength="120" required />
+
+            <label class="sr-only" for="post-input">Message</label>
+            <textarea id="post-input" class="composer-input" placeholder="Share the details…" maxlength="2000" required></textarea>
+            <span class="voice-count" id="voice-count" aria-live="off">0 / 2000</span>
+
+            <p class="field-error" id="post-error" hidden></p>
+            <div class="composer-footer">
+              <span class="composer-hint" id="composer-hint">Only StuCo can see what you submit. Other students never will.</span>
+              <div class="composer-buttons">
+                <button type="button" class="btn ghost" id="post-cancel" hidden>Cancel</button>
+                <button type="submit" class="btn primary" id="post-submit">Send to StuCo</button>
+              </div>
+            </div>
+          </form>
+        </section>
+
+        <aside class="voice-side">
+          <div class="voice-private">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 11V8C8 5.8 9.8 4 12 4C14.2 4 16 5.8 16 8V11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <div><strong>Private to StuCo</strong><span>Other students never see what you send.</span></div>
           </div>
-          <p class="field-error" id="post-error" hidden></p>
-        </form>
-      </section>
 
-      <h2 class="section-title">My Suggestions</h2>
-      <section class="voice-feed" id="voice-feed">
-        <p class="feed-empty" id="feed-empty" hidden>You haven't submitted anything yet.</p>
-      </section>
-
+          <section class="voice-mine">
+            <h2 class="voice-step">My messages</h2>
+            <div class="voice-feed" id="voice-feed">
+              <p class="feed-empty" id="feed-empty" hidden>You haven't sent anything yet.</p>
+            </div>
+          </section>
+        </aside>
+      </div>
     </main>
   </div>
 

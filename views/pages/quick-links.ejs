@@ -16,11 +16,16 @@
       </section>
 
       <section class="links-page-section">
+        <div class="links-search">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"/><path d="M16 16L20.5 20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <input type="search" id="links-search" placeholder="Search your links" aria-label="Search your links" autocomplete="off" />
+          <span class="links-count" id="links-count" aria-live="polite"></span>
+        </div>
         <div class="links-page-grid" id="links-page-grid">
           <p class="links-page-empty" id="links-page-empty">No quick links have been added yet.</p>
         </div>
+        <p class="links-page-empty" id="links-no-match" hidden>No links match that search.</p>
       </section>
-
     </main>
   </div>
 

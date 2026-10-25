@@ -14,19 +14,21 @@
       </section>
 
       <section class="clubs-section" id="community-service-clubs">
-        <h2 class="section-heading">Community Service Clubs</h2>
-        <div class="cs-clubs-list" id="cs-clubs-list">
-          <p class="cs-clubs-empty" id="cs-clubs-empty">No community service clubs have been added yet.</p>
-        </div>
+        <h2 class="club-section-title">Community Service Clubs</h2>
+        <div class="club-grid" id="cs-clubs-list"></div>
+        <p class="club-empty" id="cs-clubs-empty">No community service clubs have been added yet.</p>
       </section>
 
       <section class="clubs-section" id="after-school-clubs">
-        <h2 class="section-heading">After School Clubs</h2>
-        <div class="clubs-page-list" id="clubs-page-list">
-          <p class="clubs-page-empty" id="clubs-page-empty">No clubs have been added yet. Check back soon.</p>
-        </div>
+        <h2 class="club-section-title">After School Clubs</h2>
+        <div class="club-grid" id="clubs-page-list"></div>
+        <p class="club-empty" id="clubs-page-empty">No clubs have been added yet. Check back soon.</p>
       </section>
 
+      <dialog class="club-dialog" id="club-dialog" aria-labelledby="club-dialog-title">
+        <button type="button" class="club-dialog-close" id="club-dialog-close" aria-label="Close">&times;</button>
+        <div id="club-dialog-body"></div>
+      </dialog>
     </main>
   </div>
 

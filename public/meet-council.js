@@ -4,61 +4,74 @@ const LEADERSHIP_ROLES = ['president', 'vice president'];
 const isAdvisor = (role) => (role || '').trim().toLowerCase().includes('advisor');
 const isLeadership = (role) => LEADERSHIP_ROLES.includes((role || '').trim().toLowerCase());
 
-function renderCouncilCard(member) {
+function photoHtml(member, className) {
+  return `<span class="council-photo ${className}${member.photoUrl ? ' has-photo' : ''}">${
+    member.photoUrl ? `<img src="${escapeHtml(member.photoUrl)}" alt="" />` : MC_PERSON_ICON
+  }</span>`;
+}
+
+// The advisor, president and vice president: a larger card with a ringed
+// photo, the position as a tag, then the name and grade.
+function leaderCard(member) {
   const article = document.createElement('article');
-  article.className = 'council-page-card';
+  article.className = 'council-leader';
   article.innerHTML = `
-    <div class="council-page-avatar${member.photoUrl ? ' has-photo' : ''}">${
-      member.photoUrl ? `<img src="${escapeHtml(member.photoUrl)}" alt="${escapeHtml(member.name || '')}" />` : MC_PERSON_ICON
-    }</div>
+    ${photoHtml(member, 'council-photo-lg')}
+    ${member.role ? `<span class="council-tag${isAdvisor(member.role) ? ' council-tag-light' : ''}">${escapeHtml(member.role)}</span>` : ''}
     <h3>${escapeHtml(member.name || '')}</h3>
-    ${member.grade ? `<p class="council-page-grade">${escapeHtml(member.grade)}</p>` : ''}
-    ${member.role ? `<p class="council-page-role">${escapeHtml(member.role)}</p>` : ''}
-  `;
+    ${member.grade ? `<p class="council-grade">${escapeHtml(member.grade)}</p>` : ''}`;
   return article;
 }
 
-function buildGrid(members, narrow) {
-  const grid = document.createElement('div');
-  grid.className = narrow ? 'council-page-grid council-page-grid-narrow' : 'council-page-grid';
-  members.forEach((member) => grid.appendChild(renderCouncilCard(member)));
-  return grid;
+// Everyone else: a compact card with a small photo beside the details.
+function memberCard(member) {
+  const article = document.createElement('article');
+  article.className = 'council-member';
+  article.innerHTML = `
+    ${photoHtml(member, 'council-photo-sm')}
+    <div class="council-member-text">
+      <h3>${escapeHtml(member.name || '')}</h3>
+      ${member.role ? `<p class="council-role">${escapeHtml(member.role)}</p>` : ''}
+      ${member.grade ? `<p class="council-grade">${escapeHtml(member.grade)}</p>` : ''}
+    </div>`;
+  return article;
 }
 
-function buildSubtier(members) {
+function section(label, members, buildBody) {
   if (members.length === 0) return null;
-  const wrap = document.createElement('div');
-  wrap.className = 'council-subtier';
-  wrap.appendChild(buildGrid(members, true));
-  return wrap;
+  const el = document.createElement('section');
+  el.className = 'council-section';
+  el.innerHTML = `<div class="council-section-head"><h2>${escapeHtml(label)}</h2><span class="council-count">${members.length} ${members.length === 1 ? 'member' : 'members'}</span></div>`;
+  buildBody(el);
+  return el;
 }
 
-// A Student Council tier is broken into three sub-groups stacked vertically —
-// advisor(s), then President/Vice President, then everyone else — each only
-// appearing if it actually has members, so a school with no advisor on file
-// doesn't show an empty "Advisor" slot.
-function buildStudentCouncilTier(label, members) {
-  if (members.length === 0) return null;
-
-  const advisors = members.filter((m) => isAdvisor(m.role));
-  const leadership = members.filter((m) => !isAdvisor(m.role) && isLeadership(m.role));
-  const others = members.filter((m) => !isAdvisor(m.role) && !isLeadership(m.role));
-
-  const tier = document.createElement('div');
-  tier.className = 'council-tier';
-  tier.innerHTML = `<div class="council-tier-label">${escapeHtml(label)}</div>`;
-  [buildSubtier(advisors), buildSubtier(leadership), buildSubtier(others)].filter(Boolean).forEach((subtier) => tier.appendChild(subtier));
-
-  return tier;
+function grid(className, items, build) {
+  if (items.length === 0) return null;
+  const el = document.createElement('div');
+  el.className = className;
+  items.forEach((item) => el.appendChild(build(item)));
+  return el;
 }
 
-function buildFlatTier(label, members) {
-  if (members.length === 0) return null;
-  const tier = document.createElement('div');
-  tier.className = 'council-tier';
-  tier.innerHTML = `<div class="council-tier-label">${escapeHtml(label)}</div>`;
-  tier.appendChild(buildGrid(members, false));
-  return tier;
+// A Student Council: the advisor(s), president and vice president on top, then
+// everyone else. Each part only appears if it has people, so a council with no
+// advisor on file doesn't show an empty slot.
+function studentCouncil(label, members) {
+  return section(label, members, (el) => {
+    const advisors = members.filter((m) => isAdvisor(m.role));
+    const leadership = members.filter((m) => !isAdvisor(m.role) && isLeadership(m.role));
+    const others = members.filter((m) => !isAdvisor(m.role) && !isLeadership(m.role));
+    [grid('council-leaders', [...advisors, ...leadership], leaderCard), grid('council-members', others, memberCard)]
+      .filter(Boolean)
+      .forEach((part) => el.appendChild(part));
+  });
+}
+
+function generalCouncil(label, members) {
+  return section(label, members, (el) => {
+    el.appendChild(grid('council-members', members, memberCard));
+  });
 }
 
 async function loadCouncilPage() {
@@ -74,14 +87,14 @@ async function loadCouncilPage() {
 
   const byBucket = (level, group) => council.filter((m) => (m.level === 'ms' ? 'ms' : 'hs') === level && (m.group === 'general-council' ? 'general-council' : 'student-council') === group);
 
-  const tiers = [
-    buildStudentCouncilTier('HS Student Council', byBucket('hs', 'student-council')),
-    buildStudentCouncilTier('MS Student Council', byBucket('ms', 'student-council')),
-    buildFlatTier('HS General Council', byBucket('hs', 'general-council')),
-    buildFlatTier('MS General Council', byBucket('ms', 'general-council')),
-  ].filter(Boolean);
-
-  tiers.forEach((tier) => treeEl.appendChild(tier));
+  [
+    studentCouncil('HS Student Council', byBucket('hs', 'student-council')),
+    studentCouncil('MS Student Council', byBucket('ms', 'student-council')),
+    generalCouncil('HS General Council', byBucket('hs', 'general-council')),
+    generalCouncil('MS General Council', byBucket('ms', 'general-council')),
+  ]
+    .filter(Boolean)
+    .forEach((el) => treeEl.appendChild(el));
 }
 
 loadCouncilPage();

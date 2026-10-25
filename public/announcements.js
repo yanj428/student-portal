@@ -31,8 +31,29 @@ async function loadSlideArchive() {
   );
 }
 
+// Every upcoming event on the school calendar, soonest first (the server drops
+// events whose date has passed).
+async function loadUpcomingCalendar() {
+  const data = await fetchJson('/api/calendar-events');
+  if (!data) return;
+
+  renderList(
+    document.getElementById('upcoming-list'),
+    document.getElementById('upcoming-empty'),
+    data.calendarEvents,
+    'div',
+    'home-event',
+    (event) => `
+      <div class="home-date"><b>${escapeHtml(event.day)}</b><span>${escapeHtml(event.month)}</span></div>
+      <div class="home-event-info">
+        <h3>${escapeHtml(event.title)}</h3>
+        ${event.subtitle ? `<p>${escapeHtml(event.subtitle)}</p>` : ''}
+      </div>`
+  );
+}
 function loadAnnouncementsPage() {
   loadWeeklySlide();
+  loadUpcomingCalendar();
   loadSlideArchive();
 }
 

@@ -14,25 +14,48 @@ const feedEl = document.getElementById('voice-feed');
 const feedEmpty = document.getElementById('feed-empty');
 const postForm = document.getElementById('post-form');
 const postTitleInput = document.getElementById('post-title');
-const postCategorySelect = document.getElementById('post-category');
+const categoryRadios = postForm.querySelectorAll('input[name="post-category"]');
 const postInput = document.getElementById('post-input');
 const postSubmit = document.getElementById('post-submit');
 const postCancel = document.getElementById('post-cancel');
 const postError = document.getElementById('post-error');
 const composerTitle = document.getElementById('composer-title');
 const composerHint = document.getElementById('composer-hint');
+const countEl = document.getElementById('voice-count');
 
-const STATUS_LABEL = { pending: 'Pending review', approved: 'Approved', rejected: 'Not approved' };
+const STATUS_LABEL = { pending: 'Pending', approved: 'Approved', rejected: 'Not approved' };
+const SUBMIT_LABEL = 'Send to StuCo';
+
+// One icon per category, shared by the tiles' look and the list below.
+const CATEGORY_ICON = {
+  Suggestion: 'M9 18H15M10 21H14M12 3C8.7 3 6 5.5 6 8.6C6 10.6 7 12 8.3 13.2C8.8 13.7 9 14.3 9 15H15C15 14.3 15.2 13.7 15.7 13.2C17 12 18 10.6 18 8.6C18 5.5 15.3 3 12 3Z',
+  Concern: 'M12 8V13M12 16.2V16.3M12 21C16.97 21 21 16.97 21 12C21 7.03 16.97 3 12 3C7.03 3 3 7.03 3 12C3 16.97 7.03 21 12 21Z',
+  Question: 'M9.5 9C9.5 7.6 10.6 6.5 12 6.5C13.4 6.5 14.5 7.6 14.5 9C14.5 10.4 13.4 10.9 12.7 11.6C12.2 12.1 12 12.6 12 13.5M12 17V17.1M12 21C16.97 21 21 16.97 21 12C21 7.03 16.97 3 12 3C7.03 3 3 7.03 3 12C3 16.97 7.03 21 12 21Z',
+  Shoutout: 'M4 20L8 9L15 16L4 20ZM13 4V6M19 6L17.5 7.5M20 12H18M15 9.5C16.2 8.3 17.8 7.6 19.5 7.5',
+  Other: 'M6 12H6.01M12 12H12.01M18 12H18.01',
+};
 
 let editingId = null;
 let posts = [];
 
+const getCategory = () => (postForm.querySelector('input[name="post-category"]:checked') || {}).value || '';
+function setCategory(value) {
+  categoryRadios.forEach((radio) => {
+    radio.checked = radio.value === value;
+  });
+}
+function updateCount() {
+  countEl.textContent = `${postInput.value.length} / 2000`;
+}
+postInput.addEventListener('input', updateCount);
+
 function enterEditMode(post) {
   editingId = post.id;
   postTitleInput.value = post.title;
-  postCategorySelect.value = post.category;
+  setCategory(post.category);
   postInput.value = post.body;
-  composerTitle.textContent = 'Edit suggestion';
+  updateCount();
+  composerTitle.textContent = 'Edit your message';
   composerHint.textContent = 'Saving sends this back to StuCo for review.';
   postSubmit.textContent = 'Save changes';
   postCancel.hidden = false;
@@ -42,33 +65,31 @@ function enterEditMode(post) {
 function exitEditMode() {
   editingId = null;
   postForm.reset();
+  updateCount();
   composerTitle.textContent = 'Share something';
   composerHint.textContent = 'Only StuCo can see what you submit. Other students never will.';
-  postSubmit.textContent = 'Submit';
+  postSubmit.textContent = SUBMIT_LABEL;
   postCancel.hidden = true;
 }
 
 postCancel.addEventListener('click', exitEditMode);
 
 function renderPost(post) {
+  const icon = CATEGORY_ICON[post.category] || CATEGORY_ICON.Other;
   return `
     <article class="post-card status-${escapeHtml(post.status)}" data-post-id="${escapeHtml(post.id)}">
-      <div class="post-head">
-        <div class="post-meta">
-          <div class="post-author">
-            <span class="status-badge status-${escapeHtml(post.status)}">${escapeHtml(STATUS_LABEL[post.status] || post.status)}</span>
-          </div>
-          <div class="post-subline">${timeAgo(post.createdAt)}</div>
+      <div class="post-top">
+        <span class="post-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="${icon}" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <div class="post-main">
+          <h3 class="post-title">${escapeHtml(post.title)}</h3>
+          <span class="post-subline">${escapeHtml(post.category)} &middot; ${timeAgo(post.createdAt)}</span>
         </div>
-        <span class="category-badge">${escapeHtml(post.category)}</span>
+        <span class="status-badge status-${escapeHtml(post.status)}">${escapeHtml(STATUS_LABEL[post.status] || post.status)}</span>
       </div>
-
-      <h3 class="post-title">${escapeHtml(post.title)}</h3>
       <p class="post-body">${escapeHtml(post.body)}</p>
-
       <div class="post-actions">
-        <button class="btn ghost edit-btn" data-post-id="${escapeHtml(post.id)}">Edit</button>
-        <button class="btn reject delete-btn" data-post-id="${escapeHtml(post.id)}">Delete</button>
+        <button class="post-action edit-btn" data-post-id="${escapeHtml(post.id)}">Edit</button>
+        <button class="post-action post-action-danger delete-btn" data-post-id="${escapeHtml(post.id)}">Delete</button>
       </div>
     </article>`;
 }
@@ -94,7 +115,7 @@ function wireFeedEvents() {
 
   feedEl.querySelectorAll('.delete-btn').forEach((btn) => {
     btn.addEventListener('click', async () => {
-      if (!confirm('Delete this suggestion? This cannot be undone.')) return;
+      if (!confirm('Delete this message? This cannot be undone.')) return;
       const postId = btn.dataset.postId;
       postError.hidden = true;
       try {
@@ -103,7 +124,7 @@ function wireFeedEvents() {
         if (editingId === postId) exitEditMode();
         loadPosts();
       } catch {
-        postError.textContent = 'Could not delete that suggestion. Please try again.';
+        postError.textContent = 'Could not delete that message. Please try again.';
         postError.hidden = false;
       }
     });
@@ -115,17 +136,17 @@ postForm.addEventListener('submit', async (e) => {
   postError.hidden = true;
 
   const title = postTitleInput.value.trim();
-  const category = postCategorySelect.value;
+  const category = getCategory();
   const body = postInput.value.trim();
 
   if (!title || !category || !body) {
-    postError.textContent = 'Please fill in title, category, and message.';
+    postError.textContent = 'Please choose a category and fill in the title and message.';
     postError.hidden = false;
     return;
   }
 
   postSubmit.disabled = true;
-  postSubmit.textContent = editingId ? 'Saving…' : 'Submitting…';
+  postSubmit.textContent = editingId ? 'Saving…' : 'Sending…';
 
   try {
     const url = editingId ? `/api/voice/posts/${editingId}` : '/api/voice/posts';
@@ -150,7 +171,7 @@ postForm.addEventListener('submit', async (e) => {
     postError.hidden = false;
   } finally {
     postSubmit.disabled = false;
-    postSubmit.textContent = editingId ? 'Save changes' : 'Submit';
+    postSubmit.textContent = editingId ? 'Save changes' : SUBMIT_LABEL;
   }
 });
 

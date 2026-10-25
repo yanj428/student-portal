@@ -1,147 +1,140 @@
-.clubs-section {
-  margin-top: 4px;
-}
-.clubs-section + .clubs-section {
-  margin-top: 28px;
-}
+.clubs-section { margin-top: 4px; }
+.clubs-section + .clubs-section { margin-top: 28px; }
+.club-section-title { font-size: 20.8px; font-weight: 700; margin: 0 0 14px 0; }
 
-/* Both club lists (Community Service and After School): two cards per row. */
-.cs-clubs-list,
-.clubs-page-list {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
-}
-.cs-clubs-empty {
-  grid-column: 1 / -1;
-  color: var(--text-muted);
-  font-size: 13px;
-  margin: 0;
-}
-.cs-club-card {
-  background: var(--surface);
-  border-radius: var(--radius-md);
-  padding: 18px 20px;
-  box-shadow: var(--shadow);
-}
-.cs-club-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-.cs-club-logo {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  background: #fff;
-  object-fit: contain;
-  flex-shrink: 0;
-  border: 1px solid var(--border);
-}
-.cs-club-card h3 {
-  font-size: 15px;
-  margin: 0;
-}
-.club-info-section {
-  margin-top: 10px;
-}
-.club-info-section h4 {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-  margin: 0 0 3px 0;
-}
-.club-info-section p {
-  font-size: 13.5px;
-  line-height: 1.6;
-  color: var(--text);
-  margin: 0;
-  white-space: pre-wrap;
-}
-/* UN SDG badges: pushed to the top-right corner of the card's header row. */
-.club-sdgs {
-  display: flex;
-  gap: 6px;
-  margin-left: auto;
-  align-self: flex-start;
-  flex-shrink: 0;
-}
-.club-sdg {
-  width: 48px;
-  height: 48px;
-  border-radius: 6px;
-  object-fit: cover;
-}
-.club-info-section .cs-club-link {
-  margin-top: 4px;
-}
-.cs-club-links {
-  display: flex;
-  gap: 16px;
-  margin-top: 12px;
-}
-.cs-club-link {
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--primary);
-}
-.cs-club-link svg {
-  width: 15px;
-  height: 15px;
-  flex-shrink: 0;
-}
-.cs-club-link:hover { text-decoration: underline; }
+.club-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.club-grid:empty { display: none; }
+.club-empty { color: var(--text-muted); font-size: 15px; margin: 0; }
 
-/* After school clubs */
-.clubs-page-empty {
-  color: var(--text-muted);
-  font-size: 13px;
-  margin: 0;
-  grid-column: 1 / -1;
-}
-.club-page-card {
-  background: var(--surface);
-  border-radius: var(--radius-md);
-  padding: 18px 20px;
-  box-shadow: var(--shadow);
-}
-.club-page-card h3 {
-  font-size: 15px;
-  margin: 0 0 6px 0;
-}
-.club-page-meta {
+/* A club's card: short on purpose, the full details open in a window. */
+.club-card {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 12.5px;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 18px 16px;
+  background: var(--surface);
+  border: 1.3px solid var(--border);
+  border-radius: var(--radius-md);
   color: var(--text);
-  margin-bottom: 10px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
 }
-.club-page-meta span strong {
-  font-weight: 600;
+.club-card:hover { border-color: var(--primary-light); }
+.club-card:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.club-card-top { display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0; }
+.club-card-name { flex: 1; min-width: 0; font-size: 15px; font-weight: 700; overflow-wrap: break-word; }
+.club-card-mission {
+  font-size: 14.5px;
+  line-height: 1.45;
   color: var(--text-muted);
-  margin-right: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
-.club-page-signup {
-  display: inline-block;
-  background: var(--primary);
-  color: #fff;
-  font-size: 12.5px;
-  font-weight: 600;
-  padding: 8px 16px;
+
+.club-logo {
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+}
+.club-logo img { width: 100%; height: 100%; object-fit: cover; }
+.club-logo-letter { background: var(--primary-tint); color: var(--primary); font-weight: 800; }
+.club-logo-sm { width: 44px; height: 44px; font-size: 19px; }
+.club-logo-lg { width: 64px; height: 64px; font-size: 26px; }
+
+/* UN SDG badges */
+/* In the top-right corner, two across so up to four stay compact. */
+.club-sdgs { display: grid; grid-template-columns: repeat(2, auto); gap: 4px; margin-left: auto; align-self: flex-start; flex-shrink: 0; }
+.club-sdg-sm { width: 26px; height: 26px; border-radius: 4px; object-fit: cover; }
+.club-sdg-lg { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; }
+
+/* When an after school club meets */
+.club-meeting { display: flex; flex-wrap: wrap; gap: 8px; }
+.club-meeting-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
   border-radius: 999px;
+  background: var(--primary-tint);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+.club-meeting-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+.club-meeting-note { background: transparent; border: 1.3px solid var(--border); color: var(--text-muted); }
+
+/* The details window */
+.club-dialog {
+  border: 0;
+  border-radius: var(--radius-lg);
+  padding: 26px 28px;
+  background: var(--surface);
+  color: var(--text);
+  width: min(560px, calc(100vw - 24px));
+  max-height: calc(100vh - 48px);
+  box-shadow: var(--shadow);
+}
+.club-dialog::backdrop { background: rgba(43, 32, 32, 0.5); }
+.club-dialog[open] { display: flex; flex-direction: column; gap: 14px; }
+.club-dialog-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--primary-tint);
+  color: var(--primary);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.club-dialog-close:hover { background: #F2DADA; }
+#club-dialog-body { display: flex; flex-direction: column; gap: 14px; }
+.club-dialog-head { display: flex; align-items: center; gap: 14px; padding-right: 40px; }
+.club-dialog-head h2 { font-size: 22px; margin: 0; overflow-wrap: anywhere; }
+.club-info-section h3 {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--primary);
+  margin: 0 0 4px 0;
+}
+.club-info-section p { font-size: 15.5px; line-height: 1.6; margin: 0; white-space: pre-wrap; }
+.club-dialog-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+.club-primary-link,
+.club-secondary-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
   text-decoration: none;
 }
-.club-page-signup:hover { background: var(--primary-dark); }
+.club-primary-link { background: var(--primary); color: #fff; }
+.club-primary-link:hover { background: var(--primary-dark); }
+.club-secondary-link { border: 1.3px solid var(--border); color: var(--primary); }
+.club-secondary-link:hover { border-color: var(--primary-light); }
+.club-primary-link svg,
+.club-secondary-link svg { width: 18px; height: 18px; }
 
-@media (max-width: 700px) {
-  .cs-clubs-list,
-  .clubs-page-list { grid-template-columns: 1fr; }
+@media (max-width: 900px) {
+  .club-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .club-grid { grid-template-columns: 1fr; }
+  .club-dialog { padding: 22px 18px; }
 }

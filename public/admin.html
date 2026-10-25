@@ -470,8 +470,16 @@
           </div>
           <div class="form-row club-type-fields" data-for="after-school" hidden>
             <div class="form-field">
-              <label class="field-label" for="club-schedule">Meeting schedule (optional)</label>
-              <input class="field-input" type="text" id="club-schedule" placeholder="e.g. Tue & Thu · 3:30–5:00 PM · STEM Lab" />
+              <label class="field-label" for="club-meeting-day">Meeting day (optional)</label>
+              <input class="field-input" type="text" id="club-meeting-day" maxlength="100" placeholder="e.g. Tuesday, or Tue &amp; Thu" />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="club-meeting-time">Meeting time (optional)</label>
+              <input class="field-input" type="text" id="club-meeting-time" maxlength="100" placeholder="e.g. 3:30–5:00 PM" />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="club-schedule">Place or other details (optional)</label>
+              <input class="field-input" type="text" id="club-schedule" placeholder="e.g. STEM Lab" />
             </div>
             <div class="form-field">
               <label class="field-label" for="club-signup">Sign-up link (optional)</label>
@@ -516,7 +524,9 @@
             </div>
             <div class="form-field">
               <label class="field-label" for="cs-event-club">Hosting club</label>
-              <input class="field-input" type="text" id="cs-event-club" placeholder="e.g. Beach Cleanup Club" required />
+              <input class="field-input" type="text" id="cs-event-club" list="cs-club-options" autocomplete="off" placeholder="Start typing a club name" required />
+              <datalist id="cs-club-options"></datalist>
+              <p class="club-detected" id="cs-event-club-detected" hidden></p>
             </div>
           </div>
           <div class="form-row">
@@ -542,6 +552,33 @@
 
         <div class="simple-list" id="cs-event-admin-list">
           <p class="empty-hint" id="cs-event-empty-hint">No events or opportunities posted yet.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Community Service resources</h2>
+        <p class="panel-hint">The links shown under "Resources" on the Community Service page. Drag the &#8942;&#8942; handle to change the order.</p>
+
+        <form id="cs-resource-form" class="archive-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="cs-resource-title">Title</label>
+              <input class="field-input" type="text" id="cs-resource-title" placeholder="e.g. Proposal Form Template" maxlength="150" required />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="cs-resource-url">Link</label>
+              <input class="field-input" type="text" id="cs-resource-url" placeholder="https://..." required />
+            </div>
+          </div>
+          <p class="field-error" id="cs-resource-error" hidden></p>
+          <div class="form-actions">
+            <button type="submit" class="btn primary" id="cs-resource-submit">Add resource</button>
+            <button type="button" class="btn ghost" id="cs-resource-cancel-edit" hidden>Cancel edit</button>
+          </div>
+        </form>
+
+        <div class="simple-list" id="cs-resource-list">
+          <p class="empty-hint" id="cs-resource-empty-hint">No resources yet.</p>
         </div>
       </section>
       </section>
@@ -641,6 +678,11 @@
             <div class="form-field">
               <label class="field-label" for="quicklink-url">URL</label>
               <input class="field-input" type="text" id="quicklink-url" placeholder="https://... or http://..." required />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="quicklink-logo">Logo (optional)</label>
+              <input class="field-input" type="file" id="quicklink-logo" accept="image/png,image/jpeg,image/webp,image/gif" />
+              <label class="radio-option" id="quicklink-remove-logo-row" hidden><input type="checkbox" id="quicklink-remove-logo" /> Remove current logo</label>
             </div>
           </div>
           <p class="field-error" id="quicklink-error" hidden></p>

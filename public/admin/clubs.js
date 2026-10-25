@@ -1,5 +1,6 @@
-import { escapeHtml, getJSON, ITEM_ACTIONS_HTML } from './api.js';
+import { escapeHtml, getJSON, ITEM_ACTIONS_HTML, renderRows } from './api.js';
 import { crudPanel } from './crud.js';
+import { attachPhotoCropper } from './photoCrop.js';
 import { bindViewMore } from './viewMore.js';
 
 const typeRadios = document.querySelectorAll('input[name="club-type"]');
@@ -15,6 +16,8 @@ const contactsInput = document.getElementById('club-contacts');
 const instagramInput = document.getElementById('club-instagram');
 const applicationInput = document.getElementById('club-application');
 const scheduleInput = document.getElementById('club-schedule');
+const meetingDayInput = document.getElementById('club-meeting-day');
+const meetingTimeInput = document.getElementById('club-meeting-time');
 const advisorInput = document.getElementById('club-advisor');
 const signupInput = document.getElementById('club-signup');
 const typeFieldGroups = document.querySelectorAll('.club-type-fields');
@@ -45,6 +48,8 @@ function updateVisibleFields() {
 typeRadios.forEach((r) => r.addEventListener('change', updateVisibleFields));
 updateVisibleFields();
 
+attachPhotoCropper(logoInput);
+
 const panel = crudPanel({
   form: document.getElementById('club-form'),
   submitBtn: document.getElementById('club-submit'),
@@ -70,6 +75,8 @@ const panel = crudPanel({
       advisor: advisorInput.value.trim(),
       applicationFormUrl: only('community-service', applicationInput),
       schedule: only('after-school', scheduleInput),
+      meetingDay: only('after-school', meetingDayInput),
+      meetingTime: only('after-school', meetingTimeInput),
       signupUrl: only('after-school', signupInput),
     };
     const formData = new FormData();
@@ -90,6 +97,8 @@ const panel = crudPanel({
     instagramInput.value = club.instagramUrl;
     applicationInput.value = club.applicationFormUrl;
     scheduleInput.value = club.schedule;
+    meetingDayInput.value = club.meetingDay || '';
+    meetingTimeInput.value = club.meetingTime || '';
     advisorInput.value = club.advisor;
     signupInput.value = club.signupUrl;
     logoInput.value = '';
@@ -109,6 +118,7 @@ function metaHtml(club) {
     club.advisor ? `<span>Advisor: ${escapeHtml(club.advisor)}</span>` : '',
     club.instagramUrl ? link(club.instagramUrl, 'Instagram') : '',
     club.applicationFormUrl ? link(club.applicationFormUrl, 'Application form') : '',
+    club.meetingDay || club.meetingTime ? `<span>${escapeHtml([club.meetingDay, club.meetingTime].filter(Boolean).join(' · '))}</span>` : '',
     club.schedule ? `<span>${escapeHtml(club.schedule)}</span>` : '',
     club.signupUrl ? link(club.signupUrl, 'Sign-up link') : '',
   ].join('');
@@ -119,14 +129,9 @@ export async function loadClubs() {
   if (!data) return;
 
   Object.entries(LISTS).forEach(([type, { listEl, emptyEl }]) => {
-    listEl.querySelectorAll('.simple-item').forEach((el) => el.remove());
     const clubs = data.clubs.filter((c) => c.type === type);
-    emptyEl.hidden = clubs.length > 0;
-
-    clubs.forEach((club) => {
+    renderRows(listEl, emptyEl, clubs, (div, club) => {
       const meta = metaHtml(club);
-      const div = document.createElement('div');
-      div.className = 'simple-item';
       div.innerHTML = `
         <div class="simple-item-head">
           <div class="item-identity">
@@ -139,7 +144,6 @@ export async function loadClubs() {
         ${meta ? `<div class="item-meta">${meta}</div>` : ''}
       `;
       panel.bindRow(div, club, `Remove "${club.name}"?`);
-      listEl.appendChild(div);
     });
   });
 }

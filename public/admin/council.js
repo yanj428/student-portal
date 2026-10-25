@@ -1,5 +1,6 @@
-import { escapeHtml, getJSON, ITEM_ACTIONS_HTML } from './api.js';
+import { escapeHtml, getJSON, ITEM_ACTIONS_HTML, renderRows } from './api.js';
 import { crudPanel } from './crud.js';
+import { attachPhotoCropper } from './photoCrop.js';
 import { enableReorder } from './reorder.js';
 
 const photoInput = document.getElementById('council-photo');
@@ -19,6 +20,8 @@ const BUCKETS = Object.fromEntries(
     { listEl: document.getElementById(`council-list-${bucket}`), emptyEl: document.getElementById(`council-empty-hint-${bucket}`) },
   ])
 );
+
+attachPhotoCropper(photoInput);
 
 const panel = crudPanel({
   form: document.getElementById('council-form'),
@@ -60,14 +63,8 @@ export async function loadCouncil() {
   if (!data) return;
 
   Object.entries(BUCKETS).forEach(([bucket, { listEl, emptyEl }]) => {
-    listEl.querySelectorAll('.simple-item').forEach((el) => el.remove());
     const members = data.council.filter((m) => `${m.level}-${m.group}` === bucket);
-    emptyEl.hidden = members.length > 0;
-
-    members.forEach((item) => {
-      const div = document.createElement('div');
-      div.className = 'simple-item';
-      div.dataset.id = item.id;
+    renderRows(listEl, emptyEl, members, (div, item) => {
       div.innerHTML = `
         <div class="simple-item-head">
           <div class="item-identity">
@@ -80,7 +77,6 @@ export async function loadCouncil() {
       `;
       enableReorder(div.querySelector('.drag-handle'), listEl, { url: '/api/admin/council/reorder', extraBody: { bucket }, reload: loadCouncil });
       panel.bindRow(div, item, `Remove "${item.name}"?`);
-      listEl.appendChild(div);
     });
   });
 }

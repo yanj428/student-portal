@@ -5,6 +5,7 @@ import { loadVoicePending } from './voice.js';
 import { loadCurrentSlide, loadSlideArchive } from './slides.js';
 import { loadClubs } from './clubs.js';
 import { loadCsEvents } from './csEvents.js';
+import { loadCsResources } from './csResources.js';
 import { loadCalendarEvents } from './calendarEvents.js';
 import { loadCouncil } from './council.js';
 import { loadQuickLinks } from './quickLinks.js';
@@ -22,6 +23,7 @@ initAuth((session) => {
     loadSlideArchive,
     loadClubs,
     loadCsEvents,
+    loadCsResources,
     loadCalendarEvents,
     loadCouncil,
     loadQuickLinks,

@@ -1,4 +1,4 @@
-import { escapeHtml, getJSON, sendJSON, withBusy, ITEM_ACTIONS_HTML } from './api.js';
+import { escapeHtml, getJSON, sendJSON, withBusy, ITEM_ACTIONS_HTML, renderRows } from './api.js';
 import { crudPanel } from './crud.js';
 
 const dayInput = document.getElementById('calendar-event-day');
@@ -40,12 +40,7 @@ export async function loadCalendarEvents() {
   if (!data) return;
   existingEvents = data.calendarEvents;
 
-  listEl.querySelectorAll('.simple-item').forEach((el) => el.remove());
-  emptyEl.hidden = existingEvents.length > 0;
-
-  existingEvents.forEach((item) => {
-    const div = document.createElement('div');
-    div.className = 'simple-item';
+  renderRows(listEl, emptyEl, existingEvents, (div, item) => {
     div.innerHTML = `
       <div class="simple-item-head">
         <span class="simple-item-title">${escapeHtml(item.day)} ${escapeHtml(item.month)} · ${escapeHtml(item.title)}</span>
@@ -54,7 +49,6 @@ export async function loadCalendarEvents() {
       <p class="simple-item-body">${escapeHtml(item.subtitle)}</p>
     `;
     panel.bindRow(div, item, `Remove "${item.title}"?`);
-    listEl.appendChild(div);
   });
 }
 

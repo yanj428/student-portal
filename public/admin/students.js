@@ -1,4 +1,4 @@
-import { escapeHtml, getJSON, sendJSON, confirmDelete, withBusy, TRASH_ICON } from './api.js';
+import { escapeHtml, getJSON, sendJSON, confirmDelete, TRASH_ICON } from './api.js';
 import { crudPanel } from './crud.js';
 
 const createForm = document.getElementById('create-form');

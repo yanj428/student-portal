@@ -103,3 +103,17 @@ export async function withBusy(button, busyLabel, action) {
     button.textContent = label;
   }
 }
+
+// Rebuilds a list of rows: clears the old ones, shows the empty hint when there
+// is nothing, and calls build(div, item) to fill each new `.simple-item` row.
+export function renderRows(listEl, emptyEl, items, build) {
+  listEl.querySelectorAll('.simple-item').forEach((el) => el.remove());
+  emptyEl.hidden = items.length > 0;
+  items.forEach((item) => {
+    const div = document.createElement('div');
+    div.className = 'simple-item';
+    div.dataset.id = item.id;
+    build(div, item);
+    listEl.appendChild(div);
+  });
+}

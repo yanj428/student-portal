@@ -9,13 +9,20 @@ import { getJSON, sendForm, del, withBusy } from './api.js';
 //   contentKey  where it lives in the content object, in the server's replies
 //   labelField  the name of its text label (also the form field sent)
 //   noun        what the picture is called in messages, e.g. "lunch menu image"
+//   ids.pdfLink (optional) a link shown instead of the picture when the upload is a PDF
 export function imageSlot({ ids, endpoint, contentKey, labelField, emptyLabel, noun }) {
   const el = Object.fromEntries(Object.entries(ids).map(([key, id]) => [key, document.getElementById(id)]));
 
   function render(item) {
     el.current.hidden = !item.imageUrl;
     if (item.imageUrl) {
-      el.image.src = item.imageUrl;
+      const isPdf = /\.pdf$/i.test(item.imageUrl);
+      el.image.hidden = isPdf;
+      if (!isPdf) el.image.src = item.imageUrl;
+      if (el.pdfLink) {
+        el.pdfLink.hidden = !isPdf;
+        el.pdfLink.href = item.imageUrl;
+      }
       el.label.textContent = item[labelField] || emptyLabel;
     }
   }

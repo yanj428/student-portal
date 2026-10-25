@@ -39,13 +39,18 @@ function detectImageType(buffer) {
   return null;
 }
 
+// A PDF always starts with "%PDF-", checked the same way as the images above.
+function detectPdf(buffer) {
+  return buffer.length >= 5 && buffer.subarray(0, 5).toString('ascii') === '%PDF-' ? { ext: '.pdf', mimetype: 'application/pdf' } : null;
+}
+
 // Uploads go to memory first (these are small, capped well under 10MB) so
 // the real file type can be checked before anything touches disk, and the
 // file is saved under an extension based on what it actually is rather
 // than whatever extension or Content-Type the upload claimed. With no
 // `subdir` the image is only ever sent on to an external API (the calendar
 // extractor) and never written to disk or served back from our own domain.
-function makeImageUpload(maxSizeMb, subdir) {
+function makeImageUpload(maxSizeMb, subdir, { allowPdf = false } = {}) {
   const memoryUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: maxSizeMb * 1024 * 1024 } });
 
   return {
@@ -56,8 +61,8 @@ function makeImageUpload(maxSizeMb, subdir) {
           if (err) return next(err);
           if (!req.file) return next();
 
-          const detected = detectImageType(req.file.buffer);
-          if (!detected) return next(new Error('Only JPEG, PNG, WEBP, or GIF images are allowed.'));
+          const detected = detectImageType(req.file.buffer) || (allowPdf ? detectPdf(req.file.buffer) : null);
+          if (!detected) return next(new Error(allowPdf ? 'Only JPEG, PNG, WEBP, GIF or PDF files are allowed.' : 'Only JPEG, PNG, WEBP, or GIF images are allowed.'));
           req.file.mimetype = detected.mimetype;
           if (!subdir) return next();
 
@@ -97,7 +102,8 @@ module.exports = {
   COUNCIL_PHOTO_SUBDIR,
   CALENDAR_SUBDIR,
   QUICK_LINK_LOGO_SUBDIR,
-  lunchImageUpload: makeImageUpload(8, LUNCH_SUBDIR),
+  // The lunch menu can also be a PDF.
+  lunchImageUpload: makeImageUpload(10, LUNCH_SUBDIR, { allowPdf: true }),
   clubLogoUpload: makeImageUpload(4, CLUB_LOGO_SUBDIR),
   councilPhotoUpload: makeImageUpload(4, COUNCIL_PHOTO_SUBDIR),
   quickLinkLogoUpload: makeImageUpload(4, QUICK_LINK_LOGO_SUBDIR),

@@ -39,7 +39,7 @@ app.use(
         imgSrc: ["'self'", 'data:'],
         connectSrc: ["'self'"],
         // Matches the hosts content.js and slideArchive.js accept for a Canva link.
-        frameSrc: ['https://canva.com', 'https://*.canva.com', 'https://canva.link', 'https://*.canva.link'],
+        frameSrc: ["'self'", 'https://canva.com', 'https://*.canva.com', 'https://canva.link', 'https://*.canva.link'],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
         frameAncestors: ["'none'"],
@@ -113,6 +113,13 @@ const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 // straight back, looping forever. The admin page is served explicitly instead.
 app.get('/admin', (req, res) => res.sendFile(path.join(PUBLIC_DIR, 'admin.html')));
 
+// The lunch menu can be a PDF shown in a frame on our own lunch page. The site
+// forbids being framed everywhere else, so only these PDF responses allow it,
+// and only from our own pages.
+app.use('/uploads', (req, res, next) => {
+  if (req.path.toLowerCase().endsWith('.pdf')) res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+  next();
+});
 app.use('/uploads', express.static(UPLOADS_DIR));
 app.use(express.static(PUBLIC_DIR, { extensions: ['html'] }));
 

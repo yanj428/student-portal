@@ -4,6 +4,7 @@ export const loadLunchCurrent = imageSlot({
   ids: {
     current: 'lunch-current',
     image: 'lunch-current-image',
+    pdfLink: 'lunch-current-pdf',
     label: 'lunch-current-label',
     removeBtn: 'lunch-remove-btn',
     form: 'lunch-upload-form',
@@ -16,5 +17,5 @@ export const loadLunchCurrent = imageSlot({
   contentKey: 'lunchSchedule',
   labelField: 'weekLabel',
   emptyLabel: 'No week label set',
-  noun: 'lunch menu image',
+  noun: 'lunch menu',
 });

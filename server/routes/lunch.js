@@ -10,8 +10,8 @@ const WEEK_LABEL_MAX = 100;
 
 router.post('/api/admin/lunch-image', requireAdmin, (req, res) => {
   lunchImageUpload.single('image')(req, res, (err) => {
-    if (err) return res.status(400).json({ error: err.message || 'Could not upload image.' });
-    if (!req.file) return res.status(400).json({ error: 'No image was uploaded.' });
+    if (err) return res.status(400).json({ error: err.message || 'Could not upload the menu.' });
+    if (!req.file) return res.status(400).json({ error: 'No file was uploaded.' });
 
     const weekLabel = typeof req.body.weekLabel === 'string' ? req.body.weekLabel.trim() : '';
     if (weekLabel.length > WEEK_LABEL_MAX) {

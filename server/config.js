@@ -35,8 +35,8 @@ const LOGIN_ATTEMPT_LOG_RETENTION_DAYS = parseInt(process.env.LOGIN_ATTEMPT_LOG_
 // "logged out 8 hours after login no matter what you do in between."
 const STUDENT_SESSION_IDLE_MINUTES = parseFloat(process.env.STUDENT_SESSION_IDLE_MINUTES) || 120;
 const STUDENT_SESSION_ABSOLUTE_MINUTES = parseFloat(process.env.STUDENT_SESSION_ABSOLUTE_MINUTES) || 480;
-const ADMIN_SESSION_IDLE_MINUTES = parseFloat(process.env.ADMIN_SESSION_IDLE_MINUTES) || 60;
-const ADMIN_SESSION_ABSOLUTE_MINUTES = parseFloat(process.env.ADMIN_SESSION_ABSOLUTE_MINUTES) || 480;
+const ADMIN_SESSION_IDLE_MINUTES = parseFloat(process.env.ADMIN_SESSION_IDLE_MINUTES) || 1440; // 24 hours
+const ADMIN_SESSION_ABSOLUTE_MINUTES = parseFloat(process.env.ADMIN_SESSION_ABSOLUTE_MINUTES) || 43200; // 30 days
 
 // Only sent over HTTPS once the site is actually served that way. Force it
 // on by setting NODE_ENV=production (also see TRUST_PROXY below, needed

@@ -4,10 +4,12 @@ const bcrypt = require('bcryptjs');
 const db = require('../db');
 const { requireStudent, publicStudent } = require('../middleware/auth');
 const { studentLoginLimiter, passwordChangeLimiter } = require('../middleware/rateLimit');
-const { lockedResponse, logout } = require('../utils/authResponses');
+const { lockedResponse } = require('../utils/authResponses');
+const { snapshotRole, logoutRole } = require('../utils/sessionRoles');
 const {
   DEFAULT_STUDENT_PASSWORD,
   STUDENT_SESSION_IDLE_MINUTES,
+  ADMIN_SESSION_IDLE_MINUTES,
   DUMMY_PASSWORD_HASH,
 } = require('../config');
 
@@ -48,16 +50,20 @@ router.post('/api/login', studentLoginLimiter, (req, res) => {
 
   db.clearThrottle(email);
   db.recordLoginAttempt({ email, ip, success: true });
+  // An admin signed in on this same browser stays signed in.
+  const admin = snapshotRole(req.session, 'admin');
   req.session.regenerate((err) => {
     if (err) return res.status(500).json({ error: 'Could not start a session.' });
+    Object.assign(req.session, admin);
     req.session.studentId = student.id;
-    req.session.loginAt = Date.now();
-    req.session.cookie.maxAge = STUDENT_SESSION_IDLE_MINUTES * 60 * 1000;
+    req.session.studentLoginAt = Date.now();
+    req.session.cookie.maxAge = Math.max(STUDENT_SESSION_IDLE_MINUTES, admin.isAdmin ? ADMIN_SESSION_IDLE_MINUTES : 0) * 60 * 1000;
     res.json({ student: publicStudent(student) });
   });
 });
 
-router.post('/api/logout', logout);
+// Signs out the student only; an admin signed in on this browser stays that way.
+router.post('/api/logout', logoutRole('student'));
 
 router.get('/api/me', requireStudent, (req, res) => {
   res.json({ student: publicStudent(req.student) });

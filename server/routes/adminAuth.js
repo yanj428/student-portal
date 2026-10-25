@@ -5,11 +5,13 @@ const db = require('../db');
 const {
   ADMIN_SESSION_IDLE_MINUTES,
   ADMIN_SESSION_ABSOLUTE_MINUTES,
+  STUDENT_SESSION_IDLE_MINUTES,
   DUMMY_PASSWORD_HASH,
 } = require('../config');
 const { adminLoginLimiter } = require('../middleware/rateLimit');
 const { sessionExpiredByAbsoluteLimit } = require('../middleware/auth');
-const { lockedResponse, logout } = require('../utils/authResponses');
+const { lockedResponse } = require('../utils/authResponses');
+const { snapshotRole, logoutRole } = require('../utils/sessionRoles');
 
 const router = express.Router();
 
@@ -22,13 +24,16 @@ function throttleKey(username) {
 }
 
 function completeLogin(req, res, admin) {
+  // A student signed in on this same browser stays signed in.
+  const student = snapshotRole(req.session, 'student');
   req.session.regenerate((err) => {
     if (err) return res.status(500).json({ error: 'Could not start a session.' });
+    Object.assign(req.session, student);
     req.session.isAdmin = true;
     req.session.adminId = admin.id;
     req.session.adminUsername = admin.username;
-    req.session.loginAt = Date.now();
-    req.session.cookie.maxAge = ADMIN_SESSION_IDLE_MINUTES * 60 * 1000;
+    req.session.adminLoginAt = Date.now();
+    req.session.cookie.maxAge = Math.max(ADMIN_SESSION_IDLE_MINUTES, student.studentId ? STUDENT_SESSION_IDLE_MINUTES : 0) * 60 * 1000;
     res.json({ ok: true, username: admin.username });
   });
 }
@@ -85,11 +90,12 @@ router.post('/api/admin/login', adminLoginLimiter, (req, res) => {
   completeLogin(req, res, admin);
 });
 
-router.post('/api/admin/logout', logout);
+// Signs out the admin only; a student signed in on this browser stays that way.
+router.post('/api/admin/logout', logoutRole('admin'));
 
 router.get('/api/admin/session', (req, res) => {
   const signedOut = { isAdmin: false, username: null, id: null, role: null };
-  if (!req.session.isAdmin || sessionExpiredByAbsoluteLimit(req.session, ADMIN_SESSION_ABSOLUTE_MINUTES)) {
+  if (!req.session.isAdmin || sessionExpiredByAbsoluteLimit(req.session, ADMIN_SESSION_ABSOLUTE_MINUTES, 'adminLoginAt')) {
     return res.json(signedOut);
   }
   const admin = db.findAdminById(req.session.adminId);

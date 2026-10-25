@@ -1,5 +1,5 @@
 const db = require('../db');
-const { ACCOUNT_LOCKED_MESSAGE, SESSION_COOKIE_NAME } = require('../config');
+const { ACCOUNT_LOCKED_MESSAGE } = require('../config');
 
 function minutesUntil(isoTimestamp) {
   return Math.max(1, Math.ceil((new Date(isoTimestamp).getTime() - Date.now()) / 60000));
@@ -20,12 +20,4 @@ function lockedResponse(res, key, ip, lockedUntil) {
   });
 }
 
-// Students and admins share one session, so one logout ends either.
-function logout(req, res) {
-  req.session.destroy(() => {
-    res.clearCookie(SESSION_COOKIE_NAME);
-    res.json({ ok: true });
-  });
-}
-
-module.exports = { lockedResponse, logout };
+module.exports = { lockedResponse };

@@ -1,10 +1,10 @@
 const db = require('../db');
+const { endRole } = require('../utils/sessionRoles');
 const { fullName } = require('../utils/studentName');
 const {
   SCHOOL_DOMAIN,
   STUDENT_SESSION_ABSOLUTE_MINUTES,
   ADMIN_SESSION_ABSOLUTE_MINUTES,
-  SESSION_COOKIE_NAME,
 } = require('../config');
 
 function isValidSchoolEmail(email) {
@@ -15,15 +15,17 @@ function isValidSchoolEmail(email) {
 // gives an idle timeout — it resets on every request via `rolling: true`.
 // This is the separate hard cap that idle activity can't extend: log back
 // in after N hours no matter how continuously the session was used.
-function sessionExpiredByAbsoluteLimit(session, absoluteMinutes) {
-  return !!(session.loginAt && Date.now() - session.loginAt > absoluteMinutes * 60 * 1000);
+// `loginAtField` is the role's own sign-in time (adminLoginAt / studentLoginAt);
+// sessions started before those existed only have the shared `loginAt`.
+function sessionExpiredByAbsoluteLimit(session, absoluteMinutes, loginAtField = 'loginAt') {
+  const loginAt = session[loginAtField] || session.loginAt;
+  return !!(loginAt && Date.now() - loginAt > absoluteMinutes * 60 * 1000);
 }
 
-function expireSession(req, res, message) {
-  req.session.destroy(() => {
-    res.clearCookie(SESSION_COOKIE_NAME);
-    res.status(401).json({ error: message });
-  });
+// Ends only that role's sign-in, so an expired student session can't take an
+// admin login on the same browser down with it.
+function expireSession(req, res, message, role) {
+  endRole(req, res, role, () => res.status(401).json({ error: message }));
 }
 
 // Re-checks the account against the database on every request, not just at
@@ -33,14 +35,14 @@ function expireSession(req, res, message) {
 // route handlers reuse this lookup instead of re-fetching it themselves.
 function requireStudent(req, res, next) {
   if (!req.session.studentId) return res.status(401).json({ error: 'Not logged in.' });
-  if (sessionExpiredByAbsoluteLimit(req.session, STUDENT_SESSION_ABSOLUTE_MINUTES)) {
-    return expireSession(req, res, 'Your session has expired. Please log in again.');
+  if (sessionExpiredByAbsoluteLimit(req.session, STUDENT_SESSION_ABSOLUTE_MINUTES, 'studentLoginAt')) {
+    return expireSession(req, res, 'Your session has expired. Please log in again.', 'student');
   }
 
   const student = db.findById(req.session.studentId);
-  if (!student) return expireSession(req, res, 'This account no longer exists.');
+  if (!student) return expireSession(req, res, 'This account no longer exists.', 'student');
   if (db.getLockStatus(student.email).locked) {
-    return expireSession(req, res, 'This account has been locked. Please contact the Student Council.');
+    return expireSession(req, res, 'This account has been locked. Please contact the Student Council.', 'student');
   }
 
   req.student = student;
@@ -65,12 +67,12 @@ function requireActiveStudent(req, res, next) {
 // immediately rather than keeping full admin rights until it times out.
 function requireAdmin(req, res, next) {
   if (!req.session.isAdmin) return res.status(401).json({ error: 'Admin login required.' });
-  if (sessionExpiredByAbsoluteLimit(req.session, ADMIN_SESSION_ABSOLUTE_MINUTES)) {
-    return expireSession(req, res, 'Your admin session has expired. Please log in again.');
+  if (sessionExpiredByAbsoluteLimit(req.session, ADMIN_SESSION_ABSOLUTE_MINUTES, 'adminLoginAt')) {
+    return expireSession(req, res, 'Your admin session has expired. Please log in again.', 'admin');
   }
 
   const admin = db.findAdminById(req.session.adminId);
-  if (!admin) return expireSession(req, res, 'This admin account no longer exists.');
+  if (!admin) return expireSession(req, res, 'This admin account no longer exists.', 'admin');
 
   req.admin = admin;
   return next();

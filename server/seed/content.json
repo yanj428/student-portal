@@ -264,24 +264,6 @@
       "createdAt": "2026-09-15T13:39:43.208Z"
     },
     {
-      "id": "1ef0fd16-b67d-4963-84f2-f1ec40fd2782",
-      "name": "Phudit (Acita) Ponprasertthavorn",
-      "role": "12/1 Class Representative",
-      "grade": "Grade 12",
-      "group": "general-council",
-      "photoUrl": "",
-      "createdAt": "2026-09-15T13:40:38.739Z"
-    },
-    {
-      "id": "d393dc4c-9fe3-4542-bce5-18fcce9767ce",
-      "name": "Kiragorn (Keane) Promma",
-      "role": "12/2 Class Representative",
-      "grade": "Grade 12",
-      "group": "general-council",
-      "photoUrl": "",
-      "createdAt": "2026-09-15T13:43:10.187Z"
-    },
-    {
       "id": "8919db1b-8fb4-4119-a6eb-c8256805dbc8",
       "name": "Yan-ni (Taini) Chen",
       "role": "Marketing Representative",
@@ -363,14 +345,6 @@
   ],
   "calendarEvents": [
     {
-      "id": "a3e94f52-079d-43a6-bc43-bf22569700d7",
-      "day": "19",
-      "month": "Oct",
-      "title": "School Holidays",
-      "subtitle": "",
-      "createdAt": "2026-09-15T14:23:47.552Z"
-    },
-    {
       "id": "b0b00116-b8d0-4ae2-90d1-e21c6a716cfb",
       "day": "29",
       "month": "Oct",
@@ -392,37 +366,75 @@
       "id": "e2380384-fb8a-45e0-9626-8ae96afdfd4d",
       "label": "Community Service Website",
       "url": "https://sites.google.com/kpis.ac.th/kpiscommunityservice/home",
-      "createdAt": "2026-10-03T14:28:00.528Z"
+      "createdAt": "2026-10-03T14:28:00.528Z",
+      "logoUrl": "/uploads/quick-link-logos/1792938246009-20499b8bce43.jpg"
     },
     {
       "id": "d06df381-cbc4-4bec-b63b-ba328fcc4683",
       "label": "College and Career Counseling",
       "url": "https://sites.google.com/view/kpis-college-career-counseling/home",
-      "createdAt": "2026-10-03T14:28:00.528Z"
+      "createdAt": "2026-10-03T14:28:00.528Z",
+      "logoUrl": "/uploads/quick-link-logos/1792938246024-4d4cacfe27cc.jpg"
     },
     {
       "id": "5fcb4393-e38e-4773-b429-cdc5670f6ffa",
       "label": "Secondary Photos Drive",
       "url": "https://drive.google.com/drive/folders/1bK6Dt2OVJ71zboYFo5I159f7kS2_m5YW",
-      "createdAt": "2026-10-03T19:25:19.030Z"
+      "createdAt": "2026-10-03T19:25:19.030Z",
+      "logoUrl": "/uploads/quick-link-logos/1792938936888-503a67aa6bd5.png"
     },
     {
       "id": "3f84e03c-e556-4866-a3d6-75fa9099ed24",
       "label": "Secondary Families Drive",
       "url": "https://drive.google.com/drive/folders/1L6KZnxYNCjmygM6jfWCocBdOw2HQL8xj",
-      "createdAt": "2026-10-03T19:26:24.620Z"
+      "createdAt": "2026-10-03T19:26:24.620Z",
+      "logoUrl": "/uploads/quick-link-logos/1792938936872-d5baf59cf06c.png"
     },
     {
       "id": "2684da01-dac7-44fd-a87b-4a5b8bef3e8f",
       "label": "PowerSchool",
       "url": "https://ps.kpis.ac.th/",
-      "createdAt": "2026-10-03T19:28:02.039Z"
+      "createdAt": "2026-10-03T19:28:02.039Z",
+      "logoUrl": "/uploads/quick-link-logos/1792938572579-7ec44f65a81d.png"
     },
     {
       "id": "0c1d73dd-e66d-4707-893b-4753de8dd209",
       "label": "Club Proposal Form",
       "url": "https://docs.google.com/document/d/17WCRNpKduLjeA3T4BKjTYHKyFtHZRI3F8n_6eyTt0yI/edit?tab=t.0",
-      "createdAt": "2026-10-03T19:31:56.975Z"
+      "createdAt": "2026-10-03T19:31:56.975Z",
+      "logoUrl": "/uploads/quick-link-logos/1792938936853-27eda1defa7c.png"
+    }
+  ],
+  "csResources": [
+    {
+      "id": "9b0b1184-7700-4df0-822b-a837c7ae0d00",
+      "title": "Community Service Guidelines",
+      "url": "https://drive.google.com/file/d/1RPMj-o6DTyChbQo3NS_cy1ap-ux9FNws/view?usp=sharing",
+      "createdAt": "2026-10-25T09:31:22.701Z"
+    },
+    {
+      "id": "6360c177-3ca5-4d80-9c38-6b491d4b5956",
+      "title": "Process Slides Summary",
+      "url": "https://docs.google.com/presentation/d/1ngQhffVHjNJEwxqflLvJFHYbAnNwHgMUcTil5ItpVjk/edit?usp=sharing",
+      "createdAt": "2026-10-25T09:31:22.701Z"
+    },
+    {
+      "id": "def6dc99-fa56-4ccd-81e0-4fe70762cbaa",
+      "title": "Proposal Form Template",
+      "url": "https://docs.google.com/document/d/1g2i9S0nWOXvtIZdQy22v6b3N-eokPe49mBfWUNXdkRk/edit?usp=sharing",
+      "createdAt": "2026-10-25T09:31:22.701Z"
+    },
+    {
+      "id": "ac6b591b-4afc-48ad-aa27-6b7e5d4be047",
+      "title": "Project Report Template",
+      "url": "https://docs.google.com/document/d/1jVvXJ2AypF27KLk3fcAaf8EkrO9eCSprBaeduGbWeS4/edit?usp=sharing",
+      "createdAt": "2026-10-25T09:31:22.701Z"
+    },
+    {
+      "id": "dd9b1797-008f-4eab-82e3-3865ee6321ff",
+      "title": "Submit Your Proposal or Project",
+      "url": "https://docs.google.com/forms/d/e/1FAIpQLSfIrDAQIR-Eeu-oERg4Qo6DSINCOdzxzqR6uZ8y33b2Mk9Vhw/viewform?usp=publish-editor",
+      "createdAt": "2026-10-25T09:31:22.701Z"
     }
   ],
   "csEvents": [],

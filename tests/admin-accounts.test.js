@@ -8,6 +8,7 @@ const dataDir = initTestEnv();
 const request = require('supertest');
 const app = require('../server/server');
 const db = require('../server/db');
+const { addAdmin } = require('./helpers/admins');
 
 test.after(() => {
   db.close();
@@ -35,9 +36,7 @@ test('a wrong username with the right password is rejected', async () => {
 });
 
 test('adding a second admin requires username to disambiguate at login', async () => {
-  const admin = await loginAsAdmin();
-  const created = await admin.post('/api/admin/admins').send({ username: 'second.admin', password: 'anotherpassword1' });
-  assert.equal(created.status, 201);
+  addAdmin(db, { username: 'second.admin', password: 'anotherpassword1' });
 
   // With two admins now, omitting username at login must fail rather than
   // guess which account the password belongs to.
@@ -51,13 +50,15 @@ test('adding a second admin requires username to disambiguate at login', async (
   assert.equal(second.status, 200);
 });
 
-test('rejects creating a duplicate admin username and a too-short password', async () => {
+test('new admin accounts cannot be created through the site, even by the owner', async () => {
   const admin = await loginAsAdmin();
-  const dup = await admin.post('/api/admin/admins').send({ username: 'admin', password: 'longenough1' });
-  assert.equal(dup.status, 409);
+  const before = (await admin.get('/api/admin/admins')).body.admins.length;
 
-  const shortPw = await admin.post('/api/admin/admins').send({ username: 'third.admin', password: 'short' });
-  assert.equal(shortPw.status, 400);
+  const res = await admin.post('/api/admin/admins').send({ username: 'sneaky.admin', password: 'longenough1', role: 'owner' });
+  assert.equal(res.status, 404);
+
+  assert.equal((await admin.get('/api/admin/admins')).body.admins.length, before);
+  assert.equal((await request(app).post('/api/admin/login').send({ username: 'sneaky.admin', password: 'longenough1' })).status, 401);
 });
 
 test('an admin cannot delete their own account, and the last admin cannot be deleted', async () => {
@@ -82,8 +83,7 @@ test('an admin can change their own password, and it is required for their next 
   // Uses a dedicated admin account (not the shared bootstrap admin other
   // tests in this file log in as) so changing its password here doesn't
   // affect any test that runs afterward.
-  const bootstrapAdmin = await loginAsAdmin();
-  await bootstrapAdmin.post('/api/admin/admins').send({ username: 'pw.change', password: 'originalpassword1' });
+  addAdmin(db, { username: 'pw.change', password: 'originalpassword1' });
 
   const agent = request.agent(app);
   await agent.post('/api/admin/login').send({ username: 'pw.change', password: 'originalpassword1' });
@@ -111,6 +111,5 @@ test('security actions are recorded in the audit log', async () => {
 
 test('admin account endpoints require an admin session', async () => {
   assert.equal((await request(app).get('/api/admin/admins')).status, 401);
-  assert.equal((await request(app).post('/api/admin/admins').send({ username: 'x', password: 'password123' })).status, 401);
   assert.equal((await request(app).get('/api/admin/security/audit-log')).status, 401);
 });

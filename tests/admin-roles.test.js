@@ -8,6 +8,7 @@ const dataDir = initTestEnv();
 const request = require('supertest');
 const app = require('../server/server');
 const db = require('../server/db');
+const { addAdmin } = require('./helpers/admins');
 
 test.after(() => {
   db.close();
@@ -21,14 +22,12 @@ async function loginAsOwner() {
 }
 
 test('an editor admin cannot manage other admins or see the Security tab', async () => {
-  const owner = await loginAsOwner();
-  await owner.post('/api/admin/admins').send({ username: 'editor.one', password: 'editorpassword1', role: 'editor' });
+  addAdmin(db, { username: 'editor.one', password: 'editorpassword1', role: 'editor' });
 
   const editor = request.agent(app);
   await editor.post('/api/admin/login').send({ username: 'editor.one', password: 'editorpassword1' });
 
   assert.equal((await editor.get('/api/admin/admins')).status, 403);
-  assert.equal((await editor.post('/api/admin/admins').send({ username: 'x.editor', password: 'password123' })).status, 403);
   assert.equal((await editor.get('/api/admin/security/locked')).status, 403);
   assert.equal((await editor.get('/api/admin/security/audit-log')).status, 403);
 
@@ -40,10 +39,7 @@ test('an editor admin cannot manage other admins or see the Security tab', async
 
 test('an owner can promote/demote roles, but not below one remaining owner', async () => {
   const bootstrapAgent = await loginAsOwner();
-  const created = await bootstrapAgent
-    .post('/api/admin/admins')
-    .send({ username: 'role.test', password: 'rolepassword1', role: 'editor' });
-  const id = created.body.admin.id;
+  const id = addAdmin(db, { username: 'role.test', password: 'rolepassword1', role: 'editor' }).id;
 
   const promoted = await bootstrapAgent.patch(`/api/admin/admins/${id}/role`).send({ role: 'owner' });
   assert.equal(promoted.status, 200);
@@ -73,7 +69,7 @@ test('an owner can promote/demote roles, but not below one remaining owner', asy
 
 test('deleting the sole owner is refused even in the presence of other (editor) admins', async () => {
   const owner = await loginAsOwner();
-  await owner.post('/api/admin/admins').send({ username: 'only.editor', password: 'onlyeditorpw1', role: 'editor' });
+  addAdmin(db, { username: 'only.editor', password: 'onlyeditorpw1', role: 'editor' });
 
   const admins = (await owner.get('/api/admin/admins')).body.admins;
   const bootstrapId = admins.find((a) => a.username === 'admin').id;

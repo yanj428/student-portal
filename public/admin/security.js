@@ -1,4 +1,4 @@
-import { escapeHtml, getJSON, sendJSON, confirmDelete, withBusy, TRASH_ICON } from './api.js';
+import { escapeHtml, getJSON, sendJSON, confirmDelete, TRASH_ICON } from './api.js';
 
 const lockedList = document.getElementById('security-locked-list');
 const lockedEmpty = document.getElementById('security-locked-empty');
@@ -10,11 +10,6 @@ const attemptsFilterForm = document.getElementById('security-attempts-filter-for
 const adminCountEl = document.getElementById('admin-count');
 const adminList = document.getElementById('admin-list');
 const adminListEmpty = document.getElementById('admin-list-empty');
-const adminCreateForm = document.getElementById('admin-create-form');
-const newAdminUsername = document.getElementById('new-admin-username');
-const newAdminPassword = document.getElementById('new-admin-password');
-const newAdminRole = document.getElementById('new-admin-role');
-const adminCreateError = document.getElementById('admin-create-error');
 
 const auditLogBody = document.getElementById('audit-log-body');
 
@@ -168,31 +163,6 @@ function renderAdmins(admins) {
     adminList.appendChild(div);
   });
 }
-
-adminCreateForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  adminCreateError.hidden = true;
-
-  withBusy(adminCreateForm.querySelector('button[type="submit"]'), 'Adding…', async () => {
-    try {
-      const { ok, data } = await sendJSON('/api/admin/admins', 'POST', {
-        username: newAdminUsername.value.trim(),
-        password: newAdminPassword.value,
-        role: newAdminRole.value,
-      });
-      if (!ok) {
-        adminCreateError.textContent = data.error || 'Could not add this admin.';
-        adminCreateError.hidden = false;
-        return;
-      }
-      adminCreateForm.reset();
-      loadAdmins();
-    } catch {
-      adminCreateError.textContent = 'Could not reach the server. Please try again.';
-      adminCreateError.hidden = false;
-    }
-  });
-});
 
 async function loadAuditLog() {
   const data = await getJSON('/api/admin/security/audit-log');

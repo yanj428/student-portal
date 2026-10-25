@@ -1,42 +1,19 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
 
 const db = require('../db');
-const { requireAdmin, requireOwnerAdmin } = require('../middleware/auth');
+const { requireOwnerAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
-function isValidUsername(username) {
-  return typeof username === 'string' && /^[A-Za-z0-9._-]{3,32}$/.test(username.trim());
-}
-
-function publicAdmin(admin) {
-  return { id: admin.id, username: admin.username, role: admin.role, createdAt: admin.createdAt };
-}
-
 // ---- Admin account management (owner only) ----
+// Listing, changing a role and removing admins. New admin accounts are
+// deliberately not creatable through the site: the first admin is made at
+// startup from the ADMIN_PASSWORD setting.
 
 router.get('/api/admin/admins', requireOwnerAdmin, (req, res) => {
   res.json({ admins: db.listAdmins() });
 });
 
-router.post('/api/admin/admins', requireOwnerAdmin, (req, res) => {
-  const { username, password, role } = req.body || {};
-  if (!isValidUsername(username)) {
-    return res.status(400).json({ error: 'Username must be 3-32 characters (letters, numbers, dots, underscores, hyphens).' });
-  }
-  if (typeof password !== 'string' || password.length < 8) {
-    return res.status(400).json({ error: 'Password must be at least 8 characters.' });
-  }
-  if (role !== undefined && role !== 'owner' && role !== 'editor') {
-    return res.status(400).json({ error: 'Role must be "owner" or "editor".' });
-  }
-  if (db.findAdminByUsername(username)) return res.status(409).json({ error: 'An admin with this username already exists.' });
-
-  const admin = db.createAdmin({ username, passwordHash: bcrypt.hashSync(password, 10), role });
-  db.logAuditEvent(req.session.adminUsername, 'admin.create', { createdUsername: admin.username, role: admin.role });
-  res.status(201).json({ admin: publicAdmin(admin) });
-});
 
 router.patch('/api/admin/admins/:id/role', requireOwnerAdmin, (req, res) => {
   const { role } = req.body || {};

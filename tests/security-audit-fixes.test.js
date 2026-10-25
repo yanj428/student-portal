@@ -10,6 +10,7 @@ const dataDir = initTestEnv();
 const request = require('supertest');
 const app = require('../server/server');
 const db = require('../server/db');
+const { addAdmin } = require('./helpers/admins');
 const { normalizeUrl } = require('../server/utils/validateUrl');
 
 test.after(() => {
@@ -89,7 +90,7 @@ test("deleting a student immediately rejects their existing session (and doesn't
 
 test('deleting an admin immediately revokes that admin session, not just future logins', async () => {
   const owner = await loginAsAdmin();
-  const created = await owner.post('/api/admin/admins').send({ username: 'doomed.admin', password: 'doomedpassword1' });
+  const created = { body: { admin: addAdmin(db, { username: 'doomed.admin', password: 'doomedpassword1' }) } };
 
   const rogue = request.agent(app);
   await rogue.post('/api/admin/login').send({ username: 'doomed.admin', password: 'doomedpassword1' });
@@ -102,7 +103,7 @@ test('deleting an admin immediately revokes that admin session, not just future 
 
 test("an admin's other sessions are logged out when they change their own password", async () => {
   const owner = await loginAsAdmin();
-  await owner.post('/api/admin/admins').send({ username: 'multi.session.admin', password: 'originalpassword1' });
+  addAdmin(db, { username: 'multi.session.admin', password: 'originalpassword1' });
 
   const sessionA = request.agent(app);
   const sessionB = request.agent(app);
@@ -121,8 +122,7 @@ test('admin login locks out after repeated failures, distinct from any student l
   // Uses a throwaway admin (not the shared bootstrap admin other tests in
   // this file log in as) so locking it out here doesn't block those other
   // tests too.
-  const owner = await loginAsAdmin();
-  await owner.post('/api/admin/admins').send({ username: 'lockout.target.admin', password: 'lockouttargetpw1' });
+  addAdmin(db, { username: 'lockout.target.admin', password: 'lockouttargetpw1' });
 
   for (let i = 0; i < 5; i++) {
     await request(app).post('/api/admin/login').send({ username: 'lockout.target.admin', password: 'wrong' });

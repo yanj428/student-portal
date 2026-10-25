@@ -757,31 +757,8 @@
           <h2>Admin accounts</h2>
           <span class="count-badge" id="admin-count">0</span>
         </div>
-        <p class="panel-hint">Owners can manage other admin accounts and see this Security tab; editors manage students and content only.</p>
+        <p class="panel-hint">Owners can change roles, remove admin accounts and see this Security tab; editors manage students and content only. New admin accounts cannot be created here.</p>
 
-        <form id="admin-create-form" class="create-form">
-          <div class="form-row">
-            <div class="form-field">
-              <label class="field-label" for="new-admin-username">Username</label>
-              <input class="field-input" type="text" id="new-admin-username" required minlength="3" maxlength="32" />
-            </div>
-            <div class="form-field">
-              <label class="field-label" for="new-admin-password">Temporary password</label>
-              <input class="field-input" type="text" id="new-admin-password" required minlength="8" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-field">
-              <label class="field-label" for="new-admin-role">Role</label>
-              <select class="field-input" id="new-admin-role">
-                <option value="editor" selected>Editor: students and content</option>
-                <option value="owner">Owner: full access, including admin accounts</option>
-              </select>
-            </div>
-          </div>
-          <p class="field-error" id="admin-create-error" hidden></p>
-          <button type="submit" class="btn primary">Add admin</button>
-        </form>
         <div class="simple-list" id="admin-list">
           <p class="empty-hint" id="admin-list-empty">No admin accounts yet.</p>
         </div>

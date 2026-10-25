@@ -227,68 +227,89 @@ html, body {
   opacity: 0.85;
 }
 
-/* Right */
+/* Right: KPIS banner */
 .login-right {
   position: relative;
   margin: 23.4px;
   border-radius: 28.6px;
   overflow: hidden;
-}
-
-.campus-art {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-}
-
-.testimonial {
-  position: absolute;
-  left: 31.2px;
-  right: 31.2px;
-  bottom: 31.2px;
-  padding: 33.8px 33.8px 28.6px 33.8px;
-  border-radius: 23.4px;
-  background: rgba(46, 15, 16, 0.45);
-  backdrop-filter: blur(13px);
-  -webkit-backdrop-filter: blur(13px);
-  color: #fff;
-}
-
-.quote {
-  font-size: 21.45px;
-  line-height: 1.5;
-  margin: 0 0 26px 0;
-}
-
-.testimonial-name {
-  font-size: 22.1px;
-  font-weight: 700;
-}
-
-.testimonial-nav {
-  position: absolute;
-  right: 33.8px;
-  bottom: 28.6px;
+  background: #fff;
+  border: 1.3px solid var(--border);
   display: flex;
-  gap: 13px;
+  flex-direction: column;
+  padding: clamp(24px, 5vh, 48px) 44px;
+  min-height: 0;
 }
 
-.arrow-btn {
-  width: 46.8px;
-  height: 46.8px;
+.banner-blob {
+  position: absolute;
   border-radius: 50%;
-  border: 1.3px solid rgba(255,255,255,0.4);
-  background: transparent;
-  color: #fff;
+  background: var(--primary-tint);
+}
+.banner-blob.big { width: 62%; aspect-ratio: 1; top: -22%; left: -26%; }
+.banner-blob.small { width: 17%; aspect-ratio: 1; top: 36%; left: -8%; background: #E8C9CE; }
+
+.banner-stripes {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 96px;
+  height: 96px;
+  background: linear-gradient(135deg, transparent 0 38%, var(--primary) 38% 52%, transparent 52% 62%, var(--primary) 62% 70%, transparent 70%);
+}
+
+.banner-logo {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: clamp(84px, 15vh, 130px);
+  height: clamp(84px, 15vh, 130px);
+  border-radius: 50%;
+  background: #fff;
+  border: 7px solid #AAB2CC;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  overflow: hidden;
 }
-.arrow-btn svg { width: 20.8px; height: 20.8px; }
-.arrow-btn:hover { background: rgba(255,255,255,0.15); }
+.banner-logo img { width: 78%; height: 78%; object-fit: contain; }
 
+.banner-slogan {
+  position: relative;
+  z-index: 1;
+  margin: auto 0 0 48px;
+  padding: 28px 0 34px 34px;
+  width: max-content;
+  max-width: calc(100% - 60px);
+  font-size: clamp(30px, min(3.6vw, 6vh), 56px);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: 0.5px;
+  color: var(--primary);
+}
+.banner-slogan span { display: block; }
+.banner-slogan b { font-weight: 700; }
+.banner-slogan::before,
+.banner-slogan::after {
+  content: "";
+  position: absolute;
+  width: 38px;
+  height: 38px;
+  border: 0 solid var(--primary);
+}
+.banner-slogan::before { top: 0; left: 0; border-width: 4px 0 0 4px; }
+.banner-slogan::after { right: -34px; bottom: 0; border-width: 0 4px 4px 0; }
+
+.banner-tagline {
+  position: relative;
+  z-index: 1;
+  margin: 28px 0 auto;
+  text-align: right;
+  font-size: clamp(16px, min(1.7vw, 3vh), 24px);
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--primary);
+}
 /* Responsive */
 @media (max-width: 1274px) {
   .login-card { grid-template-columns: 1fr; min-height: unset; }

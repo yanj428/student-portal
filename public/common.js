@@ -22,15 +22,14 @@ if (changePasswordAvatar) {
 
 // Today's date in the home page's welcome banner, re-checked periodically so it rolls
 // over to the new day on its own if the portal is left open past midnight.
-const dateEl = document.getElementById('today-date');
-if (dateEl) {
-  const updateDate = () => {
-    const formatted = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    if (dateEl.textContent !== formatted) dateEl.textContent = formatted;
-  };
-  updateDate();
-  setInterval(updateDate, 60 * 1000);
+function updateTodayDate() {
+  const dateEl = document.getElementById('today-date');
+  if (!dateEl) return;
+  const formatted = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  if (dateEl.textContent !== formatted) dateEl.textContent = formatted;
 }
+updateTodayDate();
+setInterval(updateTodayDate, 60 * 1000);
 
 // The textContent/innerHTML round-trip only encodes &, <, and > - quotes
 // aren't special in HTML text content, only inside an attribute value, which
@@ -79,3 +78,9 @@ function renderList(listEl, emptyEl, items, tag, className, toHtml, decorate) {
   });
 }
 
+// A name for use inside HTML, with a place to break the line between the words
+// of a run-together name like "BetterWorldThailand", so a narrow card wraps it
+// as "BetterWorld / Thailand" instead of overflowing or cutting a word in half.
+function nameWithBreaks(name) {
+  return escapeHtml(name).replace(/([a-z])([A-Z])/g, '$1&#8203;$2');
+}

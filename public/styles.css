@@ -441,7 +441,7 @@ html, body {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  width: 96px;
+  width: 104px;
   color: var(--text);
   text-align: center;
   text-decoration: none;
@@ -462,7 +462,17 @@ html, body {
 }
 .home-club-logo img { width: 100%; height: 100%; object-fit: contain; background: #fff; padding: 6px; }
 .home-club-more { background: #fff; color: var(--text-muted); }
-.home-club-name { font-size: 14px; font-weight: 600; line-height: 1.25; }
+.home-club-name {
+  max-width: 100%;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 
 .home-cs-card {
   display: flex;
@@ -606,6 +616,7 @@ html, body {
 
 .home-edit-controls {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   margin-bottom: 10px;
@@ -616,8 +627,8 @@ html, body {
 }
 .home-edit-handle { cursor: grab; font-size: 20px; font-weight: 700; letter-spacing: -2px; padding: 2px 6px; touch-action: none; user-select: none; }
 .home-edit-handle:active { cursor: grabbing; }
-.home-edit-title { flex: 1; font-size: 15.5px; font-weight: 700; }
-.home-edit-actions { display: inline-flex; align-items: center; gap: 8px; }
+.home-edit-title { flex: 1 1 120px; min-width: 0; font-size: 15.5px; font-weight: 700; }
+.home-edit-actions { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; margin-left: auto; }
 .home-edit-move {
   width: 30px;
   height: 30px;
@@ -687,3 +698,10 @@ html, body {
 .home-edit-set legend { padding: 0; margin-bottom: 8px; font-size: 14.5px; font-weight: 600; }
 .home-edit-set-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px 18px; }
 .home-edit-note { margin: 0; color: var(--text-muted); font-size: 14.5px; }
+
+/* Dragging the items inside a section in edit mode */
+.home-editing [data-sortable] > [data-item-id] { pointer-events: auto; cursor: grab; touch-action: none; user-select: none; -webkit-user-drag: none; }
+.home-editing [data-sortable] > [data-item-id]:active { cursor: grabbing; }
+.home-editing [data-sortable] > [data-item-id] img { pointer-events: none; -webkit-user-drag: none; }
+.home-editing [data-sortable] > [data-item-id] { outline: 1.3px dashed var(--primary-light); outline-offset: 3px; border-radius: var(--radius-sm); }
+.home-editing [data-sortable] > .dragging-item { opacity: 0.45; outline-style: solid; }

@@ -176,15 +176,15 @@ test('chosen content options are saved and drawn: tiles, cards and the banner', 
 
   const html = (await agent.get('/')).text;
   const tiles = [...html.matchAll(/class="home-tile" href="([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(tiles, ['/lunch-schedule', '/community-service', '/meet-council'], 'only the chosen tiles, in the usual order');
+  assert.deepEqual(tiles, ['/meet-council', '/lunch-schedule', '/community-service'], 'only the chosen tiles, in the order chosen');
   assert.ok(!html.includes('id="home-lunch-media"'), 'the lunch card is gone');
   assert.ok(html.includes('id="home-slide-card"'), 'the slide card stays');
   assert.match(html, /home-duo home-duo-single/, 'one card fills the row');
   assert.ok(!html.includes('id="today-date"'), 'no date in the banner');
   assert.ok(!html.includes('home-hero-actions'), 'no buttons in the banner');
-  assert.deepEqual(fromPage(html, 'events'), { count: 6 });
-  assert.deepEqual(fromPage(html, 'clubs'), { type: 'after-school', count: 8 });
-  assert.deepEqual(fromPage(html, 'service'), { count: 2 });
+  assert.deepEqual(fromPage(html, 'events'), { count: 6, showSubtitle: true });
+  assert.deepEqual(fromPage(html, 'clubs'), { ...DEFAULT_SETTINGS.clubs, type: 'after-school', count: 8 });
+  assert.deepEqual(fromPage(html, 'service'), { count: 2, showDescription: true });
 });
 
 test('saving without content options keeps the ones already saved', async () => {
@@ -199,9 +199,9 @@ test('saving without content options keeps the ones already saved', async () => 
 test('a quick links choice is kept: some links, or all of them', async () => {
   const { agent } = await signedInStudent();
   await agent.put('/api/home-layout').send(base({ links: { ids: ['a', 'b'] } }));
-  assert.deepEqual((await agent.get('/api/home-layout')).body.layout.settings.links, { ids: ['a', 'b'] });
+  assert.deepEqual((await agent.get('/api/home-layout')).body.layout.settings.links, { ids: ['a', 'b'], order: [] });
   await agent.put('/api/home-layout').send(base({ links: { ids: null } }));
-  assert.deepEqual((await agent.get('/api/home-layout')).body.layout.settings.links, { ids: null });
+  assert.deepEqual((await agent.get('/api/home-layout')).body.layout.settings.links, { ids: null, order: [] });
 });
 
 test('content options outside the allowed choices are refused and change nothing', async () => {
@@ -220,6 +220,19 @@ test('content options outside the allowed choices are refused and change nothing
     { hero: { showDate: 'yes' } },
     { links: { ids: 'all' } },
     { links: { ids: [123] } },
+    { links: { order: 'a,b' } },
+    { links: { order: ['a', 'a'] } },
+    { clubs: { order: [1] } },
+    { clubs: { showNames: 'yes' } },
+    { cards: { order: ['lunch', 'banner'] } },
+    { cards: { order: ['lunch', 'lunch'] } },
+    { hero: { showCrest: 1 } },
+    { hero: { buttons: ['clubs', 'nowhere'] } },
+    { hero: { buttons: ['slide', 'lunch', 'clubs', 'voice', 'links'] } },
+    { hero: { buttons: ['lunch', 'lunch'] } },
+    { hero: { buttons: 'lunch' } },
+    { events: { showSubtitle: 'no' } },
+    { service: { showDescription: null } },
     { banner: { x: 1 } },
   ];
   for (const settings of bad) {
@@ -239,5 +252,93 @@ test('reset also puts every section back to its standard content', async () => {
 test('a stored option that is no longer valid falls back to the standard one', () => {
   const layout = resolveLayout({ order: DEFAULT_ORDER, hidden: [], settings: { events: { count: 500 }, clubs: { type: 'all', count: 6 } } });
   assert.deepEqual(layout.settings.events, DEFAULT_SETTINGS.events);
-  assert.deepEqual(layout.settings.clubs, { type: 'all', count: 6 });
+  assert.deepEqual(layout.settings.clubs, { ...DEFAULT_SETTINGS.clubs, count: 6 });
+});
+test('dragged item orders are kept: jump tiles and cards are drawn in the order chosen', async () => {
+  const { agent } = await signedInStudent();
+  const put = await agent.put('/api/home-layout').send(base({
+    jump: { tiles: ['links', 'lunch', 'announcements'] },
+    cards: { order: ['slide', 'lunch'] },
+  }));
+  assert.equal(put.status, 200);
+
+  const html = (await agent.get('/')).text;
+  const tiles = [...html.matchAll(/class="home-tile" href="([^"]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(tiles, ['/quick-links', '/lunch-schedule', '/announcements']);
+  assert.ok(html.indexOf('id="home-slide-card"') < html.indexOf('<a class="home-feature" href="/lunch-schedule"'), 'the slide card comes first');
+  assert.deepEqual((await agent.get('/api/home-layout')).body.layout.settings.cards.order, ['slide', 'lunch']);
+});
+
+test('a card order always keeps both cards, even when one is left out of it', async () => {
+  const { agent } = await signedInStudent();
+  await agent.put('/api/home-layout').send(base({ cards: { order: ['slide'] } }));
+  assert.deepEqual((await agent.get('/api/home-layout')).body.layout.settings.cards.order, ['slide', 'lunch']);
+});
+
+test('club and quick link orders are saved, and the new on/off options too', async () => {
+  const { agent } = await signedInStudent();
+  const put = await agent.put('/api/home-layout').send(base({
+    clubs: { order: ['c2', 'c1'], showNames: false, showMore: false },
+    links: { order: ['l3', 'l1'] },
+    hero: { showCrest: false },
+    events: { showSubtitle: false },
+    service: { showDescription: false },
+  }));
+  assert.equal(put.status, 200);
+  const settings = (await agent.get('/api/home-layout')).body.layout.settings;
+  assert.deepEqual(settings.clubs, { ...DEFAULT_SETTINGS.clubs, order: ['c2', 'c1'], showNames: false, showMore: false });
+  assert.deepEqual(settings.links, { ids: null, order: ['l3', 'l1'] });
+  assert.equal(settings.hero.showCrest, false);
+  assert.equal(settings.events.showSubtitle, false);
+  assert.equal(settings.service.showDescription, false);
+
+  const html = (await agent.get('/')).text;
+  assert.ok(!html.includes('home-hero-crest'), 'the crest is gone from the banner');
+});
+
+test('the banner buttons are chosen from the list and drawn in the order chosen', async () => {
+  const { agent } = await signedInStudent();
+  const put = await agent.put('/api/home-layout').send(base({ hero: { buttons: ['clubs', 'slide', 'community', 'council'] } }));
+  assert.equal(put.status, 200);
+
+  const html = (await agent.get('/')).text;
+  const actions = html.match(/<div class="home-hero-actions"[\s\S]*?<\/div>/)[0];
+  const hrefs = [...actions.matchAll(/href="([^"]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(hrefs, ['/clubs', '/announcements', '/community-service', '/meet-council']);
+  assert.match(actions, /home-pill-light" href="\/clubs"/, 'the first button is the filled one');
+  assert.equal((actions.match(/id="hero-slide-link"/g) || []).length, 1, 'the slide button keeps its link to this week\'s slide');
+});
+
+test('the banner can have no buttons at all, and the choice list is offered to the editor', async () => {
+  const { agent } = await signedInStudent();
+  assert.equal((await agent.put('/api/home-layout').send(base({ hero: { buttons: [] } }))).status, 200);
+  assert.ok(!(await agent.get('/')).text.includes('home-hero-actions'));
+  const offered = (await agent.get('/api/home-layout')).body;
+  assert.equal(offered.heroButtons.length, 9, 'the slide plus the eight pages');
+  assert.equal(offered.heroButtonMax, 4);
+});
+
+test('the preview draws one section with options that are not saved, and saves nothing', async () => {
+  const { agent } = await signedInStudent();
+  const res = await agent.post('/api/home-layout/preview').send({ widget: 'jump', settings: { tiles: ['council', 'lunch'] } });
+  assert.equal(res.status, 200);
+  const tiles = [...res.body.html.matchAll(/class="home-tile" href="([^"]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(tiles, ['/meet-council', '/lunch-schedule']);
+  assert.deepEqual(res.body.settings.tiles, ['council', 'lunch']);
+
+  // The banner is drawn with the student's own name and the chosen buttons.
+  const hero = await agent.post('/api/home-layout/preview').send({ widget: 'hero', settings: { buttons: ['clubs'], showCrest: false } });
+  assert.match(hero.body.html, /Welcome back, /);
+  assert.ok(!hero.body.html.includes('home-hero-crest'));
+  assert.match(hero.body.html, /href="\/clubs"/);
+
+  assert.deepEqual((await agent.get('/api/home-layout')).body.layout, STANDARD, 'nothing was saved');
+});
+
+test('a preview with options outside the allowed choices is refused, and it needs a signed-in student', async () => {
+  const { agent } = await signedInStudent();
+  assert.equal((await agent.post('/api/home-layout/preview').send({ widget: 'events', settings: { count: 99 } })).status, 400);
+  assert.equal((await agent.post('/api/home-layout/preview').send({ widget: 'banner', settings: {} })).status, 400);
+  assert.equal((await agent.post('/api/home-layout/preview').send({ widget: '../pages/home', settings: {} })).status, 400);
+  assert.equal((await request(app).post('/api/home-layout/preview').send({ widget: 'jump', settings: {} })).status, 401);
 });

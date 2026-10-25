@@ -22,23 +22,34 @@ const JUMP_TILES = [
   { id: 'council', title: 'Meet Your Council' },
 ];
 
+// The buttons the welcome banner can show (up to four): this week's slide, plus
+// the same pages as the Jump to tiles.
+const HERO_BUTTONS = [{ id: 'slide', title: "This week's slide" }, ...JUMP_TILES];
+const HERO_BUTTON_MAX = 4;
+
 const CLUB_TYPES = ['all', 'community-service', 'after-school'];
 
+const CARD_IDS = ['lunch', 'slide'];
+
+// order lists hold ids in the order the student dragged them into. An id that is
+// not in the list (a link or club added later) simply goes after the ones that are.
 const DEFAULT_SETTINGS = {
-  hero: { showDate: true, showButtons: true },
-  jump: { tiles: ['announcements', 'lunch', 'calendar', 'clubs', 'voice', 'links'] },
-  events: { count: 3 },
-  cards: { lunch: true, slide: true },
-  clubs: { type: 'all', count: 5 },
-  service: { count: 3 },
-  links: { ids: null }, // null = every quick link
+  hero: { showDate: true, showButtons: true, showCrest: true, buttons: ['slide', 'lunch'] }, // buttons in the order shown
+  jump: { tiles: ['announcements', 'lunch', 'calendar', 'clubs', 'voice', 'links'] }, // in the order shown
+  events: { count: 3, showSubtitle: true },
+  cards: { lunch: true, slide: true, order: CARD_IDS },
+  clubs: { type: 'all', count: 5, showNames: true, showMore: true, order: [] },
+  service: { count: 3, showDescription: true },
+  links: { ids: null, order: [] }, // ids: null = every quick link
 };
 
 const IDS = WIDGETS.map((w) => w.id);
 const isKnown = (id) => typeof id === 'string' && IDS.includes(id);
 const TILE_IDS = JUMP_TILES.map((t) => t.id);
+const HERO_BUTTON_IDS = HERO_BUTTONS.map((b) => b.id);
 
 const isBool = (v) => typeof v === 'boolean';
+const isIdList = (v) => Array.isArray(v) && v.length <= 200 && v.every((id) => typeof id === 'string' && id.length > 0 && id.length <= 64) && new Set(v).size === v.length;
 const isIntBetween = (v, min, max) => Number.isInteger(v) && v >= min && v <= max;
 
 function pick(obj, keys) {
@@ -52,9 +63,12 @@ function pick(obj, keys) {
 // know about is dropped, so only these options can ever be stored.
 const VALIDATORS = {
   hero(input, base) {
-    const s = { ...base, ...pick(input, ['showDate', 'showButtons']) };
-    if (!isBool(s.showDate) || !isBool(s.showButtons)) return { error: 'The banner options must be on or off.' };
-    return { settings: { showDate: s.showDate, showButtons: s.showButtons } };
+    const s = { ...base, ...pick(input, ['showDate', 'showButtons', 'showCrest', 'buttons']) };
+    if (!isBool(s.showDate) || !isBool(s.showButtons) || !isBool(s.showCrest)) return { error: 'The banner options must be on or off.' };
+    if (!isIdList(s.buttons) || !s.buttons.every((id) => HERO_BUTTON_IDS.includes(id)) || s.buttons.length > HERO_BUTTON_MAX) {
+      return { error: "Choose up to " + HERO_BUTTON_MAX + " banner buttons from the list." };
+    }
+    return { settings: { showDate: s.showDate, showButtons: s.showButtons, showCrest: s.showCrest, buttons: s.buttons } };
   },
   jump(input, base) {
     const tiles = input && input.tiles !== undefined ? input.tiles : base.tiles;
@@ -62,37 +76,42 @@ const VALIDATORS = {
       return { error: 'Choose tiles from the list, each at most once.' };
     }
     if (tiles.length === 0) return { error: 'Keep at least one tile, or hide the section instead.' };
-    return { settings: { tiles: TILE_IDS.filter((t) => tiles.includes(t)) } };
+    return { settings: { tiles } };
   },
   events(input, base) {
-    const count = input && input.count !== undefined ? input.count : base.count;
-    if (!isIntBetween(count, 1, 10)) return { error: 'Show between 1 and 10 events.' };
-    return { settings: { count } };
+    const s = { ...base, ...pick(input, ['count', 'showSubtitle']) };
+    if (!isIntBetween(s.count, 1, 10)) return { error: 'Show between 1 and 10 events.' };
+    if (!isBool(s.showSubtitle)) return { error: 'The event details must be on or off.' };
+    return { settings: { count: s.count, showSubtitle: s.showSubtitle } };
   },
   cards(input, base) {
-    const s = { ...base, ...pick(input, ['lunch', 'slide']) };
+    const s = { ...base, ...pick(input, ['lunch', 'slide', 'order']) };
     if (!isBool(s.lunch) || !isBool(s.slide)) return { error: 'The cards must be on or off.' };
     if (!s.lunch && !s.slide) return { error: 'Keep at least one card, or hide the section instead.' };
-    return { settings: { lunch: s.lunch, slide: s.slide } };
+    if (!isIdList(s.order) || !s.order.every((id) => CARD_IDS.includes(id))) return { error: 'The card order must list the lunch and slide cards.' };
+    // Both cards always have a place in the order, even one that is switched off.
+    return { settings: { lunch: s.lunch, slide: s.slide, order: [...s.order, ...CARD_IDS.filter((id) => !s.order.includes(id))] } };
   },
   clubs(input, base) {
-    const s = { ...base, ...pick(input, ['type', 'count']) };
+    const s = { ...base, ...pick(input, ['type', 'count', 'showNames', 'showMore', 'order']) };
     if (!CLUB_TYPES.includes(s.type)) return { error: 'Choose all clubs, community service clubs or after school clubs.' };
     if (!isIntBetween(s.count, 3, 12)) return { error: 'Show between 3 and 12 clubs.' };
-    return { settings: { type: s.type, count: s.count } };
+    if (!isBool(s.showNames) || !isBool(s.showMore)) return { error: 'The club options must be on or off.' };
+    if (!isIdList(s.order)) return { error: 'The club order must be a list of clubs.' };
+    return { settings: { type: s.type, count: s.count, showNames: s.showNames, showMore: s.showMore, order: s.order } };
   },
   service(input, base) {
-    const count = input && input.count !== undefined ? input.count : base.count;
-    if (!isIntBetween(count, 1, 5)) return { error: 'Show between 1 and 5 posts.' };
-    return { settings: { count } };
+    const s = { ...base, ...pick(input, ['count', 'showDescription']) };
+    if (!isIntBetween(s.count, 1, 5)) return { error: 'Show between 1 and 5 posts.' };
+    if (!isBool(s.showDescription)) return { error: 'The post details must be on or off.' };
+    return { settings: { count: s.count, showDescription: s.showDescription } };
   },
   links(input, base) {
-    const ids = input && input.ids !== undefined ? input.ids : base.ids;
-    if (ids === null) return { settings: { ids: null } };
-    if (!Array.isArray(ids) || ids.length > 100 || !ids.every((id) => typeof id === 'string' && id.length > 0 && id.length <= 64) || new Set(ids).size !== ids.length) {
-      return { error: 'Choose quick links from the list.' };
-    }
-    return { settings: { ids } };
+    const s = { ...base, ...pick(input, ['ids', 'order']) };
+    if (!isIdList(s.order)) return { error: 'The quick link order must be a list of links.' };
+    if (s.ids === null) return { settings: { ids: null, order: s.order } };
+    if (!isIdList(s.ids) || s.ids.length > 100) return { error: 'Choose quick links from the list.' };
+    return { settings: { ids: s.ids, order: s.order } };
   },
 };
 
@@ -118,6 +137,16 @@ function resolveLayout(saved) {
   });
   const hidden = saved && Array.isArray(saved.hidden) ? [...new Set(saved.hidden.filter(isKnown))] : [];
   return { order, hidden, settings: resolveSettings(saved && saved.settings) };
+}
+
+// One section's options checked on their own, for the live preview in edit mode.
+// \saved\ is the student's saved settings, used for anything the request leaves out.
+// Returns { settings } or { error }.
+function validateWidgetSettings(id, input, saved) {
+  if (!isKnown(id)) return { error: 'Unknown section.' };
+  const base = resolveSettings(saved)[id];
+  const result = VALIDATORS[id](input, base);
+  return result.error ? { error: WIDGETS.find((w) => w.id === id).title + ': ' + result.error } : result;
 }
 
 // What a student sends when saving. `current` is their already-saved layout;
@@ -146,4 +175,4 @@ function validateLayoutInput(body, current) {
   return { layout: { order, hidden, settings: merged } };
 }
 
-module.exports = { WIDGETS, JUMP_TILES, DEFAULT_SETTINGS, resolveLayout, validateLayoutInput };
+module.exports = { WIDGETS, JUMP_TILES, HERO_BUTTONS, HERO_BUTTON_MAX, DEFAULT_SETTINGS, resolveLayout, validateLayoutInput, validateWidgetSettings };

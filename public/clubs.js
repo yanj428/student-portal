@@ -33,7 +33,7 @@ function sdgHtml(club, className, limit) {
 
 function cardHtml(club) {
   return `
-    <span class="club-card-top">${logoHtml(club, 'club-logo-sm')}<span class="club-card-name">${escapeHtml(club.name)}</span>${sdgHtml(club, 'club-sdg-sm', 4)}</span>
+    <span class="club-card-top">${logoHtml(club, 'club-logo-sm')}<span class="club-card-name">${nameWithBreaks(club.name)}</span>${sdgHtml(club, 'club-sdg-sm', 4)}</span>
     ${club.mission ? `<span class="club-card-mission">${escapeHtml(club.mission)}</span>` : ''}
     ${meetingHtml(club)}`;
 }

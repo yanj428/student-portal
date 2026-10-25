@@ -1,5 +1,7 @@
 const express = require('express');
+const db = require('../db');
 const { requireStudentPage } = require('../middleware/pageAuth');
+const { WIDGETS, JUMP_TILES, resolveLayout } = require('../utils/homeLayout');
 
 const router = express.Router();
 
@@ -17,7 +19,8 @@ const PAGES = [
 
 for (const { paths, view } of PAGES) {
   router.get(paths, requireStudentPage, (req, res) => {
-    res.render(view, { student: res.locals.student });
+    const extra = view === 'pages/home' ? { homeWidgets: WIDGETS, jumpTiles: JUMP_TILES, homeLayout: resolveLayout(db.getHomeLayout(res.locals.student.id)) } : {};
+    res.render(view, { student: res.locals.student, ...extra });
   });
 }
 

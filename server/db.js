@@ -119,6 +119,18 @@ db.exec(`
     createdAt TEXT NOT NULL
   );
   CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created ON admin_audit_log (createdAt);
+
+  -- One-off 'this has been done' markers (e.g. the starting resources list was added).
+  CREATE TABLE IF NOT EXISTS app_flags (
+    name TEXT PRIMARY KEY
+  );
+
+  -- Each student's own arrangement of the home page widgets (order + hidden).
+  -- No row means the standard layout.
+  CREATE TABLE IF NOT EXISTS student_home_layouts (
+    studentId TEXT PRIMARY KEY,
+    layout TEXT NOT NULL
+  );
 `);
 
 // Adds a column to an existing table if it's missing — needed because the
@@ -246,7 +258,27 @@ function updateStudent(id, { firstName, middleName, lastName, nickname, email, g
 }
 
 function removeStudent(id) {
+  db.prepare('DELETE FROM student_home_layouts WHERE studentId = ?').run(id);
   return db.prepare('DELETE FROM students WHERE id = ?').run(id).changes > 0;
+}
+
+function getHomeLayout(studentId) {
+  const row = db.prepare('SELECT layout FROM student_home_layouts WHERE studentId = ?').get(studentId);
+  if (!row) return null;
+  try {
+    return JSON.parse(row.layout);
+  } catch {
+    return null;
+  }
+}
+
+function setHomeLayout(studentId, layout) {
+  db.prepare('INSERT INTO student_home_layouts (studentId, layout) VALUES (?, ?) ON CONFLICT(studentId) DO UPDATE SET layout = excluded.layout')
+    .run(studentId, JSON.stringify(layout));
+}
+
+function clearHomeLayout(studentId) {
+  db.prepare('DELETE FROM student_home_layouts WHERE studentId = ?').run(studentId);
 }
 
 function updateStudentPasswordHash(id, passwordHash, mustChangePassword = false) {
@@ -479,6 +511,27 @@ const csEvents = jsonCollection('csEvents');
 const calendarEvents = jsonCollection('calendarEvents');
 const council = jsonCollection('council');
 const quickLinks = jsonCollection('quickLinks');
+const csResources = jsonCollection('csResources');
+
+// The Community Service page's Resources list used to be typed into the page.
+// These are those links, added once as the starting list so admins can edit it
+// from here. The flag means a list an admin later empties stays empty.
+const DEFAULT_CS_RESOURCES = [
+  { title: 'Community Service Guidelines', url: 'https://drive.google.com/file/d/1RPMj-o6DTyChbQo3NS_cy1ap-ux9FNws/view?usp=sharing' },
+  { title: 'Process Slides Summary', url: 'https://docs.google.com/presentation/d/1ngQhffVHjNJEwxqflLvJFHYbAnNwHgMUcTil5ItpVjk/edit?usp=sharing' },
+  { title: 'Proposal Form Template', url: 'https://docs.google.com/document/d/1g2i9S0nWOXvtIZdQy22v6b3N-eokPe49mBfWUNXdkRk/edit?usp=sharing' },
+  { title: 'Project Report Template', url: 'https://docs.google.com/document/d/1jVvXJ2AypF27KLk3fcAaf8EkrO9eCSprBaeduGbWeS4/edit?usp=sharing' },
+  { title: 'Submit Your Proposal or Project', url: 'https://docs.google.com/forms/d/e/1FAIpQLSfIrDAQIR-Eeu-oERg4Qo6DSINCOdzxzqR6uZ8y33b2Mk9Vhw/viewform?usp=publish-editor' },
+];
+
+(function ensureDefaultCsResources() {
+  if (db.prepare("SELECT 1 FROM app_flags WHERE name = 'csResourcesDefaults'").get()) return;
+  if (csResources.read().length === 0) {
+    const now = new Date().toISOString();
+    csResources.write(DEFAULT_CS_RESOURCES.map((r) => ({ id: crypto.randomUUID(), title: r.title, url: r.url, createdAt: now })));
+  }
+  db.prepare("INSERT INTO app_flags (name) VALUES ('csResourcesDefaults')").run();
+})();
 
 // Only these collections (public site content, not accounts or the private
 // Voice suggestion box) feed the checked-in seed - see seedWriter.js for why
@@ -498,6 +551,9 @@ module.exports = {
   findById,
   addStudent,
   removeStudent,
+  getHomeLayout,
+  setHomeLayout,
+  clearHomeLayout,
   updateStudent,
   updateStudentPasswordHash,
   readContent,
@@ -535,6 +591,9 @@ module.exports = {
 
   readQuickLinks: quickLinks.read,
   writeQuickLinks: withSeedSync(quickLinks.write),
+
+  readCsResources: csResources.read,
+  writeCsResources: withSeedSync(csResources.write),
 
   DEFAULT_CONTENT,
 

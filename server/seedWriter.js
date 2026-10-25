@@ -23,6 +23,7 @@ const SEED_ASSETS_DIR = path.join(SEED_DIR, 'assets');
 
 const UPLOAD_URL_FIELDS = [
   ['clubs', 'logoUrl'],
+  ['quickLinks', 'logoUrl'],
   ['council', 'photoUrl'],
 ];
 
@@ -41,6 +42,7 @@ function writeSeedSnapshotNow() {
     council: db.readCouncil(),
     calendarEvents: db.readCalendarEvents(),
     quickLinks: db.readQuickLinks(),
+    csResources: db.readCsResources(),
     csEvents: db.readCsEvents(),
     slideArchive: db.readSlideArchive(),
   };

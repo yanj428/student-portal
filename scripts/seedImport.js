@@ -29,6 +29,7 @@ const collections = [
   ['council', db.readCouncil, db.writeCouncil],
   ['calendarEvents', db.readCalendarEvents, db.writeCalendarEvents],
   ['quickLinks', db.readQuickLinks, db.writeQuickLinks],
+  ['csResources', db.readCsResources, db.writeCsResources],
   ['csEvents', db.readCsEvents, db.writeCsEvents],
   ['slideArchive', db.readSlideArchive, db.writeSlideArchive],
 ];

@@ -6,58 +6,40 @@
 <body>
   <div class="app">
 <%- include('../partials/sidebar', { activePage: 'home' }) %>
-    <main class="main">
+    <main class="main" id="home-main">
 <%- include('../partials/topbar', { student }) %>
 
-      <section class="banner">
-        <div class="banner-text">
-          <span class="banner-date" id="today-date"></span>
-          <h1 id="welcome-heading">Welcome back, <%= student.firstName %>!</h1>
-          <p>Always stay updated in your KPIS student portal</p>
-        </div>
-        <div class="banner-art">
-          <svg viewBox="0 0 200 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="100" cy="80" r="70" fill="rgba(255,255,255,0.08)"/>
-            <path d="M100 40L30 65L100 90L170 65L100 40Z" fill="#fff"/>
-            <path d="M55 75V105C55 105 75 122 100 122C125 122 145 105 145 105V75" stroke="#fff" stroke-width="4" fill="none"/>
-            <line x1="170" y1="65" x2="170" y2="100" stroke="#fff" stroke-width="4"/>
-            <circle cx="170" cy="103" r="4" fill="#fff"/>
-          </svg>
-        </div>
-      </section>
+      <div class="home-edit-bar" id="home-edit-bar" hidden>
+        <p>Editing your home page. Drag a section by its handle to move it, or use Hide and Show. Only you see your changes.</p>
+        <span class="home-edit-error" id="home-edit-error" hidden></span>
+        <button type="button" class="home-edit-save" id="home-edit-save">Save</button>
+        <button type="button" class="home-edit-secondary" id="home-edit-cancel">Cancel</button>
+        <button type="button" class="home-edit-secondary" id="home-edit-reset">Reset to default</button>
+      </div>
 
-      <section class="content-grid">
-        <div class="content-left">
-          <div class="section-header">
-            <h2 class="section-title">Upcoming on the Calendar</h2>
-            <a href="/school-calendar" class="see-all">See all</a>
-          </div>
-          <div class="calendar-list" id="calendar-list"></div>
-        </div>
-
-        <div class="content-right">
-          <div class="section-header">
-            <h2 class="section-title">Community Service</h2>
-            <a href="/community-service" class="see-all">See all</a>
-          </div>
-          <div class="notice-card" id="cs-events-list"></div>
-
-          <div class="section-header">
-            <h2 class="section-title">Active After School Clubs</h2>
-            <a href="/clubs#after-school-clubs" class="see-all">See all</a>
-          </div>
-          <div class="chip-list" id="clubs-list"></div>
-
-          <div class="section-header">
-            <h2 class="section-title">Quick Links</h2>
-          </div>
-          <div class="quicklinks-grid" id="quicklinks-list"></div>
-        </div>
-      </section>
+<% var widgetTitles = {}; homeWidgets.forEach(function (w) { widgetTitles[w.id] = w.title; }); %>
+<% homeLayout.order.forEach(function (widgetId) { var isHidden = homeLayout.hidden.indexOf(widgetId) !== -1; %>
+      <% var options = homeLayout.settings[widgetId]; %>
+      <div class="home-widget<%= isHidden ? ' is-hidden' : '' %>" data-widget="<%= widgetId %>" data-title="<%= widgetTitles[widgetId] %>" data-settings="<%= JSON.stringify(options) %>">
+<%- include('../partials/home-widgets/' + widgetId, { options: options }) %>
+      </div>
+<% if (widgetId === 'hero') { %>
+      <div class="home-customize-bar">
+        <button type="button" class="home-customize-btn" id="home-customize-btn">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7H14M18 7H20M4 17H6M10 17H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16" cy="7" r="2" stroke="currentColor" stroke-width="1.8"/><circle cx="8" cy="17" r="2" stroke="currentColor" stroke-width="1.8"/></svg>
+          Customize home page
+        </button>
+      </div>
+<% } %>
+<% }) %>
+<% if (homeLayout.hidden.length === homeLayout.order.length) { %>
+      <p class="home-empty home-all-hidden">Everything is hidden. Use "Customize home page" to bring it back.</p>
+<% } %>
     </main>
   </div>
 
   <script src="common.js"></script>
   <script src="home.js"></script>
+  <script src="home-customize.js"></script>
 </body>
 </html>

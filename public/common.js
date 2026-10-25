@@ -20,7 +20,7 @@ if (changePasswordAvatar) {
   });
 }
 
-// Today's date in the welcome banner, re-checked periodically so it rolls
+// Today's date in the home page's welcome banner, re-checked periodically so it rolls
 // over to the new day on its own if the portal is left open past midnight.
 const dateEl = document.getElementById('today-date');
 if (dateEl) {

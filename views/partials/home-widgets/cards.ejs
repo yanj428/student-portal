@@ -1,0 +1,30 @@
+<section class="home-duo<%= (options.lunch && options.slide) ? '' : ' home-duo-single' %>">
+<% if (options.lunch) { %>
+        <a class="home-feature" href="/lunch-schedule">
+          <div class="home-feature-media" id="home-lunch-media">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3V11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4 3V8C4 9.1 4.9 10 6 10C7.1 10 8 9.1 8 8V3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 11V21" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M18 3C15.8 3 14 5.5 14 8.5C14 10.5 15 11 15.5 11.5C16 12 16 12.5 16 13V21" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="home-feature-foot">
+            <div>
+              <h3>This week's lunch</h3>
+              <p id="home-lunch-label">See the menu</p>
+            </div>
+            <svg class="home-feature-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12H19M13 6L19 12L13 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </a>
+<% } %>
+<% if (options.slide) { %>
+        <a class="home-feature" href="/announcements" id="home-slide-card">
+          <div class="home-feature-media">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M12 16V20M8 20H16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </div>
+          <div class="home-feature-foot">
+            <div>
+              <h3>This week's slide</h3>
+              <p id="home-slide-label">See the announcements</p>
+            </div>
+            <svg class="home-feature-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12H19M13 6L19 12L13 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </a>
+<% } %>
+      </section>

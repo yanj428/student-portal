@@ -85,10 +85,12 @@ app.use(require('./routes/calendarImage'));
 app.use(require('./routes/slideArchive'));
 app.use(require('./routes/clubs'));
 app.use(require('./routes/csEvents'));
+app.use(require('./routes/csResources'));
 app.use(require('./routes/calendarEvents'));
 app.use(require('./routes/council'));
 app.use(require('./routes/quickLinks'));
 app.use(require('./routes/voice'));
+app.use(require('./routes/homeLayout'));
 app.use(require('./routes/studentAuth'));
 app.use(require('./routes/security'));
 

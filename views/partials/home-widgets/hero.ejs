@@ -1,0 +1,23 @@
+<section class="home-hero">
+        <div class="home-hero-text">
+<% if (options.showDate) { %>
+          <span class="home-hero-date" id="today-date"></span>
+<% } %>
+          <h1 id="welcome-heading">Welcome back, <%= student.firstName %>!</h1>
+<% if (options.showButtons) { %>
+          <div class="home-hero-actions">
+            <a class="home-pill home-pill-light" href="/announcements" id="hero-slide-link">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 10V14C3 14.6 3.4 15 4 15H6.5L13 19V5L6.5 9H4C3.4 9 3 9.4 3 10Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M17.5 9.5C18.5 10.6 18.5 13.4 17.5 14.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M20 7C22 9.5 22 14.5 20 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              This week's slide
+            </a>
+            <a class="home-pill home-pill-outline" href="/lunch-schedule">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 3V11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M4 3V8C4 9.1 4.9 10 6 10C7.1 10 8 9.1 8 8V3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 11V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M18 3C15.8 3 14 5.5 14 8.5C14 10.5 15 11 15.5 11.5C16 12 16 12.5 16 13V21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Lunch
+            </a>
+          </div>
+<% } %>
+        </div>
+        <div class="home-hero-crest">
+          <img src="assets/kpis-logo.png" alt="KPIS International School crest" />
+        </div>
+      </section>

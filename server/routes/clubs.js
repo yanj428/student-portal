@@ -38,6 +38,8 @@ function publicClub(club) {
     logoUrl: club.logoUrl || '',
     instagramUrl: club.instagramUrl || '',
     applicationFormUrl: club.applicationFormUrl || '',
+    meetingDay: club.meetingDay || '',
+    meetingTime: club.meetingTime || '',
     schedule: club.schedule || '',
     advisor: club.advisor || '',
     signupUrl: club.signupUrl || '',
@@ -59,7 +61,7 @@ function listClubs(req, res) {
 router.get('/api/clubs', requireActiveStudent, listClubs);
 router.get('/api/admin/clubs', requireAdmin, listClubs);
 
-const TEXT_LIMITS = { mission: 2000, goals: 2000, leaders: 500, contacts: 500, advisor: 200, schedule: 200 };
+const TEXT_LIMITS = { mission: 2000, goals: 2000, leaders: 500, contacts: 500, advisor: 200, schedule: 200, meetingDay: 100, meetingTime: 100 };
 
 // UN Sustainable Development Goal numbers, typed as "4, 9". The badge image for
 // each lives at public/assets/sdg/<number>.png; a goal with no image yet is
@@ -75,7 +77,7 @@ function parseSdgs(value) {
 }
 
 function readClubFields(body) {
-  const { type, name, mission, goals, sdgs, leaders, contacts, instagramUrl, applicationFormUrl, schedule, advisor, signupUrl } = body || {};
+  const { type, name, mission, goals, sdgs, leaders, contacts, instagramUrl, applicationFormUrl, schedule, meetingDay, meetingTime, advisor, signupUrl } = body || {};
   if (!CLUB_TYPES.includes(type)) {
     return { error: 'Club type must be either community-service or after-school.' };
   }
@@ -83,7 +85,7 @@ function readClubFields(body) {
     return { error: 'Club name is required.' };
   }
 
-  const texts = { mission, goals, leaders, contacts, advisor, schedule };
+  const texts = { mission, goals, leaders, contacts, advisor, schedule, meetingDay, meetingTime };
   for (const [field, value] of Object.entries(texts)) {
     if (value === undefined || value === '') continue;
     if (typeof value !== 'string') return { error: `${field} must be text.` };
@@ -111,6 +113,8 @@ function readClubFields(body) {
       instagramUrl: normalizeUrl(instagramUrl),
       applicationFormUrl: normalizeUrl(applicationFormUrl),
       schedule: typeof schedule === 'string' ? schedule.trim() : '',
+      meetingDay: typeof meetingDay === 'string' ? meetingDay.trim() : '',
+      meetingTime: typeof meetingTime === 'string' ? meetingTime.trim() : '',
       advisor: typeof advisor === 'string' ? advisor.trim() : '',
       signupUrl: normalizeUrl(signupUrl),
     },

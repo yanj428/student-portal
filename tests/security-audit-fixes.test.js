@@ -101,19 +101,20 @@ test('deleting an admin immediately revokes that admin session, not just future 
   assert.equal((await rogue.get('/api/admin/students')).status, 401);
 });
 
-test("an admin's other sessions are logged out when they change their own password", async () => {
+test("deleting an admin account logs out every session it had", async () => {
   const owner = await loginAsAdmin();
-  addAdmin(db, { username: 'multi.session.admin', password: 'originalpassword1' });
+  const created = addAdmin(db, { username: 'multi.session.admin', password: 'originalpassword1' });
 
   const sessionA = request.agent(app);
   const sessionB = request.agent(app);
   await sessionA.post('/api/admin/login').send({ username: 'multi.session.admin', password: 'originalpassword1' });
   await sessionB.post('/api/admin/login').send({ username: 'multi.session.admin', password: 'originalpassword1' });
+  assert.equal((await sessionA.get('/api/admin/students')).status, 200);
 
-  await sessionA.post('/api/admin/change-password').send({ currentPassword: 'originalpassword1', newPassword: 'newpassword12' });
+  assert.equal((await owner.delete('/api/admin/admins/' + created.id)).status, 200);
 
-  assert.equal((await sessionA.get('/api/admin/students')).status, 200); // the session that made the change survives
-  assert.equal((await sessionB.get('/api/admin/students')).status, 401); // every other one doesn't
+  assert.equal((await sessionA.get('/api/admin/students')).status, 401);
+  assert.equal((await sessionB.get('/api/admin/students')).status, 401);
 });
 
 // ---- Item 10: admin login has its own lockout and shows up in the log ----

@@ -37,4 +37,4 @@ function logoutRole(role) {
   return (req, res) => endRole(req, res, role, () => res.json({ ok: true }));
 }
 
-module.exports = { snapshotRole, endRole, logoutRole, otherRole };
+module.exports = { snapshotRole, endRole, logoutRole };

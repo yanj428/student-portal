@@ -24,16 +24,6 @@ async function loginAsAdmin() {
   return agent;
 }
 
-test('admin change-password is rate-limited, same as the student version', async () => {
-  const admin = await loginAsAdmin();
-  for (let i = 0; i < 3; i++) {
-    const res = await admin.post('/api/admin/change-password').send({ currentPassword: 'wrong', newPassword: 'irrelevant1' });
-    assert.notEqual(res.status, 429);
-  }
-  const limited = await admin.post('/api/admin/change-password').send({ currentPassword: 'wrong', newPassword: 'irrelevant1' });
-  assert.equal(limited.status, 429);
-});
-
 test('calendar AI extraction is rate-limited per admin', async () => {
   const admin = await loginAsAdmin();
   for (let i = 0; i < 3; i++) {

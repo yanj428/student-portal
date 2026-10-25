@@ -20,19 +20,13 @@ const router = express.Router();
 const WEEK_LABEL_MAX = 100;
 
 // ---- Page content: the weekly slide, the lunch schedule image and the
-// school year calendar image. Everything else that used to live here
-// (calendar events, clubs, council, quick links) is now its
-// own collection with full admin add/edit/delete — see the other route files.
+// school year calendar image.
 function validateContent(content) {
   const shape = db.DEFAULT_CONTENT;
   if (!content || typeof content !== 'object') return { error: 'Invalid content.' };
 
   for (const key of Object.keys(shape)) {
-    if (Array.isArray(shape[key])) {
-      if (!Array.isArray(content[key]) || content[key].length !== shape[key].length) {
-        return { error: `"${key}" must be a list of exactly ${shape[key].length} item(s).` };
-      }
-    } else if (typeof content[key] !== 'object' || content[key] === null || Array.isArray(content[key])) {
+    if (typeof content[key] !== 'object' || content[key] === null || Array.isArray(content[key])) {
       return { error: `"${key}" is invalid.` };
     }
   }

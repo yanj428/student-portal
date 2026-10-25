@@ -12,8 +12,9 @@ const UPLOADS_DIR = process.env.DATA_DIR
 const LUNCH_SUBDIR = 'lunch';
 const CLUB_LOGO_SUBDIR = 'club-logos';
 const COUNCIL_PHOTO_SUBDIR = 'council-photos';
+const QUICK_LINK_LOGO_SUBDIR = 'quick-link-logos';
 const CALENDAR_SUBDIR = 'calendar';
-for (const subdir of [LUNCH_SUBDIR, CLUB_LOGO_SUBDIR, COUNCIL_PHOTO_SUBDIR, CALENDAR_SUBDIR]) {
+for (const subdir of [LUNCH_SUBDIR, CLUB_LOGO_SUBDIR, COUNCIL_PHOTO_SUBDIR, CALENDAR_SUBDIR, QUICK_LINK_LOGO_SUBDIR]) {
   fs.mkdirSync(path.join(UPLOADS_DIR, subdir), { recursive: true });
 }
 
@@ -95,9 +96,11 @@ module.exports = {
   CLUB_LOGO_SUBDIR,
   COUNCIL_PHOTO_SUBDIR,
   CALENDAR_SUBDIR,
+  QUICK_LINK_LOGO_SUBDIR,
   lunchImageUpload: makeImageUpload(8, LUNCH_SUBDIR),
   clubLogoUpload: makeImageUpload(4, CLUB_LOGO_SUBDIR),
   councilPhotoUpload: makeImageUpload(4, COUNCIL_PHOTO_SUBDIR),
+  quickLinkLogoUpload: makeImageUpload(4, QUICK_LINK_LOGO_SUBDIR),
   // A full-page calendar scan, so a larger cap than the logos and photos.
   calendarImageUpload: makeImageUpload(10, CALENDAR_SUBDIR),
   memoryImageUpload: makeImageUpload(8),

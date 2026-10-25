@@ -23,9 +23,9 @@ async function loginAsAdmin() {
 function baseContent(overrides = {}) {
   const content = db.DEFAULT_CONTENT;
   return {
-    lunchMenu: content.lunchMenu.map((l) => ({ ...l })),
     weeklySlide: { ...content.weeklySlide },
     lunchSchedule: { ...content.lunchSchedule },
+    calendarImage: { ...content.calendarImage },
     ...overrides,
   };
 }
@@ -42,10 +42,9 @@ test('saving content drops unknown fields instead of storing them', async () => 
   assert.equal(fetched.body.content.injectedField, undefined);
 });
 
-test('a lunch item over the length cap is rejected', async () => {
+test('a lunch week label over the length cap is rejected', async () => {
   const admin = await loginAsAdmin();
-  const content = baseContent();
-  content.lunchMenu[0].item = 'x'.repeat(201);
+  const content = baseContent({ lunchSchedule: { weekLabel: 'x'.repeat(101), imageUrl: '' } });
 
   const res = await admin.put('/api/admin/content').send({ content });
   assert.equal(res.status, 400);
@@ -62,10 +61,10 @@ test('a week label over the length cap is rejected', async () => {
 test('a valid content save round-trips correctly', async () => {
   const admin = await loginAsAdmin();
   const content = baseContent({ weeklySlide: { weekLabel: 'Week of Sep 1', canvaEmbedUrl: '' } });
-  content.lunchMenu[0].item = 'Fried rice';
+  content.calendarImage.label = 'School year 2026';
 
   const res = await admin.put('/api/admin/content').send({ content });
   assert.equal(res.status, 200);
   assert.equal(res.body.content.weeklySlide.weekLabel, 'Week of Sep 1');
-  assert.equal(res.body.content.lunchMenu[0].item, 'Fried rice');
+  assert.equal(res.body.content.calendarImage.label, 'School year 2026');
 });

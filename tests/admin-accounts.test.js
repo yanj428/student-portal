@@ -79,24 +79,15 @@ test('an admin cannot delete their own account, and the last admin cannot be del
   assert.equal(deleteLast.status, 400);
 });
 
-test('an admin can change their own password, and it is required for their next login', async () => {
-  // Uses a dedicated admin account (not the shared bootstrap admin other
-  // tests in this file log in as) so changing its password here doesn't
-  // affect any test that runs afterward.
-  addAdmin(db, { username: 'pw.change', password: 'originalpassword1' });
+test('admins have no change-password route: the first admin password is ADMIN_PASSWORD', async () => {
+  const admin = request.agent(app);
+  await admin.post('/api/admin/login').send({ username: 'admin', password: 'test-admin-pw' });
+  const res = await admin.post('/api/admin/change-password').send({ currentPassword: 'test-admin-pw', newPassword: 'brandnewadminpw1' });
+  assert.equal(res.status, 404);
 
-  const agent = request.agent(app);
-  await agent.post('/api/admin/login').send({ username: 'pw.change', password: 'originalpassword1' });
-  const changed = await agent
-    .post('/api/admin/change-password')
-    .send({ currentPassword: 'originalpassword1', newPassword: 'brandnewadminpw1' });
-  assert.equal(changed.status, 200);
-
-  const oldLogin = await request(app).post('/api/admin/login').send({ username: 'pw.change', password: 'originalpassword1' });
-  assert.equal(oldLogin.status, 401);
-
-  const newLogin = await request(app).post('/api/admin/login').send({ username: 'pw.change', password: 'brandnewadminpw1' });
-  assert.equal(newLogin.status, 200);
+  // Nothing changed: the old password still works.
+  const again = await request(app).post('/api/admin/login').send({ username: 'admin', password: 'test-admin-pw' });
+  assert.equal(again.status, 200);
 });
 
 test('security actions are recorded in the audit log', async () => {

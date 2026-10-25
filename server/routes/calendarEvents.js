@@ -5,6 +5,7 @@ const db = require('../db');
 const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
 const { memoryImageUpload } = require('../uploads');
 const { extractCalendarEvents, isAiConfigured, NOT_CONFIGURED_MESSAGE } = require('../utils/calendarEventsAi');
+const { deleteRoute } = require('../utils/routeHelpers');
 const { calendarAiLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
@@ -145,12 +146,6 @@ router.put('/api/admin/calendar-events/:id', requireAdmin, (req, res) => {
 
   res.json({ calendarEvent: publicEvent(item) });
 });
-router.delete('/api/admin/calendar-events/:id', requireAdmin, (req, res) => {
-  const items = pruneExpiredEvents();
-  const next = items.filter((e) => e.id !== req.params.id);
-  if (next.length === items.length) return res.status(404).json({ error: 'Calendar event not found.' });
-  db.writeCalendarEvents(next);
-  res.json({ ok: true });
-});
+router.delete('/api/admin/calendar-events/:id', requireAdmin, deleteRoute({ read: pruneExpiredEvents, write: db.writeCalendarEvents, notFound: 'Calendar event not found.' }));
 
 module.exports = router;

@@ -4,20 +4,18 @@ const crypto = require('crypto');
 const db = require('../db');
 const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
 const { validateOptionalUrl, normalizeUrl } = require('../utils/validateUrl');
+const { listRoute, reorderRoute, deleteRoute } = require('../utils/routeHelpers');
+const { quickLinkLogoUpload, QUICK_LINK_LOGO_SUBDIR, removeUpload, discardUpload } = require('../uploads');
 
 const router = express.Router();
 
 function publicLink(q) {
-  return { id: q.id, label: q.label, url: q.url, createdAt: q.createdAt };
+  return { id: q.id, label: q.label, url: q.url, logoUrl: q.logoUrl || '', createdAt: q.createdAt };
 }
 
-router.get('/api/quick-links', requireActiveStudent, (req, res) => {
-  res.json({ quickLinks: db.readQuickLinks().map(publicLink) });
-});
-
-router.get('/api/admin/quick-links', requireAdmin, (req, res) => {
-  res.json({ quickLinks: db.readQuickLinks().map(publicLink) });
-});
+const listLinks = listRoute(db.readQuickLinks, 'quickLinks', publicLink);
+router.get('/api/quick-links', requireActiveStudent, listLinks);
+router.get('/api/admin/quick-links', requireAdmin, listLinks);
 
 function validateFields(body) {
   const { label, url } = body || {};
@@ -27,60 +25,67 @@ function validateFields(body) {
 }
 
 router.post('/api/admin/quick-links', requireAdmin, (req, res) => {
-  const error = validateFields(req.body);
-  if (error) return res.status(400).json({ error });
+  quickLinkLogoUpload.single('logo')(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message || 'Could not upload logo.' });
 
-  const items = db.readQuickLinks();
-  const item = {
-    id: crypto.randomUUID(),
-    label: req.body.label.trim(),
-    url: normalizeUrl(req.body.url),
-    createdAt: new Date().toISOString(),
-  };
-  items.push(item);
-  db.writeQuickLinks(items);
+    const error = validateFields(req.body);
+    if (error) {
+      discardUpload(req);
+      return res.status(400).json({ error });
+    }
 
-  res.status(201).json({ quickLink: publicLink(item) });
+    const items = db.readQuickLinks();
+    const item = {
+      id: crypto.randomUUID(),
+      label: req.body.label.trim(),
+      url: normalizeUrl(req.body.url),
+      logoUrl: req.file ? `/uploads/${QUICK_LINK_LOGO_SUBDIR}/${req.file.filename}` : '',
+      createdAt: new Date().toISOString(),
+    };
+    items.push(item);
+    db.writeQuickLinks(items);
+
+    res.status(201).json({ quickLink: publicLink(item) });
+  });
 });
-
 // Registered before /:id so "reorder" in the URL can never be mistaken for
 // an :id value (same fix as the council reorder route needed).
-router.put('/api/admin/quick-links/reorder', requireAdmin, (req, res) => {
-  const { orderedIds } = req.body || {};
-  if (!Array.isArray(orderedIds) || !orderedIds.every((id) => typeof id === 'string')) {
-    return res.status(400).json({ error: 'orderedIds must be an array of ids.' });
-  }
-
-  const items = db.readQuickLinks();
-  const byId = new Map(items.map((q) => [q.id, q]));
-  const sameSet = orderedIds.length === items.length && new Set(orderedIds).size === orderedIds.length && orderedIds.every((id) => byId.has(id));
-  if (!sameSet) return res.status(400).json({ error: 'orderedIds must match the current quick links exactly.' });
-
-  db.writeQuickLinks(orderedIds.map((id) => byId.get(id)));
-  res.json({ quickLinks: db.readQuickLinks().map(publicLink) });
-});
+router.put('/api/admin/quick-links/reorder', requireAdmin, reorderRoute({ read: db.readQuickLinks, write: db.writeQuickLinks, key: 'quickLinks', publicFn: publicLink, noun: 'quick links' }));
 
 router.put('/api/admin/quick-links/:id', requireAdmin, (req, res) => {
-  const error = validateFields(req.body);
-  if (error) return res.status(400).json({ error });
+  quickLinkLogoUpload.single('logo')(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message || 'Could not upload logo.' });
 
-  const items = db.readQuickLinks();
-  const item = items.find((q) => q.id === req.params.id);
-  if (!item) return res.status(404).json({ error: 'Quick link not found.' });
+    const error = validateFields(req.body);
+    if (error) {
+      discardUpload(req);
+      return res.status(400).json({ error });
+    }
 
-  item.label = req.body.label.trim();
-  item.url = normalizeUrl(req.body.url);
-  db.writeQuickLinks(items);
+    const items = db.readQuickLinks();
+    const item = items.find((q) => q.id === req.params.id);
+    if (!item) {
+      discardUpload(req);
+      return res.status(404).json({ error: 'Quick link not found.' });
+    }
 
-  res.json({ quickLink: publicLink(item) });
+    const previousLogoUrl = item.logoUrl || '';
+    item.label = req.body.label.trim();
+    item.url = normalizeUrl(req.body.url);
+    if (req.file) item.logoUrl = `/uploads/${QUICK_LINK_LOGO_SUBDIR}/${req.file.filename}`;
+    else if (req.body.removeLogo === 'true') item.logoUrl = '';
+    db.writeQuickLinks(items);
+
+    if ((item.logoUrl || '') !== previousLogoUrl) removeUpload(previousLogoUrl, QUICK_LINK_LOGO_SUBDIR);
+
+    res.json({ quickLink: publicLink(item) });
+  });
 });
-
-router.delete('/api/admin/quick-links/:id', requireAdmin, (req, res) => {
-  const items = db.readQuickLinks();
-  const next = items.filter((q) => q.id !== req.params.id);
-  if (next.length === items.length) return res.status(404).json({ error: 'Quick link not found.' });
-  db.writeQuickLinks(next);
-  res.json({ ok: true });
-});
+router.delete('/api/admin/quick-links/:id', requireAdmin, deleteRoute({
+  read: db.readQuickLinks,
+  write: db.writeQuickLinks,
+  notFound: 'Quick link not found.',
+  onRemoved: (link) => removeUpload(link.logoUrl, QUICK_LINK_LOGO_SUBDIR),
+}));
 
 module.exports = router;

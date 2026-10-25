@@ -11,20 +11,30 @@ function publicSlide(slide) {
   return { id: slide.id, weekLabel: slide.weekLabel, canvaEmbedUrl: slide.canvaEmbedUrl, archivedAt: slide.archivedAt };
 }
 
+// The list is kept in the order the admin arranged it (new slides are added at
+// the top), and students see the same order.
 router.get('/api/slide-archive', requireActiveStudent, (req, res) => {
-  const slides = db
-    .readSlideArchive()
-    .sort((a, b) => new Date(b.archivedAt) - new Date(a.archivedAt))
-    .map(publicSlide);
-  res.json({ slides });
+  res.json({ slides: db.readSlideArchive().map(publicSlide) });
 });
 
 router.get('/api/admin/slide-archive', requireAdmin, (req, res) => {
-  const slides = db
-    .readSlideArchive()
-    .sort((a, b) => new Date(b.archivedAt) - new Date(a.archivedAt))
-    .map(publicSlide);
-  res.json({ slides });
+  res.json({ slides: db.readSlideArchive().map(publicSlide) });
+});
+
+// Registered before /:id so "reorder" can never be mistaken for a slide id.
+router.put('/api/admin/slide-archive/reorder', requireAdmin, (req, res) => {
+  const { orderedIds } = req.body || {};
+  if (!Array.isArray(orderedIds) || !orderedIds.every((id) => typeof id === 'string')) {
+    return res.status(400).json({ error: 'orderedIds must be an array of ids.' });
+  }
+
+  const slides = db.readSlideArchive();
+  const byId = new Map(slides.map((s) => [s.id, s]));
+  const sameSet = orderedIds.length === slides.length && new Set(orderedIds).size === orderedIds.length && orderedIds.every((id) => byId.has(id));
+  if (!sameSet) return res.status(400).json({ error: 'orderedIds must match the current archived slides exactly.' });
+
+  db.writeSlideArchive(orderedIds.map((id) => byId.get(id)));
+  res.json({ slides: orderedIds.map((id) => publicSlide(byId.get(id))) });
 });
 
 router.post('/api/admin/slide-archive', requireAdmin, (req, res) => {
@@ -45,7 +55,7 @@ router.post('/api/admin/slide-archive', requireAdmin, (req, res) => {
     canvaEmbedUrl: normalizeUrl(canvaEmbedUrl),
     archivedAt: new Date().toISOString(),
   };
-  slides.push(slide);
+  slides.unshift(slide);
   db.writeSlideArchive(slides);
 
   res.status(201).json({ slide: publicSlide(slide) });

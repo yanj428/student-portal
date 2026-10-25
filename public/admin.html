@@ -282,7 +282,7 @@
 
       <section class="panel">
         <h2>Archived Slides</h2>
-        <p class="panel-hint">Use "Archive this slide" above to move the current slide here, or paste a link manually below.</p>
+        <p class="panel-hint">Use "Archive this slide" above to move the current slide here, or paste a link manually below. Drag the &#8942;&#8942; handle on a row to change the order; students see the same order.</p>
 
         <form id="archive-form" class="archive-form">
           <div class="form-row">
@@ -303,6 +303,7 @@
           <table>
             <thead>
               <tr>
+                <th></th>
                 <th>Week</th>
                 <th>Link</th>
                 <th>Archived</th>
@@ -310,7 +311,7 @@
               </tr>
             </thead>
             <tbody id="archive-rows">
-              <tr class="empty-row" id="archive-empty-row"><td colspan="4">No archived slides yet.</td></tr>
+              <tr class="empty-row" id="archive-empty-row"><td colspan="5">No archived slides yet.</td></tr>
             </tbody>
           </table>
         </div>
@@ -781,7 +782,6 @@
           <p class="field-error" id="admin-create-error" hidden></p>
           <button type="submit" class="btn primary">Add admin</button>
         </form>
-
         <div class="simple-list" id="admin-list">
           <p class="empty-hint" id="admin-list-empty">No admin accounts yet.</p>
         </div>

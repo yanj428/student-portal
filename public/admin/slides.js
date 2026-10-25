@@ -1,4 +1,5 @@
 import { escapeHtml, getJSON, sendJSON, confirmDelete, withBusy, TRASH_ICON } from './api.js';
+import { enableReorder } from './reorder.js';
 
 // ---- This week's slide ----
 const currentSlideForm = document.getElementById('current-slide-form');
@@ -120,8 +121,11 @@ export async function loadSlideArchive() {
 
   slides.forEach((slide) => {
     const tr = document.createElement('tr');
+    tr.className = 'archive-row';
+    tr.dataset.id = slide.id;
     const archived = new Date(slide.archivedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     tr.innerHTML = `
+      <td class="drag-cell"><span class="drag-handle" title="Drag to change the order" aria-label="Drag to change the order">&#8942;&#8942;</span></td>
       <td>${escapeHtml(slide.weekLabel)}</td>
       <td><a href="${escapeHtml(slide.canvaEmbedUrl)}" target="_blank" rel="noopener">View</a></td>
       <td>${archived}</td>
@@ -130,6 +134,11 @@ export async function loadSlideArchive() {
     tr.querySelector('.delete-btn').addEventListener('click', () =>
       confirmDelete(`/api/admin/slide-archive/${slide.id}`, 'Remove this slide from the archive?', loadSlideArchive)
     );
+    enableReorder(tr.querySelector('.drag-handle'), archiveRows, {
+      url: '/api/admin/slide-archive/reorder',
+      reload: loadSlideArchive,
+      itemSelector: 'tr.archive-row',
+    });
     archiveRows.appendChild(tr);
   });
 }

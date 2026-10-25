@@ -796,3 +796,7 @@ tr:last-child td { border-bottom: none; }
 .grade-btn.active { background: #9a1b1f; border-color: #9a1b1f; color: #fff; }
 .grade-btn.active .grade-btn-count { background: rgba(255, 255, 255, 0.2); color: #fff; }
 .table-wrap[hidden] { display: none; }
+
+/* Archived slides: drag handle column and the row being dragged */
+.drag-cell { width: 34px; }
+tr.archive-row.dragging { opacity: 0.4; }

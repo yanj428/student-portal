@@ -226,10 +226,11 @@
       <section class="admin-page-section" data-section="lunch" hidden>
       <section class="panel">
         <h2>Lunch schedule</h2>
-        <p class="panel-hint">Upload this week's lunch menu picture. Uploading a new one replaces the current image.</p>
+        <p class="panel-hint">Upload this week's lunch menu as a picture or a PDF. Uploading a new one replaces the current menu.</p>
 
         <div class="current-image" id="lunch-current" hidden>
           <img id="lunch-current-image" alt="Current lunch schedule" />
+          <a class="btn ghost" id="lunch-current-pdf" href="#" target="_blank" rel="noopener" hidden>View the PDF menu</a>
           <div class="current-image-info">
             <span id="lunch-current-label"></span>
             <button type="button" class="btn reject" id="lunch-remove-btn">Remove</button>
@@ -243,8 +244,8 @@
               <input class="field-input" type="text" id="lunch-week-label" placeholder="e.g. Week of Sep 8" />
             </div>
             <div class="form-field">
-              <label class="field-label" for="lunch-image-input">Menu picture</label>
-              <input class="field-input" type="file" id="lunch-image-input" accept="image/png,image/jpeg,image/webp,image/gif" required />
+              <label class="field-label" for="lunch-image-input">Menu picture or PDF</label>
+              <input class="field-input" type="file" id="lunch-image-input" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf" required />
             </div>
           </div>
           <p class="field-error" id="lunch-upload-error" hidden></p>
@@ -317,37 +318,6 @@
         </div>
       </section>
 
-      </section>
-
-      <section class="admin-page-section" data-section="calendar" hidden>
-      <section class="panel">
-        <h2>School year calendar picture</h2>
-        <p class="panel-hint">The picture of the full school year calendar shown at the top of the School Calendar page. Uploading a new one replaces the current picture.</p>
-
-        <div class="current-image" id="calendar-image-current" hidden>
-          <img id="calendar-image-preview" alt="Current school year calendar" />
-          <div class="current-image-info">
-            <span id="calendar-image-current-label"></span>
-            <button type="button" class="btn reject" id="calendar-image-remove-btn">Remove</button>
-          </div>
-        </div>
-
-        <form id="calendar-image-form" class="archive-form">
-          <div class="form-row">
-            <div class="form-field">
-              <label class="field-label" for="calendar-image-label-input">Label</label>
-              <input class="field-input" type="text" id="calendar-image-label-input" placeholder="e.g. ACY 2026-2027 school calendar" />
-            </div>
-            <div class="form-field">
-              <label class="field-label" for="calendar-image-input">Calendar picture</label>
-              <input class="field-input" type="file" id="calendar-image-input" accept="image/png,image/jpeg,image/webp,image/gif" required />
-            </div>
-          </div>
-          <p class="field-error" id="calendar-image-error" hidden></p>
-          <button type="submit" class="btn primary" id="calendar-image-submit">Upload calendar</button>
-        </form>
-      </section>
-
       <section class="panel">
         <h2>Extract events with AI</h2>
         <p class="panel-hint">Upload a photo of a school calendar or events list and review the events it finds before adding them below.</p>
@@ -374,7 +344,7 @@
 
       <section class="panel">
         <h2>Calendar events</h2>
-        <p class="panel-hint">Shown in "Upcoming on the Calendar" on the homepage and on the School Calendar page.</p>
+        <p class="panel-hint">Shown in "Coming up" on the home page and in "Upcoming Calendar" on the Announcements page.</p>
 
         <form id="calendar-event-form" class="archive-form">
           <div class="form-row">
@@ -405,6 +375,36 @@
         <div class="simple-list" id="calendar-event-list">
           <p class="empty-hint" id="calendar-event-empty-hint">No calendar events yet.</p>
         </div>
+      </section>
+      </section>
+
+      <section class="admin-page-section" data-section="calendar" hidden>
+      <section class="panel">
+        <h2>School year calendar picture</h2>
+        <p class="panel-hint">The picture of the full school year calendar shown at the top of the School Calendar page. Uploading a new one replaces the current picture.</p>
+
+        <div class="current-image" id="calendar-image-current" hidden>
+          <img id="calendar-image-preview" alt="Current school year calendar" />
+          <div class="current-image-info">
+            <span id="calendar-image-current-label"></span>
+            <button type="button" class="btn reject" id="calendar-image-remove-btn">Remove</button>
+          </div>
+        </div>
+
+        <form id="calendar-image-form" class="archive-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="calendar-image-label-input">Label</label>
+              <input class="field-input" type="text" id="calendar-image-label-input" placeholder="e.g. ACY 2026-2027 school calendar" />
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="calendar-image-input">Calendar picture</label>
+              <input class="field-input" type="file" id="calendar-image-input" accept="image/png,image/jpeg,image/webp,image/gif" required />
+            </div>
+          </div>
+          <p class="field-error" id="calendar-image-error" hidden></p>
+          <button type="submit" class="btn primary" id="calendar-image-submit">Upload calendar</button>
+        </form>
       </section>
       </section>
 

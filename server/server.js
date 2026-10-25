@@ -69,6 +69,13 @@ app.use(
   })
 );
 
+// Data answers are never kept by the browser, so a change an admin just saved
+// (a slide, a club, an order) can't be hidden behind an old copy.
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
+
 app.use(require('./routes/adminAuth'));
 app.use(require('./routes/admins'));
 app.use(require('./routes/students'));

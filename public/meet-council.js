@@ -41,7 +41,7 @@ function section(label, members, buildBody) {
   if (members.length === 0) return null;
   const el = document.createElement('section');
   el.className = 'council-section';
-  el.innerHTML = `<div class="council-section-head"><h2>${escapeHtml(label)}</h2><span class="council-count">${members.length} ${members.length === 1 ? 'member' : 'members'}</span></div>`;
+  el.innerHTML = `<div class="council-section-head"><h2>${escapeHtml(label)}</h2></div>`;
   buildBody(el);
   return el;
 }

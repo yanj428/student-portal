@@ -337,3 +337,11 @@ html, body {
   .login-page { padding: 12px; }
   .login-left { padding-left: 24px; padding-right: 24px; }
 }
+
+.credit-line {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: #8a7f7f;
+  text-align: center;
+}
+.credit-line strong { color: #8B1E1E; font-weight: 600; }

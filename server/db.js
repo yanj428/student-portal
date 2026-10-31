@@ -164,6 +164,10 @@ ensureColumn('students', 'nickname', "nickname TEXT NOT NULL DEFAULT ''");
 ensureColumn('students', 'middleName', "middleName TEXT NOT NULL DEFAULT ''");
 const roleColumnJustAdded = ensureColumn('admins', 'role', "role TEXT NOT NULL DEFAULT 'editor'");
 
+// An admin account made with a temporary password must choose its own at the
+// first sign-in; until then the rest of the admin panel stays closed to it.
+ensureColumn('admins', 'mustChangePassword', 'mustChangePassword INTEGER NOT NULL DEFAULT 0');
+
 // Every admin that already existed before roles did becomes an owner (not
 // silently downgraded to the new, more limited 'editor' default) — running
 // with fewer admin permissions than before would be a surprising side
@@ -624,16 +628,26 @@ module.exports = {
   ownerCount() {
     return db.prepare("SELECT COUNT(*) AS c FROM admins WHERE role = 'owner'").get().c;
   },
-  createAdmin({ username, passwordHash, role }) {
+  createAdmin({ username, passwordHash, role, mustChangePassword = false }) {
     const admin = {
       id: crypto.randomUUID(),
       username: username.trim().toLowerCase(),
       passwordHash,
       role: role === 'owner' ? 'owner' : 'editor',
+      mustChangePassword: mustChangePassword ? 1 : 0,
       createdAt: new Date().toISOString(),
     };
-    db.prepare('INSERT INTO admins (id, username, passwordHash, role, createdAt) VALUES (@id, @username, @passwordHash, @role, @createdAt)').run(admin);
+    db.prepare('INSERT INTO admins (id, username, passwordHash, role, mustChangePassword, createdAt) VALUES (@id, @username, @passwordHash, @role, @mustChangePassword, @createdAt)').run(admin);
     return admin;
+  },
+  // The first admin's password comes from ADMIN_PASSWORD (see above); every other
+  // admin can choose their own. Setting one also ends the must-change requirement.
+  firstAdminId() {
+    const row = db.prepare('SELECT id FROM admins ORDER BY createdAt LIMIT 1').get();
+    return row ? row.id : null;
+  },
+  updateAdminPasswordHash(id, passwordHash) {
+    return db.prepare('UPDATE admins SET passwordHash = ?, mustChangePassword = 0 WHERE id = ?').run(passwordHash, id).changes > 0;
   },
   updateAdminRole(id, role) {
     return db.prepare('UPDATE admins SET role = ? WHERE id = ?').run(role === 'owner' ? 'owner' : 'editor', id).changes > 0;
@@ -674,8 +688,8 @@ module.exports = {
   // Same idea for admin accounts: used when an admin changes their own
   // password (keeps the current session, drops any others), and when an
   // admin account is deleted (no exceptSid — every session for it dies).
-  destroyAdminSessions(adminId) {
-    destroySessionsMatching((session) => session.adminId === adminId);
+  destroyAdminSessions(adminId, exceptSid) {
+    destroySessionsMatching((session) => session.adminId === adminId, exceptSid);
   },
 };
 

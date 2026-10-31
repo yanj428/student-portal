@@ -23,6 +23,20 @@
     </form>
   </div>
 
+  <!-- Shown after the first sign-in with a temporary password -->
+  <div class="gate" id="password-gate" hidden>
+    <form class="gate-card" id="password-form">
+      <h1>Choose a new password</h1>
+      <p>You signed in with a temporary password. Choose your own to continue.</p>
+      <input class="field-input" type="password" id="pw-current" placeholder="Temporary password" autocomplete="current-password" />
+      <input class="field-input" type="password" id="pw-new" placeholder="New password (at least 8 characters)" autocomplete="new-password" />
+      <input class="field-input" type="password" id="pw-confirm" placeholder="New password again" autocomplete="new-password" />
+      <p class="field-error" id="pw-error" hidden></p>
+      <button type="submit" class="btn primary">Save and continue</button>
+      <button type="button" class="btn ghost" id="pw-logout">Sign out</button>
+    </form>
+  </div>
+
   <!-- Admin panel -->
   <div class="admin-page" id="admin-page" hidden>
     <div class="admin-shell">

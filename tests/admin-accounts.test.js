@@ -79,11 +79,12 @@ test('an admin cannot delete their own account, and the last admin cannot be del
   assert.equal(deleteLast.status, 400);
 });
 
-test('admins have no change-password route: the first admin password is ADMIN_PASSWORD', async () => {
+test('the first admin cannot change their password here: it is the ADMIN_PASSWORD setting', async () => {
   const admin = request.agent(app);
   await admin.post('/api/admin/login').send({ username: 'admin', password: 'test-admin-pw' });
   const res = await admin.post('/api/admin/change-password').send({ currentPassword: 'test-admin-pw', newPassword: 'brandnewadminpw1' });
-  assert.equal(res.status, 404);
+  assert.equal(res.status, 400);
+  assert.match(res.body.error, /ADMIN_PASSWORD/);
 
   // Nothing changed: the old password still works.
   const again = await request(app).post('/api/admin/login').send({ username: 'admin', password: 'test-admin-pw' });

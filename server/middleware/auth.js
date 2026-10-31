@@ -74,6 +74,12 @@ function requireAdmin(req, res, next) {
   const admin = db.findAdminById(req.session.adminId);
   if (!admin) return expireSession(req, res, 'This admin account no longer exists.', 'admin');
 
+  // An admin who signed in with a temporary password may do nothing but choose
+  // a new one (that route sets req.allowMustChangePassword) until they have.
+  if (admin.mustChangePassword && !req.allowMustChangePassword) {
+    return res.status(403).json({ error: 'Choose a new password first.', mustChangePassword: true });
+  }
+
   req.admin = admin;
   return next();
 }

@@ -12,6 +12,7 @@ process.env.CALENDAR_AI_RATE_LIMIT = '3';
 const request = require('supertest');
 const app = require('../server/server');
 const db = require('../server/db');
+const { addAdmin } = require('./helpers/admins');
 
 test.after(() => {
   db.close();
@@ -31,5 +32,17 @@ test('calendar AI extraction is rate-limited per admin', async () => {
     assert.notEqual(res.status, 429);
   }
   const limited = await admin.post('/api/admin/calendar-events/extract');
+  assert.equal(limited.status, 429);
+});
+
+test('guessing an admin password through change-password is rate-limited, same as for students', async () => {
+  addAdmin(db, { username: 'limited.admin@kpis.ac.th', password: 'originalpassword1' });
+  const admin = request.agent(app);
+  await admin.post('/api/admin/login').send({ username: 'limited.admin@kpis.ac.th', password: 'originalpassword1' });
+  for (let i = 0; i < 3; i++) {
+    const res = await admin.post('/api/admin/change-password').send({ currentPassword: 'wrong', newPassword: 'irrelevant-new-1' });
+    assert.notEqual(res.status, 429);
+  }
+  const limited = await admin.post('/api/admin/change-password').send({ currentPassword: 'wrong', newPassword: 'irrelevant-new-1' });
   assert.equal(limited.status, 429);
 });

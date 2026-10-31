@@ -8,8 +8,8 @@ const {
   STUDENT_SESSION_IDLE_MINUTES,
   DUMMY_PASSWORD_HASH,
 } = require('../config');
-const { adminLoginLimiter } = require('../middleware/rateLimit');
-const { sessionExpiredByAbsoluteLimit } = require('../middleware/auth');
+const { adminLoginLimiter, passwordChangeLimiter } = require('../middleware/rateLimit');
+const { sessionExpiredByAbsoluteLimit, requireAdmin } = require('../middleware/auth');
 const { lockedResponse } = require('../utils/authResponses');
 const { snapshotRole, logoutRole } = require('../utils/sessionRoles');
 
@@ -34,7 +34,7 @@ function completeLogin(req, res, admin) {
     req.session.adminUsername = admin.username;
     req.session.adminLoginAt = Date.now();
     req.session.cookie.maxAge = Math.max(ADMIN_SESSION_IDLE_MINUTES, student.studentId ? STUDENT_SESSION_IDLE_MINUTES : 0) * 60 * 1000;
-    res.json({ ok: true, username: admin.username });
+    res.json({ ok: true, username: admin.username, mustChangePassword: !!admin.mustChangePassword });
   });
 }
 
@@ -100,7 +100,44 @@ router.get('/api/admin/session', (req, res) => {
   }
   const admin = db.findAdminById(req.session.adminId);
   if (!admin) return res.json(signedOut);
-  res.json({ isAdmin: true, username: admin.username, id: admin.id, role: admin.role });
+  res.json({ isAdmin: true, username: admin.username, id: admin.id, role: admin.role, mustChangePassword: !!admin.mustChangePassword });
+});
+
+// An admin chooses their own password: required at the first sign-in of an account
+// made with a temporary one, and open to any admin after that. The first admin's
+// password is the ADMIN_PASSWORD setting (it is put back to that at every start), so
+// that one is changed there instead.
+const allowWhileMustChange = (req, res, next) => {
+  req.allowMustChangePassword = true;
+  next();
+};
+
+router.post('/api/admin/change-password', allowWhileMustChange, requireAdmin, passwordChangeLimiter, (req, res) => {
+  const { currentPassword, newPassword } = req.body || {};
+  if (typeof currentPassword !== 'string' || typeof newPassword !== 'string' || !currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Current and new password are required.' });
+  }
+  const admin = req.admin;
+  if (admin.id === db.firstAdminId()) {
+    return res.status(400).json({ error: "This account's password is set by the site's ADMIN_PASSWORD setting, so it can't be changed here." });
+  }
+  if (newPassword.length < 8) return res.status(400).json({ error: 'New password must be at least 8 characters.' });
+  const name = admin.username.toLowerCase();
+  const typed = newPassword.toLowerCase();
+  if (typed === name || typed === name.split('@')[0]) {
+    return res.status(400).json({ error: 'Choose a password that is not your username.' });
+  }
+  if (!bcrypt.compareSync(currentPassword, admin.passwordHash)) {
+    return res.status(401).json({ error: 'Current password is incorrect.' });
+  }
+  if (bcrypt.compareSync(newPassword, admin.passwordHash)) {
+    return res.status(400).json({ error: 'New password must be different from your current password.' });
+  }
+
+  db.updateAdminPasswordHash(admin.id, bcrypt.hashSync(newPassword, 10));
+  db.destroyAdminSessions(admin.id, req.sessionID); // every other sign-in of this admin ends
+  db.logAuditEvent(admin.username, 'admin.password_change', null);
+  res.json({ ok: true });
 });
 
 module.exports = router;

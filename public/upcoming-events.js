@@ -1,8 +1,5 @@
 // ---- The upcoming calendar, as a month you can page through -------------------
-// Events only have a day and a month, so the year comes from the school year: it
-// starts in August, so August to December belong to the school year that is
-// running and January to July to the one after it (the server drops events that
-// have already passed).
+// Every event comes with its year, and past events stay on the calendar (faded).
 const CAL_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const CAL_MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const SCHOOL_YEAR_START_MONTH = 7;
@@ -17,7 +14,8 @@ const calEls = {
   prev: document.getElementById('cal-prev'),
   next: document.getElementById('cal-next'),
   todayBtn: document.getElementById('cal-today'),
-  none: document.getElementById('upcoming-empty'),
+  todayLine: document.getElementById('cal-today-line'),
+  legend: document.getElementById('cal-legend'),
 };
 
 // Today at the school (Bangkok), so the calendar rolls over at the right midnight.
@@ -26,19 +24,20 @@ function calToday() {
   return { year, month: month - 1, day };
 }
 
+let calCategories = [];
 let calEvents = [];
 const calView = { year: null, month: null, started: false };
 let calSelected = null;
 
 function calPrepare(raw, today) {
-  const schoolYearStart = today.month >= SCHOOL_YEAR_START_MONTH ? today.year : today.year - 1;
   return raw
     .map((e) => {
       const month = CAL_MONTHS.indexOf(e.month);
       const [first, last] = String(e.day).split('-').map(Number);
       if (month < 0 || !Number.isInteger(first) || first < 1) return null;
       const end = Number.isInteger(last) && last >= first ? last : first;
-      return { title: e.title, subtitle: e.subtitle || '', month, start: first, end, year: month >= SCHOOL_YEAR_START_MONTH ? schoolYearStart : schoolYearStart + 1 };
+      const past = calKey(e.year, month) * 100 + end < calKey(today.year, today.month) * 100 + today.day;
+      return { title: e.title, subtitle: e.subtitle || '', category: e.category || 'school', month, start: first, end, year: e.year, past };
     })
     .filter(Boolean)
     .sort((a, b) => a.year - b.year || a.month - b.month || a.start - b.start);
@@ -55,6 +54,7 @@ function calRenderDetail() {
   const e = calSelected && calInView().includes(calSelected) ? calSelected : null;
   calEls.detail.hidden = !e;
   if (!e) return;
+  calEls.detail.className = `cal-detail cat-${e.category}`;
   calEls.detail.innerHTML = `${calDateTile(e)}<div><h4>${escapeHtml(e.title)}</h4>${e.subtitle ? `<p>${escapeHtml(e.subtitle)}</p>` : ''}</div>`;
 }
 
@@ -73,8 +73,8 @@ function calRender() {
     const weekend = (lead + d - 1) % 7 > 4;
     const isToday = year === today.year && month === today.month && d === today.day;
     const here = monthEvents.filter((e) => d >= e.start && d <= e.end);
-    html += `<div class="cal-cell${weekend ? ' cal-weekend' : ''}${isToday ? ' cal-is-today' : ''}"><span class="cal-day">${d}</span>${here
-      .map((e) => `<button type="button" class="cal-event${e === calSelected ? ' is-selected' : ''}" data-i="${calEvents.indexOf(e)}" title="${escapeHtml(e.title)}">${escapeHtml(e.title)}</button>`)
+    html += `<div class="cal-cell${weekend ? ' cal-weekend' : ''}${isToday ? ' cal-is-today' : ''}"><span class="cal-day">${d}</span>${isToday ? '<span class="cal-today-label">Today</span>' : ''}${here
+      .map((e) => `<button type="button" class="cal-event cat-${e.category}${e.past ? ' is-past' : ''}${e === calSelected ? ' is-selected' : ''}" data-i="${calEvents.indexOf(e)}" title="${escapeHtml(e.title)}">${escapeHtml(e.title)}</button>`)
       .join('')}</div>`;
   }
   const tail = (7 - ((lead + days) % 7)) % 7;
@@ -83,15 +83,19 @@ function calRender() {
 
   // The same events as a list, which is what a phone shows instead of the grid.
   calEls.agenda.innerHTML = monthEvents
-    .map((e) => `<button type="button" class="cal-agenda-item${e === calSelected ? ' is-selected' : ''}" data-i="${calEvents.indexOf(e)}">${calDateTile(e)}<span><strong>${escapeHtml(e.title)}</strong>${e.subtitle ? `<small>${escapeHtml(e.subtitle)}</small>` : ''}</span></button>`)
+    .map((e) => `<button type="button" class="cal-agenda-item cat-${e.category}${e.past ? ' is-past' : ''}${e === calSelected ? ' is-selected' : ''}" data-i="${calEvents.indexOf(e)}">${calDateTile(e)}<span><strong>${escapeHtml(e.title)}</strong>${e.subtitle ? `<small>${escapeHtml(e.subtitle)}</small>` : ''}</span></button>`)
     .join('');
   calEls.empty.hidden = monthEvents.length > 0;
+  calEls.todayLine.textContent = `Today is ${new Date(today.year, today.month, today.day).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`;
 
-  // Paging is limited to this month through the end of the school year, or the
-  // last event if that is later.
-  const schoolYearEnd = calKey(today.month >= SCHOOL_YEAR_START_MONTH ? today.year + 1 : today.year, 6);
-  const last = calEvents.length ? Math.max(schoolYearEnd, calKey(calEvents[calEvents.length - 1].year, calEvents[calEvents.length - 1].month)) : schoolYearEnd;
-  calEls.prev.disabled = calKey(year, month) <= calKey(today.year, today.month);
+  // Paging covers the whole school year, or further if an event lies outside it.
+  const schoolYearStart = today.month >= SCHOOL_YEAR_START_MONTH ? today.year : today.year - 1;
+  const schoolYearEnd = calKey(schoolYearStart + 1, 6);
+  const firstEvent = calEvents.length ? calKey(calEvents[0].year, calEvents[0].month) : Infinity;
+  const lastEvent = calEvents.length ? calKey(calEvents[calEvents.length - 1].year, calEvents[calEvents.length - 1].month) : 0;
+  const first = Math.min(calKey(schoolYearStart, SCHOOL_YEAR_START_MONTH), firstEvent);
+  const last = Math.max(schoolYearEnd, lastEvent);
+  calEls.prev.disabled = calKey(year, month) <= first;
   calEls.next.disabled = calKey(year, month) >= last;
   calEls.todayBtn.hidden = calKey(year, month) === calKey(today.year, today.month);
   calRenderDetail();
@@ -100,8 +104,9 @@ function calRender() {
 function calShow(year, month) {
   calView.year = year;
   calView.month = month;
-  // Pick the month's first event so the details card is never empty for no reason.
-  calSelected = calInView()[0] || null;
+  // Open on the next event still to come in the month (or the first one) so the details card is not empty for no reason.
+  const inView = calInView();
+  calSelected = inView.find((e) => !e.past) || inView[0] || null;
   calRender();
 }
 
@@ -131,24 +136,22 @@ async function loadUpcomingCalendar() {
   if (!data) return;
   const today = calToday();
   calEvents = calPrepare(data.calendarEvents, today);
-  calEls.none.hidden = calEvents.length > 0;
-  calEls.root.hidden = calEvents.length === 0;
-  if (calEvents.length === 0) return;
+  if (!calCategories.length && data.categories) {
+    calCategories = data.categories;
+    calEls.legend.innerHTML = calCategories.map((c) => `<span class="cat-${c.id}"><i></i>${escapeHtml(c.label)}</span>`).join('');
+  }
 
-  // The first time, open on the month of the next event; after that the page
-  // refreshes in place and stays on the month being looked at.
+  // The first time, open on the current month; after that the page refreshes in
+  // place and stays on the month being looked at.
   if (!calView.started) {
     calView.started = true;
-    const first = calEvents[0];
-    const start = calKey(first.year, first.month) > calKey(today.year, today.month) ? first : today;
-    calShow(start.year, start.month);
+    calShow(today.year, today.month);
   } else {
     const keep = calSelected && calEvents.find((e) => e.title === calSelected.title && e.month === calSelected.month && e.start === calSelected.start);
-    calSelected = keep || calInView()[0] || null;
+    calSelected = keep || calInView().find((e) => !e.past) || calInView()[0] || null;
     calRender();
   }
 }
-
 loadUpcomingCalendar();
 
 // The page re-checks when it is switched back to and every minute while it is

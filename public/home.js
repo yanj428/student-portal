@@ -36,7 +36,7 @@ function initials(name) {
 async function loadEvents() {
   const el = document.getElementById('calendar-list');
   if (!el) return;
-  const data = await fetchJson('/api/calendar-events');
+  const data = await fetchJson('/api/calendar-events?upcoming=1');
   if (!data) return;
   const { count, showSubtitle } = widgetSettings('events');
   const events = data.calendarEvents.slice(0, count || 3);

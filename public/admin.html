@@ -68,6 +68,10 @@
             <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4" width="17" height="4.5" rx="1.2" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 8.5V18C4.5 19.1 5.4 20 6.5 20H17.5C18.6 20 19.5 19.1 19.5 18V8.5" stroke="currentColor" stroke-width="1.7"/><path d="M10 12.5H14" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
             <span>Announcements</span>
           </button>
+          <button class="nav-item" data-page="events" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 10H20.5" stroke="currentColor" stroke-width="1.7"/><path d="M8 3V6.5M16 3V6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M9.5 15L11.3 16.8L14.8 13.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Upcoming Events</span>
+          </button>
           <button class="nav-item" data-page="calendar" type="button">
             <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4.5" width="17" height="16" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 9.5H20.5" stroke="currentColor" stroke-width="1.7"/><path d="M8 3V6M16 3V6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
             <span>School Calendar</span>
@@ -337,7 +341,9 @@
           </table>
         </div>
       </section>
+      </section>
 
+      <section class="admin-page-section" data-section="events" hidden>
       <section class="panel">
         <h2>Extract events with AI</h2>
         <p class="panel-hint">Upload a photo of a school calendar or events list and review the events it finds before adding them below.</p>
@@ -376,6 +382,14 @@
               <label class="field-label" for="calendar-event-month">Month</label>
               <input class="field-input" type="text" id="calendar-event-month" placeholder="e.g. Sep" required />
             </div>
+            <div class="form-field">
+              <label class="field-label" for="calendar-event-year">Year (optional)</label>
+              <input class="field-input" type="text" inputmode="numeric" id="calendar-event-year" placeholder="auto" />
+            </div>
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="calendar-event-category">Category</label>
+            <select class="field-input" id="calendar-event-category"></select>
           </div>
           <div class="form-field">
             <label class="field-label" for="calendar-event-title">Title</label>

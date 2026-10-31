@@ -5,12 +5,18 @@ const dayInput = document.getElementById('calendar-event-day');
 const monthInput = document.getElementById('calendar-event-month');
 const titleInput = document.getElementById('calendar-event-title');
 const subtitleInput = document.getElementById('calendar-event-subtitle');
+const yearInput = document.getElementById('calendar-event-year');
+const categoryInput = document.getElementById('calendar-event-category');
 const listEl = document.getElementById('calendar-event-list');
 const emptyEl = document.getElementById('calendar-event-empty-hint');
 
 // Kept in sync by loadCalendarEvents() so a fresh AI extraction can be
 // checked against what's already on the calendar without a separate fetch.
 let existingEvents = [];
+let categories = [];
+
+const categoryOptions = (selected) => categories.map((c) => `<option value="${c.id}"${c.id === selected ? ' selected' : ''}>${escapeHtml(c.label)}</option>`).join('');
+const categoryLabel = (id) => (categories.find((c) => c.id === id) || {}).label || id;
 
 const panel = crudPanel({
   form: document.getElementById('calendar-event-form'),
@@ -25,12 +31,16 @@ const panel = crudPanel({
     month: monthInput.value.trim(),
     title: titleInput.value.trim(),
     subtitle: subtitleInput.value.trim(),
+    year: yearInput.value.trim(),
+    category: categoryInput.value,
   }),
   fill: (item) => {
     dayInput.value = item.day;
     monthInput.value = item.month;
     titleInput.value = item.title;
     subtitleInput.value = item.subtitle;
+    yearInput.value = item.year;
+    categoryInput.value = item.category;
   },
   reload: () => loadCalendarEvents(),
 });
@@ -39,14 +49,18 @@ export async function loadCalendarEvents() {
   const data = await getJSON('/api/admin/calendar-events');
   if (!data) return;
   existingEvents = data.calendarEvents;
+  if (!categories.length) {
+    categories = data.categories;
+    categoryInput.innerHTML = '<option value="">Pick for me</option>' + categoryOptions('');
+  }
 
   renderRows(listEl, emptyEl, existingEvents, (div, item) => {
     div.innerHTML = `
       <div class="simple-item-head">
-        <span class="simple-item-title">${escapeHtml(item.day)} ${escapeHtml(item.month)} · ${escapeHtml(item.title)}</span>
+        <span class="simple-item-title">${escapeHtml(item.day)} ${escapeHtml(item.month)} ${item.year} · ${escapeHtml(item.title)}</span>
         ${ITEM_ACTIONS_HTML}
       </div>
-      <p class="simple-item-body">${escapeHtml(item.subtitle)}</p>
+      <p class="simple-item-body">${escapeHtml(categoryLabel(item.category))}${item.subtitle ? ` · ${escapeHtml(item.subtitle)}` : ''}</p>
     `;
     panel.bindRow(div, item, `Remove "${item.title}"?`);
   });
@@ -96,6 +110,10 @@ function renderCandidates() {
         </div>
         ${candidateField('Title', 'candidate-title', candidate.title)}
         ${candidateField('Subtitle', 'candidate-subtitle', candidate.subtitle)}
+        <div class="form-field">
+          <label class="field-label">Category</label>
+          <select class="field-input candidate-category">${categoryOptions(candidate.category)}</select>
+        </div>
         <div class="mod-item-actions">
           <button class="btn primary add-candidate-btn">Add</button>
           <button class="btn ghost dismiss-candidate-btn">Dismiss</button>
@@ -118,7 +136,7 @@ function renderCandidates() {
 // entry, so an admin's edits are what actually gets saved.
 function readCandidateInputs(div) {
   const value = (selector) => div.querySelector(selector).value.trim();
-  return { day: value('.candidate-day'), month: value('.candidate-month'), title: value('.candidate-title'), subtitle: value('.candidate-subtitle') };
+  return { day: value('.candidate-day'), month: value('.candidate-month'), title: value('.candidate-title'), subtitle: value('.candidate-subtitle'), category: value('.candidate-category') };
 }
 
 // Returns whether it actually added the candidate — callers (especially

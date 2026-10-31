@@ -71,6 +71,7 @@ function calCloseDay() {
 function calRenderPop() {
   const cell = calSelectedDay && calEls.grid.querySelector(`.cal-cell[data-day="${calSelectedDay}"]`);
   calEls.pop.hidden = !cell;
+  calEls.root.style.paddingBottom = '';
   if (!cell) return;
 
   const { year, month } = calView;
@@ -98,6 +99,11 @@ function calRenderPop() {
   calEls.pop.style.left = `${left}px`;
   calEls.pop.style.top = `${at.bottom - box.top + 8}px`;
   calEls.pop.style.setProperty('--arrow-x', `${centre - left}px`);
+
+  // A card near the bottom of the month would hang past the calendar, where the page cannot
+  // scroll to it (and the phone's bottom bar covers it), so the calendar grows to hold it.
+  const need = at.bottom - box.top + 8 + calEls.pop.offsetHeight + 16;
+  if (need > calEls.root.offsetHeight) calEls.root.style.paddingBottom = `${14 + need - calEls.root.offsetHeight}px`;
 }
 
 function calRender() {

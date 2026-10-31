@@ -1,14 +1,35 @@
 // Shared by every student page: logout, the avatar link, the welcome date,
 // and the helpers the page scripts use to fetch and render their data.
 
-const logoutLink = document.getElementById('logout-link');
-if (logoutLink) {
-  logoutLink.addEventListener('click', async (e) => {
+// The sidebar and the phone's More sheet each have a log out link.
+document.querySelectorAll('.js-logout').forEach((link) => {
+  link.addEventListener('click', async (e) => {
     e.preventDefault();
     try {
       await fetch('/api/logout', { method: 'POST' });
     } finally {
       window.location.href = '/login';
+    }
+  });
+});
+
+// Phone navigation: the More button opens a sheet with the pages that are not on the bottom bar.
+const moreBtn = document.getElementById('more-btn');
+const moreSheet = document.getElementById('more-sheet');
+const moreBackdrop = document.getElementById('more-backdrop');
+if (moreBtn && moreSheet && moreBackdrop) {
+  const setMore = (open) => {
+    moreSheet.hidden = !open;
+    moreBackdrop.hidden = !open;
+    moreBtn.setAttribute('aria-expanded', String(open));
+    document.body.classList.toggle('more-open', open);
+  };
+  moreBtn.addEventListener('click', () => setMore(moreSheet.hidden));
+  moreBackdrop.addEventListener('click', () => setMore(false));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !moreSheet.hidden) {
+      setMore(false);
+      moreBtn.focus();
     }
   });
 }

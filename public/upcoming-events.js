@@ -1,5 +1,6 @@
 // ---- The upcoming calendar, as a month you can page through -------------------
 // Every event comes with its year, and past events stay on the calendar (faded).
+// Tapping a day opens a small card beside it with that day's events.
 const CAL_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const CAL_MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const SCHOOL_YEAR_START_MONTH = 7;
@@ -8,8 +9,7 @@ const calEls = {
   root: document.getElementById('cal'),
   title: document.getElementById('cal-title'),
   grid: document.getElementById('cal-grid'),
-  detail: document.getElementById('cal-detail'),
-  agenda: document.getElementById('cal-agenda'),
+  pop: document.getElementById('cal-pop'),
   empty: document.getElementById('cal-empty'),
   prev: document.getElementById('cal-prev'),
   next: document.getElementById('cal-next'),
@@ -27,7 +27,7 @@ function calToday() {
 let calCategories = [];
 let calEvents = [];
 const calView = { year: null, month: null, started: false };
-let calSelected = null;
+let calSelectedDay = null; // the day number whose card is open, in the month being viewed
 
 function calPrepare(raw, today) {
   return raw
@@ -54,18 +54,50 @@ const calInView = () => {
   return calEvents.filter((e) => e.startKey <= last && e.endKey >= first);
 };
 
-function calDateTile(e) {
-  if (e.startKey === e.endKey) return `<span class="cal-tile"><b>${e.sd}</b><small>${CAL_MONTHS[e.sm]}</small></span>`;
-  if (e.sm === e.em && e.sy === e.ey) return `<span class="cal-tile"><b>${e.sd}-${e.ed}</b><small>${CAL_MONTHS[e.sm]}</small></span>`;
-  return `<span class="cal-tile"><b>${e.sd}-${e.ed}</b><small>${CAL_MONTHS[e.sm]}-${CAL_MONTHS[e.em]}</small></span>`;
+// "15 Oct", "19-20 Oct", or "30 Oct - 3 Nov"
+function calDateText(e) {
+  if (e.startKey === e.endKey) return `${e.sd} ${CAL_MONTHS[e.sm]}`;
+  if (e.sm === e.em && e.sy === e.ey) return `${e.sd}-${e.ed} ${CAL_MONTHS[e.sm]}`;
+  return `${e.sd} ${CAL_MONTHS[e.sm]} - ${e.ed} ${CAL_MONTHS[e.em]}`;
 }
 
-function calRenderDetail() {
-  const e = calSelected && calInView().includes(calSelected) ? calSelected : null;
-  calEls.detail.hidden = !e;
-  if (!e) return;
-  calEls.detail.className = `cal-detail cat-${e.category}`;
-  calEls.detail.innerHTML = `${calDateTile(e)}<div><h4>${escapeHtml(e.title)}</h4>${e.subtitle ? `<p>${escapeHtml(e.subtitle)}</p>` : ''}</div>`;
+function calCloseDay() {
+  if (calSelectedDay === null) return;
+  calSelectedDay = null;
+  calRender();
+}
+
+// The small card next to the tapped day: that day's events, or a note when there are none.
+function calRenderPop() {
+  const cell = calSelectedDay && calEls.grid.querySelector(`.cal-cell[data-day="${calSelectedDay}"]`);
+  calEls.pop.hidden = !cell;
+  if (!cell) return;
+
+  const { year, month } = calView;
+  const key = calDayKey(year, month, calSelectedDay);
+  const here = calInView().filter((e) => key >= e.startKey && key <= e.endKey);
+  const heading = new Date(year, month, calSelectedDay).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  calEls.pop.innerHTML = `
+    <div class="cal-pop-head"><strong>${heading}</strong><button type="button" class="cal-pop-close" aria-label="Close">&times;</button></div>
+    ${here.length
+      ? here.map((e) => `
+        <div class="cal-pop-item cat-${e.category}${e.past ? ' is-past' : ''}">
+          <strong>${escapeHtml(e.title)}</strong>
+          ${e.subtitle ? `<span>${escapeHtml(e.subtitle)}</span>` : ''}
+          ${e.startKey === e.endKey ? '' : `<small>${calDateText(e)}</small>`}
+        </div>`).join('')
+      : '<p class="cal-pop-none">Nothing on this day.</p>'}`;
+
+  // Sit just under the day, centred on it, and never past the edges of the calendar.
+  const box = calEls.root.getBoundingClientRect();
+  const at = cell.getBoundingClientRect();
+  const width = Math.min(260, box.width - 16);
+  const centre = at.left - box.left + at.width / 2;
+  const left = Math.max(8, Math.min(centre - width / 2, box.width - width - 8));
+  calEls.pop.style.width = `${width}px`;
+  calEls.pop.style.left = `${left}px`;
+  calEls.pop.style.top = `${at.bottom - box.top + 8}px`;
+  calEls.pop.style.setProperty('--arrow-x', `${centre - left}px`);
 }
 
 function calRender() {
@@ -84,18 +116,14 @@ function calRender() {
     const isToday = year === today.year && month === today.month && d === today.day;
     const dayKey = calDayKey(year, month, d);
     const here = monthEvents.filter((e) => dayKey >= e.startKey && dayKey <= e.endKey);
-    html += `<div class="cal-cell${weekend ? ' cal-weekend' : ''}${isToday ? ' cal-is-today' : ''}"><span class="cal-day">${d}</span>${isToday ? '<span class="cal-today-label">Today</span>' : ''}${here
-      .map((e) => `<button type="button" class="cal-event cat-${e.category}${e.past ? ' is-past' : ''}${e === calSelected ? ' is-selected' : ''}" data-i="${calEvents.indexOf(e)}" title="${escapeHtml(e.title)}">${escapeHtml(e.title)}</button>`)
+    html += `<div class="cal-cell${d === calSelectedDay ? ' is-day-selected' : ''}${weekend ? ' cal-weekend' : ''}${isToday ? ' cal-is-today' : ''}" data-day="${d}"><span class="cal-day">${d}</span>${isToday ? '<span class="cal-today-label">Today</span>' : ''}${here
+      .map((e) => `<span class="cal-event cat-${e.category}${e.past ? ' is-past' : ''}" title="${escapeHtml(e.title)}">${escapeHtml(e.title)}</span>`)
       .join('')}</div>`;
   }
   const tail = (7 - ((lead + days) % 7)) % 7;
   for (let i = 0; i < tail; i += 1) html += '<div class="cal-cell cal-out"></div>';
   calEls.grid.innerHTML = html;
 
-  // The same events as a list, which is what a phone shows instead of the grid.
-  calEls.agenda.innerHTML = monthEvents
-    .map((e) => `<button type="button" class="cal-agenda-item cat-${e.category}${e.past ? ' is-past' : ''}${e === calSelected ? ' is-selected' : ''}" data-i="${calEvents.indexOf(e)}">${calDateTile(e)}<span><strong>${escapeHtml(e.title)}</strong>${e.subtitle ? `<small>${escapeHtml(e.subtitle)}</small>` : ''}</span></button>`)
-    .join('');
   calEls.empty.hidden = monthEvents.length > 0;
   calEls.todayLine.textContent = `Today is ${new Date(today.year, today.month, today.day).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`;
 
@@ -109,15 +137,13 @@ function calRender() {
   calEls.prev.disabled = calKey(year, month) <= first;
   calEls.next.disabled = calKey(year, month) >= last;
   calEls.todayBtn.hidden = calKey(year, month) === calKey(today.year, today.month);
-  calRenderDetail();
+  calRenderPop();
 }
 
 function calShow(year, month) {
   calView.year = year;
   calView.month = month;
-  // Open on the next event still to come in the month (or the first one) so the details card is not empty for no reason.
-  const inView = calInView();
-  calSelected = inView.find((e) => !e.past) || inView[0] || null;
+  calSelectedDay = null;
   calRender();
 }
 
@@ -126,11 +152,14 @@ function calStep(delta) {
   calShow(date.getFullYear(), date.getMonth());
 }
 
+// Anywhere on a day's square counts, not just the event bar. Tapping the open day again closes it.
 function calSelect(event) {
-  const button = event.target.closest('[data-i]');
-  if (!button) return;
-  calSelected = calEvents[Number(button.dataset.i)];
+  const cell = event.target.closest('.cal-cell[data-day]');
+  if (!cell) return;
+  const day = Number(cell.dataset.day);
+  calSelectedDay = day === calSelectedDay ? null : day;
   calRender();
+  if (calSelectedDay !== null) calEls.pop.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 calEls.prev.addEventListener('click', () => calStep(-1));
@@ -140,7 +169,18 @@ calEls.todayBtn.addEventListener('click', () => {
   calShow(today.year, today.month);
 });
 calEls.grid.addEventListener('click', calSelect);
-calEls.agenda.addEventListener('click', calSelect);
+calEls.pop.addEventListener('click', (event) => {
+  if (event.target.closest('.cal-pop-close')) calCloseDay();
+});
+// A tap anywhere else, or Escape, closes the card.
+document.addEventListener('click', (event) => {
+  // The grid redraws itself when a day is tapped, so look at the path the click took, not where its target is now.
+  if (!event.composedPath().some((el) => el === calEls.grid || el === calEls.pop)) calCloseDay();
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') calCloseDay();
+});
+window.addEventListener('resize', calRenderPop);
 
 async function loadUpcomingCalendar() {
   const data = await fetchJson('/api/calendar-events');
@@ -153,13 +193,11 @@ async function loadUpcomingCalendar() {
   }
 
   // The first time, open on the current month; after that the page refreshes in
-  // place and stays on the month being looked at.
+  // place and stays on the month (and day) being looked at.
   if (!calView.started) {
     calView.started = true;
     calShow(today.year, today.month);
   } else {
-    const keep = calSelected && calEvents.find((e) => e.title === calSelected.title && e.startKey === calSelected.startKey);
-    calSelected = keep || calInView().find((e) => !e.past) || calInView()[0] || null;
     calRender();
   }
 }

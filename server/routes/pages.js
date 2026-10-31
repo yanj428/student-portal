@@ -9,6 +9,7 @@ const router = express.Router();
 const PAGES = [
   { paths: ['/'], view: 'pages/home' },
   { paths: ['/announcements'], view: 'pages/announcements' },
+  { paths: ['/upcoming-events'], view: 'pages/upcoming-events' },
   { paths: ['/community-service'], view: 'pages/community-service' },
   { paths: ['/lunch-schedule'], view: 'pages/lunch-schedule' },
   { paths: ['/student-voice'], view: 'pages/student-voice' },

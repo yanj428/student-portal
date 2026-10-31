@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('../partials/head-links', { pageTitle: 'Upcoming Events', pageCss: 'upcoming-events.css' }) %>
+</head>
+<body>
+  <div class="app">
+<%- include('../partials/sidebar', { activePage: 'upcoming-events' }) %>
+    <main class="main">
+<%- include('../partials/topbar', { student }) %>
+
+      <section class="page-header">
+        <h1>Upcoming Events</h1>
+        <p>What's coming up at school, day by day.</p>
+      </section>
+
+      <section class="upcoming-section" id="upcoming-calendar">
+        <div class="cal" id="cal" hidden>
+          <div class="cal-head">
+            <button type="button" class="cal-nav" id="cal-prev" aria-label="Previous month">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 6L9 12L15 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <h2 class="cal-title" id="cal-title" aria-live="polite"></h2>
+            <button type="button" class="cal-today" id="cal-today">Today</button>
+            <button type="button" class="cal-nav" id="cal-next" aria-label="Next month">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <div class="cal-dow" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+          <div class="cal-grid" id="cal-grid"></div>
+          <div class="cal-detail" id="cal-detail" hidden></div>
+          <div class="cal-agenda" id="cal-agenda"></div>
+          <p class="cal-empty-note" id="cal-empty" hidden>Nothing on the calendar this month.</p>
+        </div>
+        <p class="cal-empty-note" id="upcoming-empty">Nothing coming up yet. Check back soon.</p>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="common.js"></script>
+  <script src="upcoming-events.js"></script>
+</body>
+</html>

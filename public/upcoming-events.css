@@ -156,8 +156,7 @@
 .cat-academic { --cat: #2F6FD0; --cat-tint: #E3EDFB; --cat-dark: #1B427D; }
 .cat-holiday { --cat: #2E8B57; --cat-tint: #E0F3E8; --cat-dark: #1B5434; }
 .cat-sports { --cat: #D9822B; --cat-tint: #FCEBD6; --cat-dark: #7A4510; }
-.cat-arts { --cat: #8A4FC4; --cat-tint: #EEE3F8; --cat-dark: #532D7A; }
-.cat-service { --cat: #D14A7A; --cat-tint: #FADFE9; --cat-dark: #7C2447; }
+.cat-activities { --cat: #8A4FC4; --cat-tint: #EEE3F8; --cat-dark: #532D7A; }
 .cat-family { --cat: #1F9AA6; --cat-tint: #DAF1F3; --cat-dark: #0F5C64; }
 .cat-school { --cat: #8B1E1E; --cat-tint: #F6E1E1; --cat-dark: #5C1212; }
 

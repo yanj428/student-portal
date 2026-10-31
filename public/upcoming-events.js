@@ -32,22 +32,32 @@ let calSelected = null;
 function calPrepare(raw, today) {
   return raw
     .map((e) => {
-      const month = CAL_MONTHS.indexOf(e.month);
-      const [first, last] = String(e.day).split('-').map(Number);
-      if (month < 0 || !Number.isInteger(first) || first < 1) return null;
-      const end = Number.isInteger(last) && last >= first ? last : first;
-      const past = calKey(e.year, month) * 100 + end < calKey(today.year, today.month) * 100 + today.day;
-      return { title: e.title, subtitle: e.subtitle || '', category: e.category || 'school', month, start: first, end, year: e.year, past };
+      // Each event comes with its first and last day as YYYY-MM-DD; an event can span months.
+      const [sy, sm, sd] = String(e.startDate).split('-').map(Number);
+      const [ey, em, ed] = String(e.endDate || e.startDate).split('-').map(Number);
+      if (![sy, sm, sd, ey, em, ed].every(Number.isInteger)) return null;
+      const startKey = calDayKey(sy, sm - 1, sd);
+      const endKey = Math.max(startKey, calDayKey(ey, em - 1, ed));
+      const past = endKey < calDayKey(today.year, today.month, today.day);
+      return { title: e.title, subtitle: e.subtitle || '', category: e.category || 'school', sy, sm: sm - 1, sd, ey, em: em - 1, ed, startKey, endKey, past };
     })
     .filter(Boolean)
-    .sort((a, b) => a.year - b.year || a.month - b.month || a.start - b.start);
+    .sort((a, b) => a.startKey - b.startKey || a.endKey - b.endKey);
 }
 
 const calKey = (year, month) => year * 12 + month;
-const calInView = () => calEvents.filter((e) => calKey(e.year, e.month) === calKey(calView.year, calView.month));
+// A day as one comparable number: 2026-10-30 (month index 9) is 20260930.
+const calDayKey = (year, month, day) => year * 10000 + month * 100 + day;
+const calInView = () => {
+  const first = calDayKey(calView.year, calView.month, 1);
+  const last = calDayKey(calView.year, calView.month, 31);
+  return calEvents.filter((e) => e.startKey <= last && e.endKey >= first);
+};
 
 function calDateTile(e) {
-  return `<span class="cal-tile"><b>${e.start === e.end ? e.start : `${e.start}-${e.end}`}</b><small>${CAL_MONTHS[e.month]}</small></span>`;
+  if (e.startKey === e.endKey) return `<span class="cal-tile"><b>${e.sd}</b><small>${CAL_MONTHS[e.sm]}</small></span>`;
+  if (e.sm === e.em && e.sy === e.ey) return `<span class="cal-tile"><b>${e.sd}-${e.ed}</b><small>${CAL_MONTHS[e.sm]}</small></span>`;
+  return `<span class="cal-tile"><b>${e.sd}-${e.ed}</b><small>${CAL_MONTHS[e.sm]}-${CAL_MONTHS[e.em]}</small></span>`;
 }
 
 function calRenderDetail() {
@@ -72,7 +82,8 @@ function calRender() {
   for (let d = 1; d <= days; d += 1) {
     const weekend = (lead + d - 1) % 7 > 4;
     const isToday = year === today.year && month === today.month && d === today.day;
-    const here = monthEvents.filter((e) => d >= e.start && d <= e.end);
+    const dayKey = calDayKey(year, month, d);
+    const here = monthEvents.filter((e) => dayKey >= e.startKey && dayKey <= e.endKey);
     html += `<div class="cal-cell${weekend ? ' cal-weekend' : ''}${isToday ? ' cal-is-today' : ''}"><span class="cal-day">${d}</span>${isToday ? '<span class="cal-today-label">Today</span>' : ''}${here
       .map((e) => `<button type="button" class="cal-event cat-${e.category}${e.past ? ' is-past' : ''}${e === calSelected ? ' is-selected' : ''}" data-i="${calEvents.indexOf(e)}" title="${escapeHtml(e.title)}">${escapeHtml(e.title)}</button>`)
       .join('')}</div>`;
@@ -91,8 +102,8 @@ function calRender() {
   // Paging covers the whole school year, or further if an event lies outside it.
   const schoolYearStart = today.month >= SCHOOL_YEAR_START_MONTH ? today.year : today.year - 1;
   const schoolYearEnd = calKey(schoolYearStart + 1, 6);
-  const firstEvent = calEvents.length ? calKey(calEvents[0].year, calEvents[0].month) : Infinity;
-  const lastEvent = calEvents.length ? calKey(calEvents[calEvents.length - 1].year, calEvents[calEvents.length - 1].month) : 0;
+  const firstEvent = calEvents.length ? calKey(calEvents[0].sy, calEvents[0].sm) : Infinity;
+  const lastEvent = calEvents.reduce((latest, e) => Math.max(latest, calKey(e.ey, e.em)), 0);
   const first = Math.min(calKey(schoolYearStart, SCHOOL_YEAR_START_MONTH), firstEvent);
   const last = Math.max(schoolYearEnd, lastEvent);
   calEls.prev.disabled = calKey(year, month) <= first;
@@ -147,7 +158,7 @@ async function loadUpcomingCalendar() {
     calView.started = true;
     calShow(today.year, today.month);
   } else {
-    const keep = calSelected && calEvents.find((e) => e.title === calSelected.title && e.month === calSelected.month && e.start === calSelected.start);
+    const keep = calSelected && calEvents.find((e) => e.title === calSelected.title && e.startKey === calSelected.startKey);
     calSelected = keep || calInView().find((e) => !e.past) || calInView()[0] || null;
     calRender();
   }

@@ -106,3 +106,39 @@ test('editing an event keeps its year unless the date moves or a year is given',
   const moved = await admin.put(`/api/admin/calendar-events/${id}`).send({ day: '3', month: 'Mar', year: '2028', title: 'Keeps year, renamed', subtitle: '' });
   assert.equal(moved.body.calendarEvent.year, 2028);
 });
+test('the admin form sends a start date and an optional end date', async () => {
+  const admin = await loginAsAdmin();
+  const post = (body) => admin.post('/api/admin/calendar-events').send({ title: 'Dated', subtitle: '', ...body });
+
+  const single = await post({ startDate: '2027-03-05', endDate: '' });
+  assert.equal(single.status, 201);
+  assert.deepEqual([single.body.calendarEvent.day, single.body.calendarEvent.month, single.body.calendarEvent.year], ['5', 'Mar', 2027]);
+  assert.equal(single.body.calendarEvent.startDate, '2027-03-05');
+  assert.equal(single.body.calendarEvent.endDate, '2027-03-05');
+
+  const sameMonth = await post({ startDate: '2027-03-05', endDate: '2027-03-07' });
+  assert.equal(sameMonth.body.calendarEvent.day, '5-7');
+  assert.equal(sameMonth.body.calendarEvent.endDate, '2027-03-07');
+
+  const crossMonth = await post({ startDate: '2027-03-30', endDate: '2027-04-02' });
+  assert.equal(crossMonth.status, 201);
+  assert.equal(crossMonth.body.calendarEvent.day, '30');
+  assert.equal(crossMonth.body.calendarEvent.startDate, '2027-03-30');
+  assert.equal(crossMonth.body.calendarEvent.endDate, '2027-04-02');
+
+  assert.equal((await post({ startDate: '2027-03-05', endDate: '2027-03-01' })).status, 400);
+  assert.equal((await post({ startDate: '2027-02-31' })).status, 400);
+  assert.equal((await post({ startDate: '' })).status, 400);
+});
+
+test('a multi-day event is upcoming until its last day, and changing it back to one day clears the end', async () => {
+  const admin = await loginAsAdmin();
+  const created = await admin.post('/api/admin/calendar-events').send({ title: 'Long camp', subtitle: '', startDate: '2020-01-30', endDate: '2099-02-02' });
+  const upcoming = await admin.get('/api/admin/calendar-events?upcoming=1');
+  assert.ok(upcoming.body.calendarEvents.some((e) => e.title === 'Long camp'));
+
+  const edited = await admin.put(`/api/admin/calendar-events/${created.body.calendarEvent.id}`).send({ title: 'Long camp', subtitle: '', startDate: '2020-01-30', endDate: '' });
+  assert.equal(edited.body.calendarEvent.endDate, '2020-01-30');
+  const after = await admin.get('/api/admin/calendar-events?upcoming=1');
+  assert.ok(!after.body.calendarEvents.some((e) => e.title === 'Long camp'));
+});

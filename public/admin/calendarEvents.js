@@ -1,11 +1,13 @@
 import { escapeHtml, getJSON, sendJSON, withBusy, ITEM_ACTIONS_HTML, renderRows } from './api.js';
 import { crudPanel } from './crud.js';
 
-const dayInput = document.getElementById('calendar-event-day');
-const monthInput = document.getElementById('calendar-event-month');
+const singleInput = document.getElementById('calendar-event-single');
+const startInput = document.getElementById('calendar-event-start');
+const endInput = document.getElementById('calendar-event-end');
+const endField = document.getElementById('calendar-event-end-field');
+const startLabel = document.getElementById('calendar-event-start-label');
 const titleInput = document.getElementById('calendar-event-title');
 const subtitleInput = document.getElementById('calendar-event-subtitle');
-const yearInput = document.getElementById('calendar-event-year');
 const categoryInput = document.getElementById('calendar-event-category');
 const listEl = document.getElementById('calendar-event-list');
 const emptyEl = document.getElementById('calendar-event-empty-hint');
@@ -16,6 +18,13 @@ let existingEvents = [];
 let categories = [];
 
 const categoryOptions = (selected) => categories.map((c) => `<option value="${c.id}"${c.id === selected ? ' selected' : ''}>${escapeHtml(c.label)}</option>`).join('');
+// One date for a single-day event; a start and an end date otherwise.
+function syncDateFields() {
+  endField.hidden = singleInput.checked;
+  endInput.required = !singleInput.checked;
+  startLabel.textContent = singleInput.checked ? 'Date' : 'Start date';
+}
+singleInput.addEventListener('change', syncDateFields);
 const categoryLabel = (id) => (categories.find((c) => c.id === id) || {}).label || id;
 
 const panel = crudPanel({
@@ -27,23 +36,33 @@ const panel = crudPanel({
   addLabel: 'Add event',
   saveError: 'Could not save event.',
   readPayload: () => ({
-    day: dayInput.value.trim(),
-    month: monthInput.value.trim(),
+    startDate: startInput.value,
+    endDate: singleInput.checked ? '' : endInput.value,
     title: titleInput.value.trim(),
     subtitle: subtitleInput.value.trim(),
-    year: yearInput.value.trim(),
     category: categoryInput.value,
   }),
   fill: (item) => {
-    dayInput.value = item.day;
-    monthInput.value = item.month;
+    startInput.value = item.startDate;
+    endInput.value = item.endDate;
+    singleInput.checked = item.startDate === item.endDate;
+    syncDateFields();
     titleInput.value = item.title;
     subtitleInput.value = item.subtitle;
-    yearInput.value = item.year;
     categoryInput.value = item.category;
   },
+  onReset: () => syncDateFields(),
   reload: () => loadCalendarEvents(),
 });
+
+const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// 19 Oct 2026, 19-20 Oct 2026 (day already holds the range), or 30 Oct - 2 Nov 2026.
+function dateText(item) {
+  const [endYear, endMonth, endDay] = item.endDate.split('-').map(Number);
+  if (endYear === item.year && MONTH_ABBR[endMonth - 1] === item.month) return `${item.day} ${item.month} ${item.year}`;
+  return `${item.day} ${item.month} - ${endDay} ${MONTH_ABBR[endMonth - 1]} ${endYear}`;
+}
 
 export async function loadCalendarEvents() {
   const data = await getJSON('/api/admin/calendar-events');
@@ -57,7 +76,7 @@ export async function loadCalendarEvents() {
   renderRows(listEl, emptyEl, existingEvents, (div, item) => {
     div.innerHTML = `
       <div class="simple-item-head">
-        <span class="simple-item-title">${escapeHtml(item.day)} ${escapeHtml(item.month)} ${item.year} · ${escapeHtml(item.title)}</span>
+        <span class="simple-item-title">${escapeHtml(dateText(item))} · ${escapeHtml(item.title)}</span>
         ${ITEM_ACTIONS_HTML}
       </div>
       <p class="simple-item-body">${escapeHtml(categoryLabel(item.category))}${item.subtitle ? ` · ${escapeHtml(item.subtitle)}` : ''}</p>

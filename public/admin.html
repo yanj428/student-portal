@@ -373,18 +373,17 @@
         <p class="panel-hint">Shown in "Coming up" on the home page and on the Upcoming Events page.</p>
 
         <form id="calendar-event-form" class="archive-form">
+          <div class="form-field">
+            <label class="field-label"><input type="checkbox" id="calendar-event-single" checked /> Single-day event</label>
+          </div>
           <div class="form-row">
             <div class="form-field">
-              <label class="field-label" for="calendar-event-day">Day</label>
-              <input class="field-input" type="text" id="calendar-event-day" placeholder="e.g. 12 or 19-20" required />
+              <label class="field-label" for="calendar-event-start" id="calendar-event-start-label">Date</label>
+              <input class="field-input" type="date" id="calendar-event-start" required />
             </div>
-            <div class="form-field">
-              <label class="field-label" for="calendar-event-month">Month</label>
-              <input class="field-input" type="text" id="calendar-event-month" placeholder="e.g. Sep" required />
-            </div>
-            <div class="form-field">
-              <label class="field-label" for="calendar-event-year">Year (optional)</label>
-              <input class="field-input" type="text" inputmode="numeric" id="calendar-event-year" placeholder="auto" />
+            <div class="form-field" id="calendar-event-end-field" hidden>
+              <label class="field-label" for="calendar-event-end">End date</label>
+              <input class="field-input" type="date" id="calendar-event-end" />
             </div>
           </div>
           <div class="form-field">

@@ -34,10 +34,10 @@ const CARD_IDS = ['lunch', 'slide'];
 // order lists hold ids in the order the student dragged them into. An id that is
 // not in the list (a link or club added later) simply goes after the ones that are.
 const DEFAULT_SETTINGS = {
-  hero: { showDate: true, showButtons: true, showCrest: true, buttons: ['slide', 'lunch'] }, // buttons in the order shown
+  hero: { showDate: true, showButtons: true, showCrest: true, buttons: ['lunch'] }, // buttons in the order shown (this week's slide is the Announcements page's job now)
   jump: { tiles: ['announcements', 'lunch', 'calendar', 'clubs', 'voice', 'links'] }, // in the order shown
   events: { count: 3, showSubtitle: true },
-  cards: { lunch: true, slide: true, order: CARD_IDS },
+  cards: { lunch: true, slide: false, order: CARD_IDS }, // the slide card is off unless a student turns it on
   clubs: { type: 'all', count: 5, showNames: true, showMore: true, order: [] },
   service: { count: 3, showDescription: true },
   links: { ids: null, order: [] }, // ids: null = every quick link

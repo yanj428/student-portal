@@ -64,20 +64,6 @@ const aiDuplicatesHint = document.getElementById('calendar-ai-duplicates-hint');
 
 let candidates = [];
 
-// Same day + month + title (case-insensitive) as something already on the
-// calendar counts as the same event — most likely the admin re-uploading a
-// calendar that overlaps a range already entered. Extracting a real event
-// (a rare exact retitle aside) shouldn't require deleting the old one first,
-// so these are silently skipped rather than shown as an error.
-function isDuplicateOfExisting(candidate) {
-  return existingEvents.some(
-    (e) =>
-      e.day.trim() === candidate.day.trim() &&
-      e.month.trim().toLowerCase() === candidate.month.trim().toLowerCase() &&
-      e.title.trim().toLowerCase() === candidate.title.trim().toLowerCase()
-  );
-}
-
 function candidateField(label, className, value) {
   return `
     <div class="form-field">
@@ -182,13 +168,17 @@ aiExtractBtn.addEventListener('click', async () => {
         return;
       }
 
-      const skipped = data.events.filter(isDuplicateOfExisting).length;
-      candidates = data.events.filter((c) => !isDuplicateOfExisting(c));
+      // The server already left out events that are on the calendar and ones that have passed.
+      candidates = data.events;
       renderCandidates();
 
-      aiDuplicatesHint.hidden = skipped === 0;
-      if (skipped > 0) {
-        aiDuplicatesHint.textContent = `Skipped ${skipped} event${skipped === 1 ? '' : 's'} already on the calendar.`;
+      const { skippedExisting = 0, skippedPast = 0 } = data;
+      const parts = [];
+      if (skippedExisting > 0) parts.push(`already on the calendar (${skippedExisting})`);
+      if (skippedPast > 0) parts.push(`already passed (${skippedPast})`);
+      aiDuplicatesHint.hidden = parts.length === 0;
+      if (parts.length > 0) {
+        aiDuplicatesHint.textContent = `Left out events ${parts.join(' and ')}.` + (candidates.length === 0 ? ' Nothing new was found in this photo.' : '');
       }
     } catch {
       aiError.textContent = 'Could not reach the server. Please try again.';

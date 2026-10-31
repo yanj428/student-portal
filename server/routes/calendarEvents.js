@@ -6,6 +6,7 @@ const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
 const { memoryImageUpload } = require('../uploads');
 const { extractCalendarEvents, isAiConfigured, NOT_CONFIGURED_MESSAGE } = require('../utils/calendarEventsAi');
 const { deleteRoute } = require('../utils/routeHelpers');
+const { filterCandidates } = require('../utils/calendarCandidates');
 const { calendarAiLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
@@ -24,8 +25,9 @@ router.post('/api/admin/calendar-events/extract', requireAdmin, calendarAiLimite
     if (!req.file) return res.status(400).json({ error: 'No image was uploaded.' });
 
     try {
-      const events = await extractCalendarEvents(req.file.buffer, req.file.mimetype);
-      res.json({ events });
+      const found = await extractCalendarEvents(req.file.buffer, req.file.mimetype);
+      // Events already on the calendar and events that have already passed are left out.
+      res.json(filterCandidates(found, pruneExpiredEvents()));
     } catch (extractErr) {
       res.status(502).json({ error: extractErr.message });
     }

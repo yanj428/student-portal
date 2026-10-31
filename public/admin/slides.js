@@ -5,6 +5,7 @@ import { enableReorder } from './reorder.js';
 const currentSlideForm = document.getElementById('current-slide-form');
 const weekLabelInput = document.getElementById('current-slide-week-label');
 const embedUrlInput = document.getElementById('current-slide-embed-url');
+const embedCodeInput = document.getElementById('current-slide-embed-code');
 const currentSlideError = document.getElementById('current-slide-error');
 const currentSlideSuccess = document.getElementById('current-slide-success');
 const currentSlideSave = document.getElementById('current-slide-save');
@@ -13,7 +14,29 @@ const currentSlideToArchive = document.getElementById('current-slide-to-archive'
 
 // The slide as last loaded or saved, which is what "Archive this slide"
 // archives, rather than whatever is currently typed (and maybe never saved).
-let savedSlide = { weekLabel: '', canvaEmbedUrl: '' };
+let savedSlide = { weekLabel: '', canvaEmbedUrl: '', embedUrl: '' };
+
+// The slide is a link or an embed, never both: while one box has something in
+// it the other is switched off.
+function syncSlideInputs() {
+  const hasLink = embedUrlInput.value.trim() !== '';
+  const hasEmbed = embedCodeInput.value.trim() !== '';
+  embedCodeInput.disabled = hasLink;
+  embedUrlInput.disabled = hasEmbed;
+}
+embedUrlInput.addEventListener('input', syncSlideInputs);
+embedCodeInput.addEventListener('input', syncSlideInputs);
+
+// The normal link for an embed address: the same design without ?embed.
+function viewLinkFromEmbed(embedUrl) {
+  try {
+    const url = new URL(embedUrl);
+    url.searchParams.delete('embed');
+    return url.toString();
+  } catch {
+    return '';
+  }
+}
 
 function showSlideMessage(el, text) {
   currentSlideError.hidden = true;
@@ -28,27 +51,32 @@ function setSlideInputs(slide) {
   savedSlide = slide;
   weekLabelInput.value = slide.weekLabel;
   embedUrlInput.value = slide.canvaEmbedUrl;
+  embedCodeInput.value = slide.embedUrl || '';
+  syncSlideInputs();
 }
 
 export async function loadCurrentSlide() {
   const data = await getJSON('/api/admin/content');
-  if (data) setSlideInputs({ weekLabel: '', canvaEmbedUrl: '', ...data.content.weeklySlide });
+  if (data) setSlideInputs({ weekLabel: '', canvaEmbedUrl: '', embedUrl: '', ...data.content.weeklySlide });
 }
 
 // Returns whether the slide was saved; failures are shown inline.
-async function saveCurrentSlide(weekLabel, canvaEmbedUrl) {
+async function saveCurrentSlide(weekLabel, canvaEmbedUrl, embedUrl = '') {
   showSlideMessage();
   try {
     const current = await getJSON('/api/admin/content');
     if (!current) throw new Error();
-    const content = { ...current.content, weeklySlide: { weekLabel, canvaEmbedUrl } };
+    const content = { ...current.content, weeklySlide: { weekLabel, canvaEmbedUrl, embedUrl } };
 
     const { ok, data } = await sendJSON('/api/admin/content', 'PUT', { content });
     if (!ok) {
       showSlideMessage(currentSlideError, data.error || 'Could not save the slide.');
       return false;
     }
-    savedSlide = { weekLabel, canvaEmbedUrl };
+    // The server keeps just the embed's address, so show that back in the box.
+    savedSlide = { weekLabel, canvaEmbedUrl, embedUrl: data.content.weeklySlide.embedUrl || '' };
+    embedCodeInput.value = savedSlide.embedUrl;
+    syncSlideInputs();
     showSlideMessage(currentSlideSuccess, "This week's slide updated.");
     return true;
   } catch {
@@ -59,19 +87,21 @@ async function saveCurrentSlide(weekLabel, canvaEmbedUrl) {
 
 currentSlideForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  withBusy(currentSlideSave, 'Saving…', () => saveCurrentSlide(weekLabelInput.value.trim(), embedUrlInput.value.trim()));
+  withBusy(currentSlideSave, 'Saving…', () => saveCurrentSlide(weekLabelInput.value.trim(), embedUrlInput.value.trim(), embedCodeInput.value.trim()));
 });
 
 currentSlideClear.addEventListener('click', () => {
   if (!confirm('Delete the current slide? It will stop showing on the Announcements page.')) return;
   withBusy(currentSlideClear, 'Clearing…', async () => {
-    if (await saveCurrentSlide('', '')) setSlideInputs({ weekLabel: '', canvaEmbedUrl: '' });
+    if (await saveCurrentSlide('', '', '')) setSlideInputs({ weekLabel: '', canvaEmbedUrl: '', embedUrl: '' });
   });
 });
 
 currentSlideToArchive.addEventListener('click', () => {
   showSlideMessage();
-  const { weekLabel, canvaEmbedUrl } = savedSlide;
+  const { weekLabel, embedUrl } = savedSlide;
+  // An embedded slide is archived as its normal link.
+  const canvaEmbedUrl = savedSlide.canvaEmbedUrl || viewLinkFromEmbed(embedUrl);
   if (!weekLabel || !canvaEmbedUrl) {
     showSlideMessage(currentSlideError, 'Save a week label and Canva link before archiving.');
     return;
@@ -85,8 +115,8 @@ currentSlideToArchive.addEventListener('click', () => {
         showSlideMessage(currentSlideError, data.error || 'Could not archive this slide.');
         return;
       }
-      if (await saveCurrentSlide('', '')) {
-        setSlideInputs({ weekLabel: '', canvaEmbedUrl: '' });
+      if (await saveCurrentSlide('', '', '')) {
+        setSlideInputs({ weekLabel: '', canvaEmbedUrl: '', embedUrl: '' });
         showSlideMessage(currentSlideSuccess, 'Slide moved to the archive.');
       }
       loadSlideArchive();

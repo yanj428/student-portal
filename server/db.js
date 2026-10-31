@@ -27,7 +27,8 @@ const DB_FILE = path.join(DATA_DIR, 'portal.db');
 const DEFAULT_CONTENT = {
   weeklySlide: {
     weekLabel: '',
-    canvaEmbedUrl: '',
+    canvaEmbedUrl: '', // a normal Canva link, opened in a new tab
+    embedUrl: '', // or a Canva embed, shown on the page (only one of the two is ever set)
   },
   calendarImage: {
     label: '',

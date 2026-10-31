@@ -3,6 +3,7 @@ const express = require('express');
 const db = require('../db');
 const { requireAdmin, requireActiveStudent } = require('../middleware/auth');
 const { validateOptionalUrl, normalizeUrl } = require('../utils/validateUrl');
+const { extractCanvaEmbed } = require('../utils/canvaEmbed');
 
 // The lunch schedule image is set via the upload endpoint
 // (server/routes/lunch.js), which produces a relative /uploads/lunch/...
@@ -31,9 +32,9 @@ function validateContent(content) {
     }
   }
 
-  const { weekLabel: slideWeekLabel, canvaEmbedUrl } = content.weeklySlide;
-  if (typeof slideWeekLabel !== 'string' || typeof canvaEmbedUrl !== 'string') {
-    return { error: 'Weekly slide needs a week label and a Canva link (both can be blank).' };
+  const { weekLabel: slideWeekLabel, canvaEmbedUrl, embedUrl: pastedEmbed = '' } = content.weeklySlide;
+  if (typeof slideWeekLabel !== 'string' || typeof canvaEmbedUrl !== 'string' || typeof pastedEmbed !== 'string') {
+    return { error: 'Weekly slide needs a week label and a Canva link or embed (all can be blank).' };
   }
   if (slideWeekLabel.length > WEEK_LABEL_MAX) return { error: `Week label must be ${WEEK_LABEL_MAX} characters or fewer.` };
   const canvaError = validateOptionalUrl(canvaEmbedUrl, {
@@ -41,6 +42,11 @@ function validateContent(content) {
     allowedHosts: ['canva.com', 'canva.link'],
   });
   if (canvaError) return { error: canvaError };
+  // The slide is either a normal link (opened in a new tab) or an embed (shown
+  // on the page), never both.
+  const embed = extractCanvaEmbed(pastedEmbed);
+  if (embed.error) return { error: embed.error };
+  if (canvaEmbedUrl.trim() && embed.url) return { error: 'Use either a Canva link or an embed, not both. Clear one of them.' };
 
   const { weekLabel: lunchWeekLabel, imageUrl } = content.lunchSchedule;
   if (typeof lunchWeekLabel !== 'string' || typeof imageUrl !== 'string') {
@@ -63,7 +69,7 @@ function validateContent(content) {
   // arbitrary extra fields to what gets stored.
   return {
     fields: {
-      weeklySlide: { weekLabel: slideWeekLabel.trim(), canvaEmbedUrl: normalizeUrl(canvaEmbedUrl) },
+      weeklySlide: { weekLabel: slideWeekLabel.trim(), canvaEmbedUrl: normalizeUrl(canvaEmbedUrl), embedUrl: embed.url },
       lunchSchedule: { weekLabel: lunchWeekLabel.trim(), imageUrl },
       calendarImage: { label: calendarLabel.trim(), imageUrl: calendarImageUrl },
     },

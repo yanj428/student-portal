@@ -2,10 +2,21 @@ async function loadWeeklySlide() {
   const data = await fetchJson('/api/content');
   if (!data) return;
 
+  // The slide is either a link (a button that opens it) or an embed (shown on the page).
   const slide = data.content.weeklySlide || {};
   if (slide.canvaEmbedUrl) document.getElementById('slide-link').href = slide.canvaEmbedUrl;
   document.getElementById('slide-link-wrap').hidden = !slide.canvaEmbedUrl;
-  document.getElementById('slide-empty').hidden = !!slide.canvaEmbedUrl;
+
+  const embedFrame = document.getElementById('slide-embed-frame');
+  document.getElementById('slide-embed').hidden = !slide.embedUrl;
+  if (slide.embedUrl) {
+    // The page re-checks every minute; only reload the frame when the slide changed.
+    if (embedFrame.getAttribute('src') !== slide.embedUrl) embedFrame.setAttribute('src', slide.embedUrl);
+    document.getElementById('slide-embed-open').href = slide.embedUrl.replace(/[?&]embed(=[^&]*)?$/, '');
+  } else if (embedFrame.getAttribute('src')) {
+    embedFrame.removeAttribute('src');
+  }
+  document.getElementById('slide-empty').hidden = !!(slide.canvaEmbedUrl || slide.embedUrl);
 
   const weekLabelEl = document.getElementById('week-label');
   weekLabelEl.textContent = slide.weekLabel || '';

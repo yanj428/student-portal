@@ -9,6 +9,7 @@ const { snapshotRole, logoutRole } = require('../utils/sessionRoles');
 const {
   DEFAULT_STUDENT_PASSWORD,
   DEFAULT_TEACHER_PASSWORD,
+  DEFAULT_STAFF_PASSWORD,
   STUDENT_SESSION_IDLE_MINUTES,
   ADMIN_SESSION_IDLE_MINUTES,
   DUMMY_PASSWORD_HASH,
@@ -78,7 +79,7 @@ router.post('/api/change-password', requireStudent, passwordChangeLimiter, (req,
   if (newPassword.length < 8) {
     return res.status(400).json({ error: 'New password must be at least 8 characters.' });
   }
-  if (newPassword === DEFAULT_STUDENT_PASSWORD || newPassword === DEFAULT_TEACHER_PASSWORD) {
+  if ([DEFAULT_STUDENT_PASSWORD, DEFAULT_TEACHER_PASSWORD, DEFAULT_STAFF_PASSWORD].includes(newPassword)) {
     return res.status(400).json({ error: "You can't use the default password. Please choose a different password." });
   }
 

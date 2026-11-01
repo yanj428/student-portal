@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 
 const db = require('../db');
 const { requireAdmin, isValidSchoolEmail, publicStudent } = require('../middleware/auth');
-const { DEFAULT_STUDENT_PASSWORD, SCHOOL_DOMAIN } = require('../config');
+const { defaultPasswordFor, SCHOOL_DOMAIN } = require('../config');
 
 const router = express.Router();
 
@@ -51,16 +51,17 @@ router.post('/api/admin/students', requireAdmin, (req, res) => {
     return res.status(409).json({ error: 'An account with this email already exists.' });
   }
 
+  const password = defaultPasswordFor(fields.grade);
   const student = {
     id: crypto.randomUUID(),
     ...fields,
-    passwordHash: bcrypt.hashSync(DEFAULT_STUDENT_PASSWORD, 10),
+    passwordHash: bcrypt.hashSync(password, 10),
     mustChangePassword: true,
     createdAt: new Date().toISOString(),
   };
   db.addStudent(student);
   db.logAuditEvent(req.session.adminUsername, 'student.create', { email: student.email });
-  res.status(201).json({ student: publicStudent(student), password: DEFAULT_STUDENT_PASSWORD });
+  res.status(201).json({ student: publicStudent(student), password });
 });
 
 // Edits an account's details (not its password: use reset-password for that).
@@ -90,12 +91,13 @@ router.delete('/api/admin/students/:id', requireAdmin, (req, res) => {
 });
 
 router.post('/api/admin/students/:id/reset-password', requireAdmin, (req, res) => {
-  const passwordHash = bcrypt.hashSync(DEFAULT_STUDENT_PASSWORD, 10);
-  const student = db.updateStudentPasswordHash(req.params.id, passwordHash, true);
-  if (!student) return res.status(404).json({ error: 'Student not found.' });
+  const existing = db.findById(req.params.id);
+  if (!existing) return res.status(404).json({ error: 'Student not found.' });
+  const password = defaultPasswordFor(existing.grade);
+  const student = db.updateStudentPasswordHash(req.params.id, bcrypt.hashSync(password, 10), true);
   db.destroyOtherStudentSessions(student.id);
   db.logAuditEvent(req.session.adminUsername, 'student.reset_password', { email: student.email });
-  res.json({ ok: true, password: DEFAULT_STUDENT_PASSWORD });
+  res.json({ ok: true, password });
 });
 
 // Manual, permanent lock — separate from the automatic timed lockout in

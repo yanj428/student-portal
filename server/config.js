@@ -18,6 +18,16 @@ const DEFAULT_STUDENT_PASSWORD = 'keerapat';
 // The temporary password teacher accounts start with. Teachers use the same kind
 // of account as students and must also choose their own at the first sign-in.
 const DEFAULT_TEACHER_PASSWORD = 'kpisteacher';
+// The temporary password staff accounts start with.
+const DEFAULT_STAFF_PASSWORD = 'kpisstaff';
+
+// Which temporary password a new or reset account gets, by its grade/role.
+function defaultPasswordFor(grade) {
+  const role = String(grade || '').trim().toLowerCase();
+  if (role === 'staff') return DEFAULT_STAFF_PASSWORD;
+  if (role === 'teacher') return DEFAULT_TEACHER_PASSWORD;
+  return DEFAULT_STUDENT_PASSWORD;
+}
 const SESSION_COOKIE_NAME = 'kpis.sid';
 const ACCOUNT_LOCKED_MESSAGE =
   'This account has been locked after too many failed login attempts. Please contact the Student Council to regain access.';
@@ -103,6 +113,8 @@ module.exports = {
   SESSION_SECRET,
   DEFAULT_STUDENT_PASSWORD,
   DEFAULT_TEACHER_PASSWORD,
+  DEFAULT_STAFF_PASSWORD,
+  defaultPasswordFor,
   ACCOUNT_LOCKED_MESSAGE,
   SESSION_COOKIE_NAME,
   LOGIN_LOCKOUT_THRESHOLD,

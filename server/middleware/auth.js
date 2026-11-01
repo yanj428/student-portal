@@ -117,8 +117,8 @@ function publicStudent(student) {
     email: student.email,
     grade: student.grade,
     // Grades are stored as typed ("Grade 12" from the admin form, or just "12"),
-    // so the word is only added when it's missing.
-    gradeLabel: /^grade( |$)/i.test(student.grade) ? student.grade : `Grade ${student.grade}`,
+    // so the word is only added when it's missing. Roles like "Teacher" or "Staff" have no number and stay as they are.
+    gradeLabel: /^grade( |$)/i.test(student.grade) || !/\d/.test(student.grade) ? student.grade : `Grade ${student.grade}`,
     createdAt: student.createdAt,
     mustChangePassword: !!student.mustChangePassword,
     locked: db.getLockStatus(student.email).locked,

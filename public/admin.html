@@ -58,7 +58,7 @@
           </button>
           <button class="nav-item" data-page="students" type="button">
             <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 19C3.5 15.7 6 13.5 9 13.5C12 13.5 14.5 15.7 14.5 19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="17" cy="9" r="2.4" stroke="currentColor" stroke-width="1.7"/><path d="M15.2 13.7C17.7 13.9 19.7 15.9 19.7 19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-            <span>Student Accounts</span>
+            <span>Accounts</span>
           </button>
           <button class="nav-item" data-page="lunch" type="button">
             <svg viewBox="0 0 24 24" fill="none"><path d="M7 3V11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M5 3V8C5 9.1 5.9 10 7 10C8.1 10 9 9.1 9 8V3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M7 11V21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M16.5 3C15 3 13.5 5 13.5 8C13.5 10 14.5 11 15.5 11.3V21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -122,7 +122,7 @@
                 <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 19C3.5 15.7 6 13.5 9 13.5C12 13.5 14.5 15.7 14.5 19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
               </div>
               <div>
-                <div class="stat-label">Student accounts</div>
+                <div class="stat-label">Accounts</div>
                 <div class="stat-value" id="stat-students">0</div>
               </div>
             </div>
@@ -184,9 +184,9 @@
               <input class="field-input" type="email" id="student-email" placeholder="firstname.lastname@kpis.ac.th" required />
             </div>
             <div class="form-field">
-              <label class="field-label" for="grade">Grade</label>
+              <label class="field-label" for="grade">Grade / Role</label>
               <select class="field-input" id="grade" required>
-                <option value="" disabled selected>Select grade</option>
+                <option value="" disabled selected>Select grade or role</option>
                 <option>Grade 6</option>
                 <option>Grade 7</option>
                 <option>Grade 8</option>
@@ -195,6 +195,7 @@
                 <option>Grade 11</option>
                 <option>Grade 12</option>
                 <option>Teacher</option>
+                <option>Staff</option>
               </select>
             </div>
           </div>
@@ -213,7 +214,7 @@
 
       <section class="panel">
         <div class="panel-header">
-          <h2>Student accounts</h2>
+          <h2>Accounts</h2>
           <span class="count-badge" id="student-count">0</span>
         </div>
 
@@ -226,7 +227,7 @@
               <tr>
                 <th>Name</th>
                 <th>Email</th>
-                <th>Grade</th>
+                <th>Grade / Role</th>
                 <th>Created</th>
                 <th></th>
                 <th></th>

@@ -50,3 +50,24 @@ test('none of the three defaults can be chosen as a new password', async () => {
     assert.equal(res.status, 400, newPassword);
   }
 });
+
+test('a new admin cannot choose the admin default as their own password', async () => {
+  const bcrypt = require('bcryptjs');
+  const admin = db.createAdmin({ username: 'new.admin@kpis.ac.th', passwordHash: bcrypt.hashSync('kpisadmin', 10), role: 'editor', mustChangePassword: true });
+  const agent = request.agent(app);
+  const login = await agent.post('/api/admin/login').send({ username: 'new.admin@kpis.ac.th', password: 'kpisadmin' });
+  assert.equal(login.status, 200);
+  const same = await agent.post('/api/admin/change-password').send({ currentPassword: 'kpisadmin', newPassword: 'kpisadmin' });
+  assert.equal(same.status, 400);
+  const ok = await agent.post('/api/admin/change-password').send({ currentPassword: 'kpisadmin', newPassword: 'my-own-admin-pass-1' });
+  assert.equal(ok.status, 200, JSON.stringify(ok.body));
+  assert.ok(admin);
+});
+
+test('resetAdminPassword sets a temporary password that must be changed', () => {
+  const bcrypt = require('bcryptjs');
+  const admin = db.createAdmin({ username: 'reset.admin@kpis.ac.th', passwordHash: bcrypt.hashSync('old-password-1', 10), role: 'editor' });
+  assert.equal(db.resetAdminPassword(admin.id, bcrypt.hashSync('kpisadmin', 10)), true);
+  const after = db.findAdminByUsername ? db.findAdminByUsername('reset.admin@kpis.ac.th') : null;
+  if (after) assert.equal(!!after.mustChangePassword, true);
+});

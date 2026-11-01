@@ -1,5 +1,7 @@
 import { initAuth } from './auth.js';
 import { initNav } from './nav.js';
+import { initDrawers } from './drawer.js';
+import { initOverview } from './overview.js';
 import { loadStudents } from './students.js';
 import { loadVoicePending } from './voice.js';
 import { loadCurrentSlide, loadSlideArchive } from './slides.js';
@@ -14,6 +16,8 @@ import { loadCalendarImage } from './calendarImage.js';
 import { loadSecurity } from './security.js';
 
 initNav();
+initDrawers();
+initOverview();
 
 initAuth((session) => {
   [

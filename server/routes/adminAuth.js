@@ -7,6 +7,7 @@ const {
   ADMIN_SESSION_ABSOLUTE_MINUTES,
   STUDENT_SESSION_IDLE_MINUTES,
   DUMMY_PASSWORD_HASH,
+  DEFAULT_ADMIN_PASSWORD,
 } = require('../config');
 const { adminLoginLimiter, passwordChangeLimiter } = require('../middleware/rateLimit');
 const { sessionExpiredByAbsoluteLimit, requireAdmin } = require('../middleware/auth');
@@ -126,6 +127,9 @@ router.post('/api/admin/change-password', allowWhileMustChange, requireAdmin, pa
   const typed = newPassword.toLowerCase();
   if (typed === name || typed === name.split('@')[0]) {
     return res.status(400).json({ error: 'Choose a password that is not your username.' });
+  }
+  if (newPassword === DEFAULT_ADMIN_PASSWORD) {
+    return res.status(400).json({ error: "You can't use the default password. Please choose a different password." });
   }
   if (!bcrypt.compareSync(currentPassword, admin.passwordHash)) {
     return res.status(401).json({ error: 'Current password is incorrect.' });

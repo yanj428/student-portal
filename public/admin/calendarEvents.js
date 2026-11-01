@@ -1,5 +1,7 @@
 import { escapeHtml, getJSON, sendJSON, withBusy, ITEM_ACTIONS_HTML, renderRows } from './api.js';
 import { crudPanel } from './crud.js';
+import { createEventCalendar } from './eventCalendar.js';
+import { openDrawerFor, showToast } from './drawer.js';
 
 const singleInput = document.getElementById('calendar-event-single');
 const startInput = document.getElementById('calendar-event-start');
@@ -25,6 +27,23 @@ function syncDateFields() {
   startLabel.textContent = singleInput.checked ? 'Date' : 'Start date';
 }
 singleInput.addEventListener('change', syncDateFields);
+
+// The category picker shows as a row of chips; the select underneath keeps the value.
+const chipRow = document.createElement('div');
+chipRow.className = 'chip-row';
+categoryInput.after(chipRow);
+categoryInput.hidden = true;
+function syncChips() {
+  chipRow.querySelectorAll('button').forEach((chip) => chip.classList.toggle('on', chip.dataset.value === categoryInput.value));
+}
+function buildChips() {
+  chipRow.innerHTML = [{ id: '', label: 'Pick for me' }, ...categories].map((c) => `<button type="button" class="chip" data-value="${c.id}">${escapeHtml(c.label)}</button>`).join('');
+  chipRow.querySelectorAll('button').forEach((chip) => chip.addEventListener('click', () => {
+    categoryInput.value = chip.dataset.value;
+    syncChips();
+  }));
+  syncChips();
+}
 const categoryLabel = (id) => (categories.find((c) => c.id === id) || {}).label || id;
 
 const panel = crudPanel({
@@ -50,8 +69,12 @@ const panel = crudPanel({
     titleInput.value = item.title;
     subtitleInput.value = item.subtitle;
     categoryInput.value = item.category;
+    syncChips();
   },
-  onReset: () => syncDateFields(),
+  onReset: () => {
+    syncDateFields();
+    syncChips();
+  },
   reload: () => loadCalendarEvents(),
 });
 
@@ -64,13 +87,56 @@ function dateText(item) {
   return `${item.day} ${item.month} - ${endDay} ${MONTH_ABBR[endMonth - 1]} ${endYear}`;
 }
 
+// ---- The calendar view: drag an event to move it, pull its end to stretch it ----
+
+const calendarEl = document.getElementById('calendar-event-cal');
+const eventCal = createEventCalendar({
+  root: calendarEl,
+  onEdit: (item) => panel.startEdit(item),
+  onAdd: (isoDate) => {
+    singleInput.checked = true;
+    syncDateFields();
+    startInput.value = isoDate;
+    endInput.value = '';
+    openDrawerFor('calendar-event-form');
+  },
+  onMove: async (item, startDate, endDate) => {
+    try {
+      const { ok, data } = await sendJSON(`/api/admin/calendar-events/${item.id}`, 'PUT', {
+        startDate,
+        endDate: endDate === startDate ? '' : endDate,
+        title: item.title,
+        subtitle: item.subtitle,
+        category: item.category,
+      });
+      if (ok) showToast(startDate === endDate ? `Moved to ${startDate}` : `Now ${startDate} to ${endDate}`);
+      else alert(data.error || 'Could not move the event.');
+    } catch {
+      alert('Could not reach the server. Please try again.');
+    }
+    loadCalendarEvents();
+  },
+});
+
+// Calendar and list are two views of the same events.
+document.querySelectorAll('#event-view-switch button').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const calendar = btn.dataset.view === 'calendar';
+    document.querySelectorAll('#event-view-switch button').forEach((b) => b.classList.toggle('on', b === btn));
+    calendarEl.hidden = !calendar;
+    listEl.hidden = calendar;
+  });
+});
+
 export async function loadCalendarEvents() {
   const data = await getJSON('/api/admin/calendar-events');
   if (!data) return;
   existingEvents = data.calendarEvents;
+  eventCal.setEvents(existingEvents);
   if (!categories.length) {
     categories = data.categories;
     categoryInput.innerHTML = '<option value="">Pick for me</option>' + categoryOptions('');
+    buildChips();
   }
 
   renderRows(listEl, emptyEl, existingEvents, (div, item) => {

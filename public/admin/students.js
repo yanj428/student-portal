@@ -11,6 +11,8 @@ const emptyRow = document.getElementById('empty-row');
 const studentCount = document.getElementById('student-count');
 const gradeSummary = document.getElementById('grade-summary');
 const listBody = document.getElementById('student-list-body');
+const searchInput = document.getElementById('student-search');
+searchInput.addEventListener('input', () => renderStudents());
 
 let allStudents = [];
 // The grade whose accounts are showing. The list is long, so it stays folded
@@ -29,6 +31,7 @@ function renderStudents() {
 
   studentCount.textContent = students.length;
   document.getElementById('stat-students').textContent = students.length;
+  document.getElementById('stat-locked').textContent = students.filter((s) => s.locked).length;
   studentRows.innerHTML = '';
   gradeSummary.innerHTML = '';
 
@@ -69,10 +72,12 @@ function renderStudents() {
     });
     gradeSummary.appendChild(btn);
   });
-  listBody.hidden = openGrade === null;
+  // Typing in the search box looks through every account; otherwise only the pressed grade shows.
+  const query = searchInput.value.trim().toLowerCase();
+  listBody.hidden = !query && openGrade === null;
 
   sortedStudents
-    .filter((student) => student.grade === openGrade)
+    .filter((student) => (query ? `${student.fullName} ${student.email}`.toLowerCase().includes(query) : student.grade === openGrade))
     .forEach((student) => {
       const name = student.fullName;
       const created = new Date(student.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });

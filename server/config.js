@@ -21,6 +21,9 @@ const DEFAULT_TEACHER_PASSWORD = 'kpisteacher';
 // The temporary password staff accounts start with.
 const DEFAULT_STAFF_PASSWORD = 'kpisstaff';
 
+// The temporary password admin accounts start with.
+const DEFAULT_ADMIN_PASSWORD = 'kpisadmin';
+
 // Which temporary password a new or reset account gets, by its grade/role.
 function defaultPasswordFor(grade) {
   const role = String(grade || '').trim().toLowerCase();
@@ -114,6 +117,7 @@ module.exports = {
   DEFAULT_STUDENT_PASSWORD,
   DEFAULT_TEACHER_PASSWORD,
   DEFAULT_STAFF_PASSWORD,
+  DEFAULT_ADMIN_PASSWORD,
   defaultPasswordFor,
   ACCOUNT_LOCKED_MESSAGE,
   SESSION_COOKIE_NAME,

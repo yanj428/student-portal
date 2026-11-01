@@ -1,7 +1,6 @@
-import { escapeHtml, getJSON, ITEM_ACTIONS_HTML, renderRows } from './api.js';
+import { escapeHtml, getJSON, TRASH_ICON, renderRows } from './api.js';
 import { crudPanel } from './crud.js';
 import { attachPhotoCropper } from './photoCrop.js';
-import { bindViewMore } from './viewMore.js';
 
 const typeRadios = document.querySelectorAll('input[name="club-type"]');
 const nameInput = document.getElementById('club-name');
@@ -26,18 +25,19 @@ const LISTS = {
   'community-service': {
     listEl: document.getElementById('club-list-community-service'),
     emptyEl: document.getElementById('club-empty-community-service'),
-    toggle: document.getElementById('club-community-service-toggle'),
-    body: document.getElementById('club-community-service-body'),
+    count: document.getElementById('club-count-community-service'),
   },
   'after-school': {
     listEl: document.getElementById('club-list-after-school'),
     emptyEl: document.getElementById('club-empty-after-school'),
-    toggle: document.getElementById('club-after-school-toggle'),
-    body: document.getElementById('club-after-school-body'),
+    count: document.getElementById('club-count-after-school'),
   },
 };
-Object.values(LISTS).forEach(({ toggle, body }) => bindViewMore(toggle, body));
-
+const typeSwitch = document.querySelectorAll('#club-type-switch button');
+const searchInput = document.getElementById('club-search');
+let shownType = 'community-service';
+let allClubs = [];
+const NONE_TEXT = Object.fromEntries(Object.entries(LISTS).map(([type, { emptyEl }]) => [type, emptyEl.textContent]));
 const currentType = () => document.querySelector('input[name="club-type"]:checked').value;
 
 function updateVisibleFields() {
@@ -50,6 +50,29 @@ updateVisibleFields();
 
 attachPhotoCropper(logoInput);
 
+// ---- The form is four short steps; Save works on any of them ----
+const form = document.getElementById('club-form');
+const stepPanels = form.querySelectorAll('.form-step');
+const stepTabs = form.querySelectorAll('#club-steps .step');
+const backBtn = document.getElementById('club-back');
+const nextBtn = document.getElementById('club-next');
+let step = 1;
+function showStep(n) {
+  step = Math.min(4, Math.max(1, n));
+  stepPanels.forEach((panelEl) => { panelEl.hidden = Number(panelEl.dataset.step) !== step; });
+  stepTabs.forEach((tab) => tab.classList.toggle('on', Number(tab.dataset.go) === step));
+  backBtn.hidden = step === 1;
+  nextBtn.hidden = step === 4;
+}
+stepTabs.forEach((tab) => tab.addEventListener('click', () => showStep(Number(tab.dataset.go))));
+backBtn.addEventListener('click', () => showStep(step - 1));
+nextBtn.addEventListener('click', () => showStep(step + 1));
+// A required box on a step that is not showing would block Save without a word, so go to it.
+form.addEventListener('invalid', (e) => {
+  const owner = e.target.closest('.form-step');
+  if (owner) showStep(Number(owner.dataset.step));
+}, true);
+showStep(1);
 const panel = crudPanel({
   form: document.getElementById('club-form'),
   submitBtn: document.getElementById('club-submit'),
@@ -104,46 +127,78 @@ const panel = crudPanel({
     logoInput.value = '';
     removeLogoInput.checked = false;
     removeLogoRow.hidden = !club.logoUrl;
+    showStep(1);
   },
   onReset: () => {
     updateVisibleFields();
     removeLogoRow.hidden = true;
+    showStep(1);
   },
   reload: () => loadClubs(),
 });
 
-function metaHtml(club) {
-  const link = (url, label) => `<a href="${escapeHtml(url)}" target="_blank" rel="noopener">${label}</a>`;
-  return [
-    club.advisor ? `<span>Advisor: ${escapeHtml(club.advisor)}</span>` : '',
-    club.instagramUrl ? link(club.instagramUrl, 'Instagram') : '',
-    club.applicationFormUrl ? link(club.applicationFormUrl, 'Application form') : '',
-    club.meetingDay || club.meetingTime ? `<span>${escapeHtml([club.meetingDay, club.meetingTime].filter(Boolean).join(' · '))}</span>` : '',
-    club.schedule ? `<span>${escapeHtml(club.schedule)}</span>` : '',
-    club.signupUrl ? link(club.signupUrl, 'Sign-up link') : '',
-  ].join('');
+const initials = (name) => name.trim().split(/\s+/).slice(0, 2).map((w) => w.charAt(0)).join('').toUpperCase() || '?';
+
+// A few small facts per club, and a note for what is still missing.
+function chipsHtml(club) {
+  const chip = (text, cls = '') => `<span class="chip${cls}">${escapeHtml(text)}</span>`;
+  const when = [club.meetingDay, club.meetingTime].filter(Boolean).join(' · ');
+  const chips = [
+    club.leaders ? chip(`Leaders: ${club.leaders}`) : '',
+    club.advisor ? chip(`Advisor: ${club.advisor}`) : '',
+    club.type === 'after-school' && when ? chip(when) : '',
+    club.type === 'after-school' && club.schedule ? chip(club.schedule) : '',
+    club.type === 'community-service' && club.applicationFormUrl ? chip('Application open', ' ok') : '',
+    club.type === 'after-school' && club.signupUrl ? chip('Sign-up open', ' ok') : '',
+  ];
+  const gaps = [
+    !club.mission ? 'Needs mission' : '',
+    !club.advisor ? 'No advisor' : '',
+    club.type === 'after-school' && !when ? 'No meeting time' : '',
+  ].filter(Boolean).map((text) => chip(text, ' warn'));
+  return [...chips, ...gaps].join('');
 }
+
+function cardHtml(club) {
+  return `
+    <div class="club-actions">
+      <button class="edit-btn" aria-label="Edit">Edit</button>
+      <button class="delete-btn" aria-label="Remove">${TRASH_ICON}</button>
+    </div>
+    <div class="club-head">
+      <div class="club-logo">${club.logoUrl ? `<img src="${escapeHtml(club.logoUrl)}" alt="" />` : escapeHtml(initials(club.name))}</div>
+      <b class="club-name">${escapeHtml(club.name)}</b>
+    </div>
+    <p class="club-mission${club.mission ? '' : ' none'}">${club.mission ? escapeHtml(club.mission) : 'No mission yet'}</p>
+    <div class="club-chips">${chipsHtml(club)}</div>`;
+}
+
+function renderClubs() {
+  const query = searchInput.value.trim().toLowerCase();
+  Object.entries(LISTS).forEach(([type, { listEl, emptyEl, count }]) => {
+    const ofType = allClubs.filter((c) => c.type === type);
+    count.textContent = ofType.length;
+    const shown = ofType.filter((c) => !query || `${c.name} ${c.leaders} ${c.advisor} ${c.mission}`.toLowerCase().includes(query));
+    emptyEl.textContent = query && ofType.length ? 'No clubs match your search.' : NONE_TEXT[type];
+    renderRows(listEl, emptyEl, shown, (div, club) => {
+      div.classList.add('club-card');
+      div.innerHTML = cardHtml(club);
+      panel.bindRow(div, club, `Remove "${club.name}"?`);
+    });
+    listEl.hidden = type !== shownType;
+  });
+}
+
+typeSwitch.forEach((btn) => btn.addEventListener('click', () => {
+  shownType = btn.dataset.type;
+  typeSwitch.forEach((b) => b.classList.toggle('on', b === btn));
+  renderClubs();
+}));
+searchInput.addEventListener('input', renderClubs);
 
 export async function loadClubs() {
   const data = await getJSON('/api/admin/clubs');
   if (!data) return;
-
-  Object.entries(LISTS).forEach(([type, { listEl, emptyEl }]) => {
-    const clubs = data.clubs.filter((c) => c.type === type);
-    renderRows(listEl, emptyEl, clubs, (div, club) => {
-      const meta = metaHtml(club);
-      div.innerHTML = `
-        <div class="simple-item-head">
-          <div class="item-identity">
-            ${club.logoUrl ? `<img class="item-logo" src="${escapeHtml(club.logoUrl)}" alt="" />` : ''}
-            <span class="simple-item-title">${escapeHtml(club.name)}</span>
-          </div>
-          ${ITEM_ACTIONS_HTML}
-        </div>
-        ${club.mission ? `<p class="simple-item-body">${escapeHtml(club.mission)}</p>` : ''}
-        ${meta ? `<div class="item-meta">${meta}</div>` : ''}
-      `;
-      panel.bindRow(div, club, `Remove "${club.name}"?`);
-    });
-  });
+  allClubs = data.clubs;
+  renderClubs();
 }

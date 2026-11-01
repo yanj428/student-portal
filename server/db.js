@@ -649,6 +649,10 @@ module.exports = {
   updateAdminPasswordHash(id, passwordHash) {
     return db.prepare('UPDATE admins SET passwordHash = ?, mustChangePassword = 0 WHERE id = ?').run(passwordHash, id).changes > 0;
   },
+  // An admin reset to a temporary password must choose their own again at the next sign-in.
+  resetAdminPassword(id, passwordHash) {
+    return db.prepare('UPDATE admins SET passwordHash = ?, mustChangePassword = 1 WHERE id = ?').run(passwordHash, id).changes > 0;
+  },
   updateAdminRole(id, role) {
     return db.prepare('UPDATE admins SET role = ? WHERE id = ?').run(role === 'owner' ? 'owner' : 'editor', id).changes > 0;
   },

@@ -11,6 +11,9 @@ import { sendForm, sendJSON, confirmDelete } from './api.js';
 //   fill(item)   copies an item into the form fields for editing
 //   onReset      optional extra clean-up when the form is reset
 //   onSaved      optional (responseData, wasEditing) hook after a successful save
+//
+// The form also announces crud:edit, crud:saved and crud:reset (bubbling), which the
+// slide-in drawers listen to (see drawer.js).
 //   reload       re-fetches and re-renders the list
 export function crudPanel({ form, submitBtn, cancelBtn, errorEl, endpoint, addLabel, saveError, readPayload, fill, onReset, onSaved, reload }) {
   let editingId = null;
@@ -21,6 +24,7 @@ export function crudPanel({ form, submitBtn, cancelBtn, errorEl, endpoint, addLa
     if (onReset) onReset();
     submitBtn.textContent = addLabel;
     cancelBtn.hidden = true;
+    form.dispatchEvent(new CustomEvent('crud:reset', { bubbles: true }));
   }
 
   function startEdit(item) {
@@ -29,6 +33,7 @@ export function crudPanel({ form, submitBtn, cancelBtn, errorEl, endpoint, addLa
     errorEl.hidden = true;
     submitBtn.textContent = 'Save changes';
     cancelBtn.hidden = false;
+    form.dispatchEvent(new CustomEvent('crud:edit', { bubbles: true }));
     form.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
@@ -68,6 +73,7 @@ export function crudPanel({ form, submitBtn, cancelBtn, errorEl, endpoint, addLa
       }
 
       if (onSaved) onSaved(data, wasEditing);
+      form.dispatchEvent(new CustomEvent('crud:saved', { bubbles: true, detail: { wasEditing } }));
       reset();
       reload();
     } catch {

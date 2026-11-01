@@ -52,31 +52,17 @@ async function loadEvents() {
     : '<p class="home-empty">Nothing coming up yet.</p>';
 }
 
-// Lunch picture and week label, and the weekly slide card + hero button.
+// With a weekly slide set, the banner's slide button opens it directly.
 async function loadLunchAndSlide() {
   const data = await fetchJson('/api/content');
   if (!data) return;
 
-  const lunch = data.content.lunchSchedule || {};
-  const media = document.getElementById('home-lunch-media');
-  if (lunch.imageUrl && media && !/\.pdf$/i.test(lunch.imageUrl)) {
-    media.innerHTML = `<img src="${escapeHtml(lunch.imageUrl)}" alt="This week's lunch menu" />`;
-  }
-  const lunchLabel = document.getElementById('home-lunch-label');
-  if (lunch.weekLabel && lunchLabel) lunchLabel.textContent = lunch.weekLabel;
-
   const slide = data.content.weeklySlide || {};
-  const slideLabel = document.getElementById('home-slide-label');
-  if (slide.weekLabel && slideLabel) slideLabel.textContent = slide.weekLabel;
-  // With a slide set, both the card and the hero button open it directly.
-  if (slide.canvaEmbedUrl) {
-    ['home-slide-card', 'hero-slide-link'].forEach((id) => {
-      const link = document.getElementById(id);
-      if (!link) return;
-      link.href = slide.canvaEmbedUrl;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-    });
+  const link = document.getElementById('hero-slide-link');
+  if (slide.canvaEmbedUrl && link) {
+    link.href = slide.canvaEmbedUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
   }
 }
 
@@ -165,7 +151,6 @@ async function loadQuickLinks() {
 // that are not saved yet (see home-customize.js).
 const HOME_LOADERS = {
   events: loadEvents,
-  cards: loadLunchAndSlide,
   clubs: loadClubs,
   service: loadCommunityService,
   links: loadQuickLinks,

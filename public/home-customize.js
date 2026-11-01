@@ -48,10 +48,6 @@
       { type: 'select', key: 'count', label: 'How many events', number: true, options: COUNT_OPTIONS([1, 2, 3, 4, 5, 6, 8, 10]) },
       { type: 'check', key: 'showSubtitle', label: "Show each event's details" },
     ],
-    cards: () => [
-      { type: 'check', key: 'lunch', label: "This week's lunch card" },
-      { type: 'check', key: 'slide', label: "This week's slide card" },
-    ],
     clubs: () => [
       { type: 'select', key: 'type', label: 'Which clubs', options: [{ value: 'all', label: 'All clubs' }, { value: 'community-service', label: 'Community service clubs' }, { value: 'after-school', label: 'After school clubs' }] },
       { type: 'select', key: 'count', label: 'How many to show', number: true, options: COUNT_OPTIONS([3, 4, 5, 6, 8, 10, 12]) },
@@ -313,7 +309,6 @@
     };
     settings.jump.tiles = chosenInOrder('jump', settings.jump.tiles);
     settings.hero.buttons = chosenInOrder('hero', settings.hero.buttons);
-    settings.cards.order = mergeOrder(idsIn('cards'), settings.cards.order);
     settings.links.order = mergeOrder(idsIn('links'), settings.links.order);
     settings.clubs.order = mergeOrder(idsIn('clubs'), settings.clubs.order);
   }

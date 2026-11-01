@@ -15,7 +15,7 @@ test.after(() => {
   fs.rmSync(dataDir, { recursive: true, force: true });
 });
 
-const DEFAULT_ORDER = ['hero', 'jump', 'links', 'events', 'cards', 'clubs', 'service'];
+const DEFAULT_ORDER = ['hero', 'jump', 'links', 'events', 'clubs', 'service'];
 const STANDARD = { order: DEFAULT_ORDER, hidden: [], settings: DEFAULT_SETTINGS };
 const orderAndHidden = (layout) => ({ order: layout.order, hidden: layout.hidden });
 let counter = 0;
@@ -44,7 +44,7 @@ test('a student who has never customized gets the standard layout', async () => 
   const res = await agent.get('/api/home-layout');
   assert.equal(res.status, 200);
   assert.deepEqual(res.body.layout, STANDARD);
-  assert.equal(res.body.widgets.length, 7);
+  assert.equal(res.body.widgets.length, 6);
   assert.equal(res.body.jumpTiles.length, 8);
 });
 
@@ -62,19 +62,19 @@ test('the home layout needs a signed-in student', async () => {
 
 test('a saved order and hidden widget are kept and the home page is drawn that way', async () => {
   const { agent } = await signedInStudent();
-  const order = ['links', 'clubs', 'events', 'hero', 'jump', 'cards', 'service'];
-  const put = await agent.put('/api/home-layout').send({ order, hidden: ['cards'] });
+  const order = ['links', 'clubs', 'events', 'hero', 'jump', 'service'];
+  const put = await agent.put('/api/home-layout').send({ order, hidden: ['clubs'] });
   assert.equal(put.status, 200);
-  assert.deepEqual(orderAndHidden((await agent.get('/api/home-layout')).body.layout), { order, hidden: ['cards'] });
+  assert.deepEqual(orderAndHidden((await agent.get('/api/home-layout')).body.layout), { order, hidden: ['clubs'] });
 
   const page = pageLayout((await agent.get('/')).text);
   assert.deepEqual(page.order, order);
-  assert.deepEqual(page.hidden, ['cards']);
+  assert.deepEqual(page.hidden, ['clubs']);
 });
 
 test('invalid layouts are refused and change nothing', async () => {
   const { agent } = await signedInStudent();
-  const good = ['events', 'hero', 'jump', 'cards', 'clubs', 'service', 'links'];
+  const good = ['events', 'hero', 'jump', 'clubs', 'service', 'links'];
   await agent.put('/api/home-layout').send({ order: good, hidden: [] });
 
   const bad = [
@@ -109,7 +109,7 @@ test("one student's layout does not change another's", async () => {
 
 test('a widget added to the site later still shows for students with an older saved layout', () => {
   const layout = resolveLayout({ order: ['links', 'jump'], hidden: ['ghost'] });
-  assert.deepEqual(layout.order, ['links', 'jump', 'hero', 'events', 'cards', 'clubs', 'service']);
+  assert.deepEqual(layout.order, ['links', 'jump', 'hero', 'events', 'clubs', 'service']);
   assert.deepEqual(layout.hidden, []);
 });
 
@@ -132,7 +132,7 @@ test('hiding every widget still leaves the page and a way back', async () => {
 
 test('the welcome banner can be hidden and moved like any other part of the page', async () => {
   const { agent } = await signedInStudent();
-  const order = ['jump', 'events', 'cards', 'clubs', 'service', 'links', 'hero'];
+  const order = ['jump', 'events', 'clubs', 'service', 'links', 'hero'];
   await agent.put('/api/home-layout').send({ order, hidden: [] });
   assert.equal(pageLayout((await agent.get('/')).text).order.at(-1), 'hero', 'the banner is now last');
 
@@ -162,11 +162,10 @@ test('every section starts with its standard content options', async () => {
   Object.keys(DEFAULT_SETTINGS).forEach((id) => assert.deepEqual(fromPage(html, id), DEFAULT_SETTINGS[id], id));
 });
 
-test('chosen content options are saved and drawn: tiles, cards and the banner', async () => {
+test('chosen content options are saved and drawn: tiles and the banner', async () => {
   const { agent } = await signedInStudent();
   const put = await agent.put('/api/home-layout').send(base({
     jump: { tiles: ['council', 'lunch', 'community'] },
-    cards: { lunch: false, slide: true },
     hero: { showDate: false, showButtons: false },
     events: { count: 6 },
     clubs: { type: 'after-school', count: 8 },
@@ -177,9 +176,6 @@ test('chosen content options are saved and drawn: tiles, cards and the banner', 
   const html = (await agent.get('/')).text;
   const tiles = [...html.matchAll(/class="home-tile" href="([^"]+)"/g)].map((m) => m[1]);
   assert.deepEqual(tiles, ['/meet-council', '/lunch-schedule', '/community-service'], 'only the chosen tiles, in the order chosen');
-  assert.ok(!html.includes('id="home-lunch-media"'), 'the lunch card is gone');
-  assert.ok(html.includes('id="home-slide-card"'), 'the slide card stays');
-  assert.match(html, /home-duo home-duo-single/, 'one card fills the row');
   assert.ok(!html.includes('id="today-date"'), 'no date in the banner');
   assert.ok(!html.includes('home-hero-actions'), 'no buttons in the banner');
   assert.deepEqual(fromPage(html, 'events'), { count: 6, showSubtitle: true });
@@ -216,7 +212,6 @@ test('content options outside the allowed choices are refused and change nothing
     { jump: { tiles: [] } },
     { jump: { tiles: ['nowhere'] } },
     { jump: { tiles: ['lunch', 'lunch'] } },
-    { cards: { lunch: false, slide: false } },
     { hero: { showDate: 'yes' } },
     { links: { ids: 'all' } },
     { links: { ids: [123] } },
@@ -224,8 +219,6 @@ test('content options outside the allowed choices are refused and change nothing
     { links: { order: ['a', 'a'] } },
     { clubs: { order: [1] } },
     { clubs: { showNames: 'yes' } },
-    { cards: { order: ['lunch', 'banner'] } },
-    { cards: { order: ['lunch', 'lunch'] } },
     { hero: { showCrest: 1 } },
     { hero: { buttons: ['clubs', 'nowhere'] } },
     { hero: { buttons: ['slide', 'lunch', 'clubs', 'voice', 'links'] } },
@@ -254,25 +247,16 @@ test('a stored option that is no longer valid falls back to the standard one', (
   assert.deepEqual(layout.settings.events, DEFAULT_SETTINGS.events);
   assert.deepEqual(layout.settings.clubs, { ...DEFAULT_SETTINGS.clubs, count: 6 });
 });
-test('dragged item orders are kept: jump tiles and cards are drawn in the order chosen', async () => {
+test('dragged item orders are kept: jump tiles are drawn in the order chosen', async () => {
   const { agent } = await signedInStudent();
   const put = await agent.put('/api/home-layout').send(base({
     jump: { tiles: ['links', 'lunch', 'announcements'] },
-    cards: { order: ['slide', 'lunch'] },
   }));
   assert.equal(put.status, 200);
 
   const html = (await agent.get('/')).text;
   const tiles = [...html.matchAll(/class="home-tile" href="([^"]+)"/g)].map((m) => m[1]);
   assert.deepEqual(tiles, ['/quick-links', '/lunch-schedule', '/announcements']);
-  assert.ok(html.indexOf('id="home-slide-card"') < html.indexOf('<a class="home-feature" href="/lunch-schedule"'), 'the slide card comes first');
-  assert.deepEqual((await agent.get('/api/home-layout')).body.layout.settings.cards.order, ['slide', 'lunch']);
-});
-
-test('a card order always keeps both cards, even when one is left out of it', async () => {
-  const { agent } = await signedInStudent();
-  await agent.put('/api/home-layout').send(base({ cards: { order: ['slide'] } }));
-  assert.deepEqual((await agent.get('/api/home-layout')).body.layout.settings.cards.order, ['slide', 'lunch']);
 });
 
 test('club and quick link orders are saved, and the new on/off options too', async () => {

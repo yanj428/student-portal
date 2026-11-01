@@ -1,3 +1,0 @@
-<section class="home-duo<%= (options.lunch && options.slide) ? '' : ' home-duo-single' %>" data-sortable="cards">
-<% options.order.forEach(function (id) { if (options[id]) { %><%- include('card-' + id) %><% } }); %>
-      </section>

@@ -5,7 +5,6 @@ const WIDGETS = [
   { id: 'jump', title: 'Jump to' },
   { id: 'links', title: 'Quick links' },
   { id: 'events', title: 'Coming up' },
-  { id: 'cards', title: 'Lunch and slide' },
   { id: 'clubs', title: 'Clubs' },
   { id: 'service', title: 'Community service' },
 ];
@@ -29,15 +28,12 @@ const HERO_BUTTON_MAX = 4;
 
 const CLUB_TYPES = ['all', 'community-service', 'after-school'];
 
-const CARD_IDS = ['lunch', 'slide'];
-
 // order lists hold ids in the order the student dragged them into. An id that is
 // not in the list (a link or club added later) simply goes after the ones that are.
 const DEFAULT_SETTINGS = {
   hero: { showDate: true, showButtons: true, showCrest: true, buttons: ['lunch'] }, // buttons in the order shown (this week's slide is the Announcements page's job now)
   jump: { tiles: ['announcements', 'lunch', 'calendar', 'clubs', 'voice', 'links'] }, // in the order shown
   events: { count: 3, showSubtitle: true },
-  cards: { lunch: true, slide: false, order: CARD_IDS }, // the slide card is off unless a student turns it on
   clubs: { type: 'all', count: 5, showNames: true, showMore: true, order: [] },
   service: { count: 3, showDescription: true },
   links: { ids: null, order: [] }, // ids: null = every quick link
@@ -83,14 +79,6 @@ const VALIDATORS = {
     if (!isIntBetween(s.count, 1, 10)) return { error: 'Show between 1 and 10 events.' };
     if (!isBool(s.showSubtitle)) return { error: 'The event details must be on or off.' };
     return { settings: { count: s.count, showSubtitle: s.showSubtitle } };
-  },
-  cards(input, base) {
-    const s = { ...base, ...pick(input, ['lunch', 'slide', 'order']) };
-    if (!isBool(s.lunch) || !isBool(s.slide)) return { error: 'The cards must be on or off.' };
-    if (!s.lunch && !s.slide) return { error: 'Keep at least one card, or hide the section instead.' };
-    if (!isIdList(s.order) || !s.order.every((id) => CARD_IDS.includes(id))) return { error: 'The card order must list the lunch and slide cards.' };
-    // Both cards always have a place in the order, even one that is switched off.
-    return { settings: { lunch: s.lunch, slide: s.slide, order: [...s.order, ...CARD_IDS.filter((id) => !s.order.includes(id))] } };
   },
   clubs(input, base) {
     const s = { ...base, ...pick(input, ['type', 'count', 'showNames', 'showMore', 'order']) };

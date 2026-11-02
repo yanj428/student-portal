@@ -50,6 +50,45 @@ updateVisibleFields();
 
 attachPhotoCropper(logoInput);
 
+// ---- UN goals: a tile for each of the 17, click to switch on or off ----
+// The chosen numbers live in the hidden #club-sdgs box as "3, 4", which is what is sent.
+const sdgPicker = document.getElementById('club-sdg-picker');
+const sdgSummary = document.getElementById('club-sdg-summary');
+let sdgGoals = [];
+const chosenSdgs = () => sdgsInput.value.split(',').map((s) => Number(s.trim())).filter(Boolean);
+function paintSdgs() {
+  const chosen = chosenSdgs();
+  sdgPicker.querySelectorAll('.sdg-tile').forEach((tile) => {
+    const on = chosen.includes(Number(tile.dataset.n));
+    tile.classList.toggle('on', on);
+    tile.setAttribute('aria-pressed', String(on));
+  });
+  sdgSummary.textContent = chosen.length
+    ? `Chosen: ${chosen.sort((a, b) => a - b).map((n) => `Goal ${n}`).join(', ')}`
+    : 'No goal chosen.';
+}
+function setSdgs(numbers) {
+  sdgsInput.value = [...new Set(numbers)].sort((a, b) => a - b).join(', ');
+  paintSdgs();
+}
+sdgPicker.addEventListener('click', (e) => {
+  const tile = e.target.closest('.sdg-tile');
+  if (!tile) return;
+  const n = Number(tile.dataset.n);
+  const chosen = chosenSdgs();
+  setSdgs(chosen.includes(n) ? chosen.filter((x) => x !== n) : [...chosen, n]);
+});
+getJSON('/api/admin/sdgs').then((data) => {
+  if (!data) return;
+  sdgGoals = data.goals;
+  sdgPicker.innerHTML = sdgGoals.map((g) => `
+    <button type="button" class="sdg-tile" data-n="${g.number}" aria-pressed="false" title="Goal ${g.number}: ${escapeHtml(g.name)}">
+      ${g.url ? `<img src="/${escapeHtml(g.url)}" alt="Goal ${g.number}: ${escapeHtml(g.name)}" />` : `<span class="sdg-num">${g.number}</span>`}
+      <span class="sdg-tick" aria-hidden="true">&#10003;</span>
+    </button>`).join('');
+  paintSdgs();
+});
+
 // ---- The form is four short steps; Save works on any of them ----
 const form = document.getElementById('club-form');
 const stepPanels = form.querySelectorAll('.form-step');
@@ -114,7 +153,7 @@ const panel = crudPanel({
     nameInput.value = club.name;
     missionInput.value = club.mission;
     goalsInput.value = club.goals;
-    sdgsInput.value = club.sdgs.join(', ');
+    setSdgs(club.sdgs);
     leadersInput.value = club.leaders;
     contactsInput.value = club.contacts;
     instagramInput.value = club.instagramUrl;
@@ -131,6 +170,7 @@ const panel = crudPanel({
   },
   onReset: () => {
     updateVisibleFields();
+    setSdgs([]);
     removeLogoRow.hidden = true;
     showStep(1);
   },
@@ -146,6 +186,7 @@ function chipsHtml(club) {
   const chips = [
     club.leaders ? chip(`Leaders: ${club.leaders}`) : '',
     club.advisor ? chip(`Advisor: ${club.advisor}`) : '',
+    club.sdgs && club.sdgs.length ? chip(`SDG ${club.sdgs.join(', ')}`) : '',
     club.type === 'after-school' && when ? chip(when) : '',
     club.type === 'after-school' && club.schedule ? chip(club.schedule) : '',
     club.type === 'community-service' && club.applicationFormUrl ? chip('Application open', ' ok') : '',

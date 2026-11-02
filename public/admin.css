@@ -1062,3 +1062,30 @@ body.ec-dragging, body.ec-dragging * { cursor: grabbing !important; }
 .form-step[hidden] { display: none; }
 .step-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .step-actions [hidden] { display: none; }
+
+/* ---- Security: two columns, and long lists scroll inside their own box ---- */
+.security-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (min-width: 960px) { .security-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.security-grid .panel { margin: 0; padding: 16px 18px; }
+.security-grid .panel h2 { font-size: 18px; margin: 0; }
+.security-grid .panel-header { margin: 0; }
+.security-grid .panel-hint { font-size: 14px; margin: 4px 0 12px; line-height: 1.4; }
+.security-grid .simple-list { max-height: 260px; overflow-y: auto; }
+.security-grid .table-wrap { max-height: 260px; overflow: auto; }
+.security-grid thead th { position: sticky; top: 0; background: var(--surface, #fff); z-index: 1; }
+.security-grid table { font-size: 14px; }
+.security-grid td, .security-grid th { padding: 8px 10px; }
+#security-attempts-filter-form { display: flex; align-items: flex-end; gap: 10px; margin: 0 0 12px; }
+#security-attempts-filter-form .form-row { flex: 1; margin: 0; }
+#security-attempts-filter-form .form-actions { margin: 0; }
+
+/* ---- Clubs: the UN goal picker ---- */
+.field-help { font-size: 14px; color: var(--text-muted); margin: 4px 0 8px; }
+.sdg-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; }
+.sdg-tile { position: relative; padding: 0; border: 3px solid transparent; border-radius: 8px; background: none; cursor: pointer; opacity: 0.55; overflow: hidden; aspect-ratio: 1; transition: opacity 0.12s, border-color 0.12s; }
+.sdg-tile:hover { opacity: 0.85; }
+.sdg-tile.on { opacity: 1; border-color: var(--text, #222); }
+.sdg-tile img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.sdg-num { display: grid; place-items: center; width: 100%; height: 100%; background: var(--border, #ddd); font-weight: 700; font-size: 22px; }
+.sdg-tick { position: absolute; right: 4px; top: 4px; width: 20px; height: 20px; border-radius: 50%; background: var(--text, #222); color: #fff; font-size: 13px; line-height: 20px; text-align: center; display: none; }
+.sdg-tile.on .sdg-tick { display: block; }

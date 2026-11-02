@@ -13,7 +13,15 @@ const router = express.Router();
 // The badge image for SDG <n> is whichever of public/assets/sdg/<n>.<ext> exists.
 // A goal with no image yet gets no badge, so the card never shows a broken picture.
 const SDG_DIR = path.join(__dirname, '..', '..', 'public', 'assets', 'sdg');
-const SDG_EXTENSIONS = ['png', 'webp', 'jpg'];
+// The official picture (png, webp, jpg) wins over a plain colored tile (svg) for the same goal.
+const SDG_EXTENSIONS = ['png', 'webp', 'jpg', 'svg'];
+const SDG_NAMES = [
+  'No Poverty', 'Zero Hunger', 'Good Health and Well-being', 'Quality Education', 'Gender Equality',
+  'Clean Water and Sanitation', 'Affordable and Clean Energy', 'Decent Work and Economic Growth',
+  'Industry, Innovation and Infrastructure', 'Reduced Inequalities', 'Sustainable Cities and Communities',
+  'Responsible Consumption and Production', 'Climate Action', 'Life Below Water', 'Life on Land',
+  'Peace, Justice and Strong Institutions', 'Partnerships for the Goals',
+];
 
 function sdgBadges(numbers) {
   return numbers.flatMap((number) => {
@@ -21,6 +29,12 @@ function sdgBadges(numbers) {
     return ext ? [{ number, url: `assets/sdg/${number}.${ext}` }] : [];
   });
 }
+
+// All 17 goals with their badge, for the admin's goal picker.
+router.get('/api/admin/sdgs', requireAdmin, (req, res) => {
+  const goals = SDG_NAMES.map((name, i) => ({ number: i + 1, name, url: (sdgBadges([i + 1])[0] || {}).url || '' }));
+  res.json({ goals });
+});
 
 const CLUB_TYPES = ['community-service', 'after-school'];
 

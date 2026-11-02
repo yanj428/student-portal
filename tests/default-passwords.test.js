@@ -91,3 +91,14 @@ test('an admin with an email username signs in on the student site with their ad
   const list = await admin.get('/api/admin/students');
   assert.equal(list.body.students.filter((s) => s.email === 'site.admin@kpis.ac.th').length, 1);
 });
+
+test('the admin goal picker lists all 17 goals, each with a badge picture', async () => {
+  const admin = request.agent(app);
+  await admin.post('/api/admin/login').send({ username: 'admin', password: 'test-admin-pw' });
+  const res = await admin.get('/api/admin/sdgs');
+  assert.equal(res.status, 200);
+  assert.equal(res.body.goals.length, 17);
+  assert.ok(res.body.goals.every((g) => g.url), 'every goal has a picture');
+  assert.equal(res.body.goals[2].name, 'Good Health and Well-being');
+  assert.equal((await request(app).get('/api/admin/sdgs')).status, 401);
+});

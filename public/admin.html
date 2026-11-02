@@ -198,7 +198,7 @@
             <div class="form-field">
               <label class="field-label" for="nickname">Nickname (optional)</label>
               <input class="field-input" type="text" id="nickname" placeholder="e.g. Tim" maxlength="60" />
-              <p class="field-hint">Shown in brackets, like Kittichet Somchai (Tim) Maklin.</p>
+              <p class="field-hint">Shown in brackets, like Kittichet (Tim) Maklin.</p>
             </div>
           </div>
 
@@ -484,7 +484,7 @@
             <button type="button" class="step on" data-go="1">1 Basics</button>
             <button type="button" class="step" data-go="2">2 People</button>
             <button type="button" class="step" data-go="3">3 Meetings</button>
-            <button type="button" class="step" data-go="4">4 Extras</button>
+            <button type="button" class="step" data-go="4">4 Goals &amp; logo</button>
           </div>
 
           <div class="form-step" data-step="1">
@@ -564,8 +564,11 @@
               <textarea class="field-input" id="club-goals" rows="3" placeholder="What the club aims to achieve"></textarea>
             </div>
             <div class="form-field">
-              <label class="field-label" for="club-sdgs">UN SDG goals (optional)</label>
-              <input class="field-input" type="text" id="club-sdgs" placeholder="Goal numbers, separated by commas, e.g. 4, 9" />
+              <label class="field-label">UN Sustainable Development Goals (optional)</label>
+              <p class="field-help">Click every goal the club supports. A club can have more than one.</p>
+              <input type="hidden" id="club-sdgs" />
+              <div class="sdg-picker" id="club-sdg-picker"></div>
+              <p class="field-help" id="club-sdg-summary"></p>
             </div>
           </div>
 
@@ -836,12 +839,13 @@
       </section>
 
       <section class="admin-page-section" data-section="security" hidden>
+      <div class="security-grid">
       <section class="panel">
         <div class="panel-header">
           <h2>Locked accounts</h2>
           <button type="button" class="btn ghost" id="security-unlock-all">Unlock all</button>
         </div>
-        <p class="panel-hint">Includes both automatic timed lockouts (too many failed passwords) and accounts an admin locked manually.</p>
+        <p class="panel-hint">Automatic lockouts (too many wrong passwords) and accounts an admin locked.</p>
 
         <div class="simple-list" id="security-locked-list">
           <p class="empty-hint" id="security-locked-empty">No accounts are currently locked.</p>
@@ -849,8 +853,20 @@
       </section>
 
       <section class="panel">
+        <div class="panel-header">
+          <h2>Admin accounts</h2>
+          <span class="count-badge" id="admin-count">0</span>
+        </div>
+        <p class="panel-hint">Owners can change roles and remove admins; editors manage students and content only.</p>
+
+        <div class="simple-list" id="admin-list">
+          <p class="empty-hint" id="admin-list-empty">No admin accounts yet.</p>
+        </div>
+      </section>
+
+      <section class="panel">
         <h2>Login attempts</h2>
-        <p class="panel-hint">Every login attempt, successful or not, kept for 90 days.</p>
+        <p class="panel-hint">Every attempt, kept for 90 days.</p>
 
         <form id="security-attempts-filter-form" class="archive-form">
           <div class="form-row">
@@ -882,20 +898,8 @@
       </section>
 
       <section class="panel">
-        <div class="panel-header">
-          <h2>Admin accounts</h2>
-          <span class="count-badge" id="admin-count">0</span>
-        </div>
-        <p class="panel-hint">Owners can change roles, remove admin accounts and see this Security tab; editors manage students and content only. New admin accounts cannot be created here.</p>
-
-        <div class="simple-list" id="admin-list">
-          <p class="empty-hint" id="admin-list-empty">No admin accounts yet.</p>
-        </div>
-      </section>
-
-      <section class="panel">
         <h2>Audit log</h2>
-        <p class="panel-hint">Security-relevant admin actions: student and admin account changes, unlocks.</p>
+        <p class="panel-hint">Account changes and unlocks made by admins.</p>
         <div class="table-wrap">
           <table>
             <thead>
@@ -912,6 +916,7 @@
           </table>
         </div>
       </section>
+      </div>
       </section>
 
       </main>

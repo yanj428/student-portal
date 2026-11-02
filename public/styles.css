@@ -720,7 +720,8 @@ html, body {
 
 /* ---- Phone navigation: bottom bar + More sheet (the sidebar strip is hidden) ---- */
 .tabbar, .more-sheet, .more-backdrop { display: none; }
-@media (max-width: 700px) {
+/* Wherever the sidebar is gone (tablets included), the phone layout takes over */
+@media (max-width: 1170px) {
   .tabbar[hidden], .more-sheet[hidden], .more-backdrop[hidden] { display: none; }
   .app { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
   .sidebar { padding: 12px 16px; }
@@ -784,6 +785,7 @@ html, body {
     border-radius: 22px 22px 0 0;
     padding: 10px 16px calc(18px + env(safe-area-inset-bottom, 0px));
   }
+  .more-sheet { max-width: 560px; margin: 0 auto; }
   .more-grab { width: 38px; height: 4px; border-radius: 2px; background: #cfcfcf; margin: 0 auto 12px; }
   .more-group { font-size: 13px; font-weight: 600; color: var(--text-muted); margin: 10px 2px 8px; }
   .more-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }

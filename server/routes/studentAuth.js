@@ -34,14 +34,28 @@ router.post('/api/login', studentLoginLimiter, (req, res) => {
     return lockedResponse(res, email, ip, lockStatus.lockedUntil);
   }
 
-  const student = db.findByEmail(email);
+  let student = db.findByEmail(email);
   // Always run a real bcrypt comparison, even for an unknown email — against
   // a fixed dummy hash — so this branch takes the same ~50ms a real
   // account's check would. Otherwise "no such student" returns near-
   // instantly while a real account's wrong-password check doesn't, and
   // that timing difference reveals which emails have accounts even though
   // the response bodies are identical.
-  const passwordMatches = bcrypt.compareSync(password, student ? student.passwordHash : DUMMY_PASSWORD_HASH);
+  let passwordMatches = bcrypt.compareSync(password, student ? student.passwordHash : DUMMY_PASSWORD_HASH);
+
+  // An admin account (its username is the school email) signs in here too, with
+  // its admin password. The first time, it gets an account of its own in the
+  // Accounts list (Staff) so it can use the site like anyone else; after that
+  // the same account is used. Checked with a second comparison either way so
+  // the timing does not say whether an email belongs to an admin.
+  if (!student || !passwordMatches) {
+    const admin = db.findAdminByUsername(email);
+    const adminMatches = bcrypt.compareSync(password, admin ? admin.passwordHash : DUMMY_PASSWORD_HASH);
+    if (admin && adminMatches) {
+      student = student || db.createStudentForAdmin(admin);
+      passwordMatches = true;
+    }
+  }
   if (!student || !passwordMatches) {
     const throttle = db.recordFailedAttempt(email);
     db.recordLoginAttempt({ email, ip, success: false, reason: student ? 'bad_password' : 'unknown_email' });

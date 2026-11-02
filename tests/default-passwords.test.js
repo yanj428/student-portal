@@ -71,3 +71,23 @@ test('resetAdminPassword sets a temporary password that must be changed', () => 
   const after = db.findAdminByUsername ? db.findAdminByUsername('reset.admin@kpis.ac.th') : null;
   if (after) assert.equal(!!after.mustChangePassword, true);
 });
+test('an admin with an email username signs in on the student site with their admin password', async () => {
+  const bcrypt = require('bcryptjs');
+  db.createAdmin({ username: 'site.admin@kpis.ac.th', passwordHash: bcrypt.hashSync('admin-pass-123', 10), role: 'editor' });
+  const wrong = await request(app).post('/api/login').send({ email: 'site.admin@kpis.ac.th', password: 'nope-nope-1' });
+  assert.equal(wrong.status, 401);
+
+  const agent = request.agent(app);
+  const first = await agent.post('/api/login').send({ email: 'site.admin@kpis.ac.th', password: 'admin-pass-123' });
+  assert.equal(first.status, 200, JSON.stringify(first.body));
+  assert.equal(first.body.student.grade, 'Staff');
+  assert.equal(first.body.student.fullName.trim(), 'Site Admin');
+  assert.equal((await agent.get('/api/me')).status, 200);
+
+  const again = await request(app).post('/api/login').send({ email: 'site.admin@kpis.ac.th', password: 'admin-pass-123' });
+  assert.equal(again.status, 200);
+  const admin = request.agent(app);
+  await admin.post('/api/admin/login').send({ username: 'admin', password: 'test-admin-pw' });
+  const list = await admin.get('/api/admin/students');
+  assert.equal(list.body.students.filter((s) => s.email === 'site.admin@kpis.ac.th').length, 1);
+});

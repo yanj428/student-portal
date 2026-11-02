@@ -619,6 +619,25 @@ module.exports = {
   findAdminById(id) {
     return db.prepare('SELECT * FROM admins WHERE id = ?').get(id) || null;
   },
+  // The account an admin uses on the student site, made the first time they sign in
+  // there with their admin password. It is a Staff account named from the email
+  // (joel.gar@... -> Joel Gar), which the Accounts page can edit. Only admins whose
+  // username is an email can have one.
+  createStudentForAdmin(admin) {
+    if (!admin.username.includes('@')) return null;
+    const [first, ...rest] = admin.username.split('@')[0].split(/[._-]+/).filter(Boolean);
+    const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
+    return addStudent({
+      id: crypto.randomUUID(),
+      firstName: cap(first) || 'Admin',
+      lastName: rest.map(cap).join(' ') || 'Admin',
+      email: admin.username.trim().toLowerCase(),
+      grade: 'Staff',
+      passwordHash: admin.passwordHash,
+      mustChangePassword: false,
+      createdAt: new Date().toISOString(),
+    });
+  },
   listAdmins() {
     return db.prepare('SELECT id, username, role, createdAt FROM admins ORDER BY createdAt').all();
   },

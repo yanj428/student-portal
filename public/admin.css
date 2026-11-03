@@ -1063,21 +1063,36 @@ body.ec-dragging, body.ec-dragging * { cursor: grabbing !important; }
 .step-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .step-actions [hidden] { display: none; }
 
-/* ---- Security: two columns, and long lists scroll inside their own box ---- */
-.security-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
-@media (min-width: 960px) { .security-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.security-grid .panel { margin: 0; padding: 16px 18px; }
-.security-grid .panel h2 { font-size: 18px; margin: 0; }
-.security-grid .panel-header { margin: 0; }
-.security-grid .panel-hint { font-size: 14px; margin: 4px 0 12px; line-height: 1.4; }
-.security-grid .simple-list { max-height: 260px; overflow-y: auto; }
-.security-grid .table-wrap { max-height: 260px; overflow: auto; }
-.security-grid thead th { position: sticky; top: 0; background: var(--surface, #fff); z-index: 1; }
-.security-grid table { font-size: 14px; }
-.security-grid td, .security-grid th { padding: 8px 10px; }
-#security-attempts-filter-form { display: flex; align-items: flex-end; gap: 10px; margin: 0 0 12px; }
-#security-attempts-filter-form .form-row { flex: 1; margin: 0; }
-#security-attempts-filter-form .form-actions { margin: 0; }
+/* ---- Security: a status row, then one table at a time under tabs ---- */
+.sec-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.sec-top > .btn[hidden] { display: none; }
+.sec-stats { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.sec-stat { padding: 14px 18px; border: 1.3px solid var(--border); border-radius: 16px; background: var(--surface, #fff); display: flex; flex-direction: column; gap: 2px; }
+.sec-stat span { font-size: 14px; color: var(--text-muted); }
+.sec-stat b { font-size: 28px; line-height: 1.15; }
+.sec-stat small { font-size: 13px; color: var(--text-muted); }
+.sec-stat small.warn { color: #C0392B; font-weight: 700; }
+.sec-tabs { display: flex; gap: 4px; margin-bottom: 14px; border-bottom: 1.3px solid var(--border); overflow-x: auto; }
+.sec-tab { padding: 10px 16px; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1.3px; background: none; font: inherit; font-size: 15.5px; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+.sec-tab.on { color: var(--primary); border-color: var(--primary); font-weight: 700; }
+.sec-pane { margin: 0; padding: 16px 18px; }
+.sec-pane[hidden] { display: none; }
+.sec-pane .panel-hint { font-size: 14px; margin: 0 0 12px; }
+.sec-bar { display: flex; gap: 10px; margin: 0 0 8px; }
+.sec-bar .field-input { flex: 1; }
+.sec-bar .btn.on { background: var(--primary-tint); border-color: var(--primary-light); color: var(--primary); }
+.sec-pane table { font-size: 15px; }
+.sec-pane td, .sec-pane th { padding: 11px 10px; }
+.sec-pane th { font-size: 12.5px; }
+.muted-cell { color: var(--text-muted); white-space: nowrap; }
+.sec-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; padding-top: 12px; border-top: 1.3px solid var(--border); font-size: 14px; color: var(--text-muted); }
+.sec-foot .btn[hidden] { display: none; }
+@media (max-width: 700px) {
+  .sec-top { flex-direction: column; }
+  .sec-stats { width: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .sec-stat { padding: 10px 12px; }
+  .sec-stat b { font-size: 22px; }
+}
 
 /* ---- Clubs: the UN goal picker ---- */
 .field-help { font-size: 14px; color: var(--text-muted); margin: 4px 0 8px; }

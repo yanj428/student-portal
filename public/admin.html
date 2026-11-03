@@ -839,84 +839,63 @@
       </section>
 
       <section class="admin-page-section" data-section="security" hidden>
-      <div class="security-grid">
-      <section class="panel">
-        <div class="panel-header">
-          <h2>Locked accounts</h2>
-          <button type="button" class="btn ghost" id="security-unlock-all">Unlock all</button>
+      <div class="sec-top">
+        <div class="sec-stats">
+          <div class="sec-stat"><span>Locked accounts</span><b id="sec-stat-locked">0</b><small id="sec-stat-locked-note">All clear</small></div>
+          <div class="sec-stat"><span>Failed sign-ins today</span><b id="sec-stat-failed">0</b><small>Last 24 hours</small></div>
+          <div class="sec-stat"><span>Admins</span><b id="sec-stat-admins">0</b><small id="sec-stat-admins-note"></small></div>
         </div>
-        <p class="panel-hint">Automatic lockouts (too many wrong passwords) and accounts an admin locked.</p>
+        <button type="button" class="btn ghost" id="security-unlock-all">Unlock all</button>
+      </div>
 
-        <div class="simple-list" id="security-locked-list">
-          <p class="empty-hint" id="security-locked-empty">No accounts are currently locked.</p>
-        </div>
-      </section>
+      <div class="sec-tabs" role="tablist">
+        <button type="button" class="sec-tab on" role="tab" data-pane="attempts">Login attempts</button>
+        <button type="button" class="sec-tab" role="tab" data-pane="audit">Audit log</button>
+        <button type="button" class="sec-tab" role="tab" data-pane="admins">Admins <span class="count-badge" id="admin-count">0</span></button>
+        <button type="button" class="sec-tab" role="tab" data-pane="locked">Locked <span class="count-badge" id="sec-locked-count">0</span></button>
+      </div>
 
-      <section class="panel">
-        <div class="panel-header">
-          <h2>Admin accounts</h2>
-          <span class="count-badge" id="admin-count">0</span>
-        </div>
-        <p class="panel-hint">Owners can change roles and remove admins; editors manage students and content only.</p>
-
-        <div class="simple-list" id="admin-list">
-          <p class="empty-hint" id="admin-list-empty">No admin accounts yet.</p>
-        </div>
-      </section>
-
-      <section class="panel">
-        <h2>Login attempts</h2>
-        <p class="panel-hint">Every attempt, kept for 90 days.</p>
-
-        <form id="security-attempts-filter-form" class="archive-form">
-          <div class="form-row">
-            <div class="form-field">
-              <label class="field-label" for="security-attempts-filter">Filter by email</label>
-              <input class="field-input" type="text" id="security-attempts-filter" placeholder="student@kpis.ac.th" />
-            </div>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn primary">Filter</button>
-          </div>
+      <section class="panel sec-pane" data-pane="attempts">
+        <form id="security-attempts-filter-form" class="sec-bar">
+          <input class="field-input" type="search" id="security-attempts-filter" placeholder="Search by email" aria-label="Search by email" />
+          <button type="button" class="btn ghost" id="security-failed-only" aria-pressed="false">Failed only</button>
         </form>
-
         <div class="table-wrap">
           <table>
-            <thead>
-              <tr>
-                <th>Email</th>
-                <th>IP address</th>
-                <th>Result</th>
-                <th>Time</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Time</th><th>Email</th><th>Result</th><th>IP address</th></tr></thead>
             <tbody id="security-attempts-body">
               <tr class="empty-row"><td colspan="4">No login attempts recorded yet.</td></tr>
             </tbody>
           </table>
         </div>
+        <div class="sec-foot"><span id="security-attempts-count">Kept for 90 days</span><button type="button" class="btn ghost" id="security-attempts-more" hidden>Show more</button></div>
       </section>
 
-      <section class="panel">
-        <h2>Audit log</h2>
-        <p class="panel-hint">Account changes and unlocks made by admins.</p>
+      <section class="panel sec-pane" data-pane="audit" hidden>
         <div class="table-wrap">
           <table>
-            <thead>
-              <tr>
-                <th>Admin</th>
-                <th>Action</th>
-                <th>Details</th>
-                <th>Time</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Time</th><th>Admin</th><th>What happened</th></tr></thead>
             <tbody id="audit-log-body">
-              <tr class="empty-row"><td colspan="4">No audit log entries yet.</td></tr>
+              <tr class="empty-row"><td colspan="3">No audit log entries yet.</td></tr>
             </tbody>
           </table>
         </div>
+        <div class="sec-foot"><span id="audit-log-count">Changes and unlocks made by admins</span><button type="button" class="btn ghost" id="audit-log-more" hidden>Show more</button></div>
       </section>
-      </div>
+
+      <section class="panel sec-pane" data-pane="admins" hidden>
+        <p class="panel-hint">Owners can change roles and remove admins; editors manage students and content only.</p>
+        <div class="simple-list" id="admin-list">
+          <p class="empty-hint" id="admin-list-empty">No admin accounts yet.</p>
+        </div>
+      </section>
+
+      <section class="panel sec-pane" data-pane="locked" hidden>
+        <p class="panel-hint">Automatic lockouts (too many wrong passwords) and accounts an admin locked.</p>
+        <div class="simple-list" id="security-locked-list">
+          <p class="empty-hint" id="security-locked-empty">No accounts are currently locked.</p>
+        </div>
+      </section>
       </section>
 
       </main>

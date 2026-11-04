@@ -33,7 +33,14 @@ async function guardExpiredSession(res) {
   if (res.status === 401) {
     try {
       const session = await (await fetch('/api/admin/session')).json();
-      if (!session.isAdmin) window.location.reload();
+      // At most one reload every 10 seconds, so a request that keeps failing can never
+      // turn into a page that refreshes nonstop.
+      let last = 0;
+      try { last = Number(sessionStorage.getItem('adminReloadAt')) || 0; } catch { /* storage blocked */ }
+      if (!session.isAdmin && Date.now() - last > 10000) {
+        try { sessionStorage.setItem('adminReloadAt', String(Date.now())); } catch { /* storage blocked */ }
+        window.location.reload();
+      }
     } catch {
       // Offline: leave the panel as is.
     }

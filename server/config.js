@@ -49,8 +49,8 @@ const LOGIN_ATTEMPT_LOG_RETENTION_DAYS = parseInt(process.env.LOGIN_ATTEMPT_LOG_
 // with rolling:true); "absolute" is a hard cap tracked separately via
 // session.loginAt, since express-session's cookie maxAge alone can't express
 // "logged out 8 hours after login no matter what you do in between."
-const STUDENT_SESSION_IDLE_MINUTES = parseFloat(process.env.STUDENT_SESSION_IDLE_MINUTES) || 120;
-const STUDENT_SESSION_ABSOLUTE_MINUTES = parseFloat(process.env.STUDENT_SESSION_ABSOLUTE_MINUTES) || 480;
+const STUDENT_SESSION_IDLE_MINUTES = parseFloat(process.env.STUDENT_SESSION_IDLE_MINUTES) || 43200; // 30 days: sign in once per device
+const STUDENT_SESSION_ABSOLUTE_MINUTES = parseFloat(process.env.STUDENT_SESSION_ABSOLUTE_MINUTES) || 43200; // 30 days
 const ADMIN_SESSION_IDLE_MINUTES = parseFloat(process.env.ADMIN_SESSION_IDLE_MINUTES) || 1440; // 24 hours
 const ADMIN_SESSION_ABSOLUTE_MINUTES = parseFloat(process.env.ADMIN_SESSION_ABSOLUTE_MINUTES) || 43200; // 30 days
 

@@ -78,7 +78,11 @@ sdgPicker.addEventListener('click', (e) => {
   const chosen = chosenSdgs();
   setSdgs(chosen.includes(n) ? chosen.filter((x) => x !== n) : [...chosen, n]);
 });
-getJSON('/api/admin/sdgs').then((data) => {
+// Fetched after sign-in (from loadClubs), never at page load: an admin-only request made
+// before the login gate is answered would get a 401 and reload the page again and again.
+async function loadSdgTiles() {
+  if (sdgGoals.length) return;
+  const data = await getJSON('/api/admin/sdgs');
   if (!data) return;
   sdgGoals = data.goals;
   sdgPicker.innerHTML = sdgGoals.map((g) => `
@@ -87,7 +91,7 @@ getJSON('/api/admin/sdgs').then((data) => {
       <span class="sdg-tick" aria-hidden="true">&#10003;</span>
     </button>`).join('');
   paintSdgs();
-});
+}
 
 // ---- The form is four short steps; Save works on any of them ----
 const form = document.getElementById('club-form');
@@ -238,6 +242,7 @@ typeSwitch.forEach((btn) => btn.addEventListener('click', () => {
 searchInput.addEventListener('input', renderClubs);
 
 export async function loadClubs() {
+  loadSdgTiles();
   const data = await getJSON('/api/admin/clubs');
   if (!data) return;
   allClubs = data.clubs;

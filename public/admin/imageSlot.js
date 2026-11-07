@@ -1,4 +1,5 @@
 import { getJSON, sendForm, del, withBusy } from './api.js';
+import { pdfToImage } from './pdfToImage.js';
 
 // A "current picture, remove it, upload a new one" panel. The lunch menu and the
 // school year calendar picture are the same panel with different ids and
@@ -50,7 +51,18 @@ export function imageSlot({ ids, endpoint, contentKey, labelField, emptyLabel, n
       try {
         const formData = new FormData();
         formData.append(labelField, el.labelInput.value.trim());
-        formData.append('image', el.fileInput.files[0]);
+        let file = el.fileInput.files[0];
+        // A PDF is turned into a picture first, so every device can show it.
+        if (el.pdfLink && file && (file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+          try {
+            file = await pdfToImage(file);
+          } catch {
+            el.error.textContent = 'Could not read that PDF. Try a different file, or upload a picture of the menu.';
+            el.error.hidden = false;
+            return;
+          }
+        }
+        formData.append('image', file);
 
         const { ok, data } = await sendForm(endpoint, 'POST', formData);
         if (!ok) {

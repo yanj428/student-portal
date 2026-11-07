@@ -121,6 +121,8 @@ app.use('/uploads', (req, res, next) => {
   next();
 });
 app.use('/uploads', express.static(UPLOADS_DIR));
+// The admin page uses this to turn an uploaded PDF menu into a picture.
+app.use('/vendor/pdfjs', express.static(path.join(__dirname, '..', 'node_modules', 'pdfjs-dist')));
 app.use(express.static(PUBLIC_DIR, { extensions: ['html'] }));
 
 // Anything nothing above answered. Pages get a proper "page not found" screen

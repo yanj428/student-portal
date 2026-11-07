@@ -21,22 +21,43 @@ router.get('/api/admin/slide-archive', requireAdmin, listSlides);
 // Registered before /:id so "reorder" can never be mistaken for a slide id.
 router.put('/api/admin/slide-archive/reorder', requireAdmin, reorderRoute({ read: db.readSlideArchive, write: db.writeSlideArchive, key: 'slides', publicFn: publicSlide, noun: 'archived slides' }));
 
-router.post('/api/admin/slide-archive', requireAdmin, (req, res) => {
-  const { weekLabel, canvaEmbedUrl } = req.body || {};
+function readSlideFields(body) {
+  const { weekLabel, canvaEmbedUrl } = body || {};
   if (typeof weekLabel !== 'string' || !weekLabel.trim()) {
-    return res.status(400).json({ error: 'Week label is required.' });
+    return { error: 'Week label is required.' };
   }
   if (typeof canvaEmbedUrl !== 'string' || !canvaEmbedUrl.trim()) {
-    return res.status(400).json({ error: 'Canva link is required.' });
+    return { error: 'Canva link is required.' };
   }
   const urlError = validateOptionalUrl(canvaEmbedUrl, { fieldName: 'Canva link', allowedHosts: ['canva.com', 'canva.link'] });
-  if (urlError) return res.status(400).json({ error: urlError });
+  if (urlError) return { error: urlError };
+  return { weekLabel: weekLabel.trim(), canvaEmbedUrl: normalizeUrl(canvaEmbedUrl) };
+}
+
+// Changes an archived slide's label or link; its place in the list and archive date stay.
+router.put('/api/admin/slide-archive/:id', requireAdmin, (req, res) => {
+  const { weekLabel, canvaEmbedUrl, error } = readSlideFields(req.body);
+  if (error) return res.status(400).json({ error });
+
+  const slides = db.readSlideArchive();
+  const slide = slides.find((s) => s.id === req.params.id);
+  if (!slide) return res.status(404).json({ error: 'Slide not found.' });
+  slide.weekLabel = weekLabel;
+  slide.canvaEmbedUrl = canvaEmbedUrl;
+  db.writeSlideArchive(slides);
+
+  res.json({ slide: publicSlide(slide) });
+});
+
+router.post('/api/admin/slide-archive', requireAdmin, (req, res) => {
+  const { weekLabel, canvaEmbedUrl, error } = readSlideFields(req.body);
+  if (error) return res.status(400).json({ error });
 
   const slides = db.readSlideArchive();
   const slide = {
     id: crypto.randomUUID(),
-    weekLabel: weekLabel.trim(),
-    canvaEmbedUrl: normalizeUrl(canvaEmbedUrl),
+    weekLabel,
+    canvaEmbedUrl,
     archivedAt: new Date().toISOString(),
   };
   slides.unshift(slide);

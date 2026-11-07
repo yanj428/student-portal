@@ -1,4 +1,5 @@
-import { escapeHtml, getJSON, sendJSON, confirmDelete, withBusy, TRASH_ICON } from './api.js';
+import { escapeHtml, getJSON, sendJSON, withBusy, TRASH_ICON } from './api.js';
+import { crudPanel } from './crud.js';
 import { enableReorder } from './reorder.js';
 
 // ---- This week's slide ----
@@ -159,11 +160,9 @@ export async function loadSlideArchive() {
       <td>${escapeHtml(slide.weekLabel)}</td>
       <td><a href="${escapeHtml(slide.canvaEmbedUrl)}" target="_blank" rel="noopener">View</a></td>
       <td>${archived}</td>
-      <td><button class="delete-btn" aria-label="Remove from archive">${TRASH_ICON}</button></td>
+      <td class="row-actions"><button class="edit-btn" aria-label="Edit">Edit</button><button class="delete-btn" aria-label="Remove from archive">${TRASH_ICON}</button></td>
     `;
-    tr.querySelector('.delete-btn').addEventListener('click', () =>
-      confirmDelete(`/api/admin/slide-archive/${slide.id}`, 'Remove this slide from the archive?', loadSlideArchive)
-    );
+    archivePanel.bindRow(tr, slide, 'Remove this slide from the archive?');
     enableReorder(tr.querySelector('.drag-handle'), archiveRows, {
       url: '/api/admin/slide-archive/reorder',
       reload: loadSlideArchive,
@@ -173,26 +172,22 @@ export async function loadSlideArchive() {
   });
 }
 
-archiveForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  archiveError.hidden = true;
-
-  withBusy(archiveSubmit, 'Adding…', async () => {
-    try {
-      const { ok, data } = await sendJSON('/api/admin/slide-archive', 'POST', {
-        weekLabel: archiveWeekLabelInput.value.trim(),
-        canvaEmbedUrl: archiveEmbedUrlInput.value.trim(),
-      });
-      if (!ok) {
-        archiveError.textContent = data.error || 'Could not add to archive.';
-        archiveError.hidden = false;
-        return;
-      }
-      archiveForm.reset();
-      loadSlideArchive();
-    } catch {
-      archiveError.textContent = 'Could not reach the server. Please try again.';
-      archiveError.hidden = false;
-    }
-  });
+// Adding and editing share the form above; Edit on a row fills it and the button becomes "Save changes".
+const archivePanel = crudPanel({
+  form: archiveForm,
+  submitBtn: archiveSubmit,
+  cancelBtn: document.getElementById('archive-cancel-edit'),
+  errorEl: archiveError,
+  endpoint: '/api/admin/slide-archive',
+  addLabel: 'Add to archive',
+  saveError: 'Could not save the slide.',
+  readPayload: () => ({
+    weekLabel: archiveWeekLabelInput.value.trim(),
+    canvaEmbedUrl: archiveEmbedUrlInput.value.trim(),
+  }),
+  fill: (slide) => {
+    archiveWeekLabelInput.value = slide.weekLabel;
+    archiveEmbedUrlInput.value = slide.canvaEmbedUrl;
+  },
+  reload: () => loadSlideArchive(),
 });

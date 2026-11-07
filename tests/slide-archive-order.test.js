@@ -67,3 +67,28 @@ test('reordering the archive requires an admin login', async () => {
   const res = await request(app).put('/api/admin/slide-archive/reorder').send({ orderedIds: [] });
   assert.equal(res.status, 401);
 });
+
+test('the admin can edit an archived slide and it keeps its place in the list', async () => {
+  const admin = await loginAsAdmin();
+  const id = await addSlide(admin, 'Typo wek');
+  const before = await labels(admin);
+
+  const res = await admin.put(`/api/admin/slide-archive/${id}`).send({ weekLabel: 'Fixed week', canvaEmbedUrl: 'https://www.canva.com/design/DAFnew/view' });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.slide.weekLabel, 'Fixed week');
+
+  const after = (await admin.get('/api/admin/slide-archive')).body.slides;
+  assert.deepEqual(after.map((s) => s.weekLabel), before.map((l) => (l === 'Typo wek' ? 'Fixed week' : l)));
+  assert.equal(after.find((s) => s.id === id).canvaEmbedUrl, 'https://www.canva.com/design/DAFnew/view');
+});
+
+test('editing an archived slide rejects a blank label, a non-Canva link and an unknown slide', async () => {
+  const admin = await loginAsAdmin();
+  const id = await addSlide(admin, 'Keep me');
+  const good = 'https://www.canva.com/design/DAFtest/view';
+  assert.equal((await admin.put(`/api/admin/slide-archive/${id}`).send({ weekLabel: ' ', canvaEmbedUrl: good })).status, 400);
+  assert.equal((await admin.put(`/api/admin/slide-archive/${id}`).send({ weekLabel: 'x', canvaEmbedUrl: 'https://example.com/a' })).status, 400);
+  assert.equal((await admin.put('/api/admin/slide-archive/nope').send({ weekLabel: 'x', canvaEmbedUrl: good })).status, 404);
+  assert.ok((await labels(admin)).includes('Keep me'));
+  assert.equal((await request(app).put(`/api/admin/slide-archive/${id}`).send({ weekLabel: 'x', canvaEmbedUrl: good })).status, 401);
+});

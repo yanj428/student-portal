@@ -65,5 +65,9 @@
 .lunch-pdf[hidden] { display: none; }
 .lunch-pdf-link { display: inline-block; margin-top: 12px; font-size: 15px; font-weight: 600; color: var(--primary); text-decoration: none; }
 .lunch-pdf-link:hover { text-decoration: underline; }
+/* Devices that cannot show a PDF in a frame get a plain button instead */
+.lunch-image-wrap.lunch-no-frame { display: none; }
+.lunch-pdf-button { display: block; margin-top: 4px; padding: 16px; border-radius: 14px; background: var(--primary); color: #fff; font-size: 17px; text-align: center; }
+.lunch-pdf-button:hover { text-decoration: none; background: var(--primary-dark); }
 .lunch-pdf-link[hidden] { display: none; }
 .lunch-image-wrap img[hidden] { display: none; }

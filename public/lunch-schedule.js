@@ -16,17 +16,23 @@ const isPdf = (url) => /\.pdf$/i.test(url || '');
   const schedule = data.content.lunchSchedule || {};
   const url = schedule.imageUrl;
   const showPdf = isPdf(url);
+  // Android browsers (Samsung Internet, Chrome) have no PDF viewer to put in a frame and show
+  // "page failed to connect" instead, so there the menu is a button that opens it on its own.
+  const frameWorks = showPdf && navigator.pdfViewerEnabled !== false && !/Android/i.test(navigator.userAgent);
   if (url) {
     if (showPdf) {
-      pdf.src = url;
+      if (frameWorks) pdf.src = url;
       pdfLink.href = url;
     } else {
       image.src = url;
     }
   }
   image.hidden = !url || showPdf;
-  pdf.hidden = !showPdf;
+  pdf.hidden = !frameWorks;
   pdfLink.hidden = !showPdf;
+  pdfLink.classList.toggle('lunch-pdf-button', showPdf && !frameWorks);
+  if (showPdf && !frameWorks) pdfLink.textContent = "Open this week's menu";
+  imageWrap.classList.toggle('lunch-no-frame', showPdf && !frameWorks);
   imageWrap.hidden = !url;
   empty.hidden = !!url;
 

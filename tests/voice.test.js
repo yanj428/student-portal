@@ -79,6 +79,32 @@ test('approving a suggestion never makes it visible to other students — only S
   assert.ok(adminList.body.items.some((i) => i.id === created.body.post.id));
 });
 
+test('a reason given when approving or rejecting is shown to the author, and clears when they edit', async () => {
+  const author = await createLoggedInStudent('voice.reason@kpis.ac.th');
+  const created = await author.post('/api/voice/posts').send({ title: 'Why', category: 'Suggestion', body: 'More vending machines' });
+  const id = created.body.post.id;
+  const admin = await loginAsAdmin();
+
+  assert.equal((await admin.post(`/api/admin/voice/posts/${id}/reject`).send({ reason: 'x'.repeat(501) })).status, 400);
+
+  await admin.post(`/api/admin/voice/posts/${id}/reject`).send({ reason: '  Not in the budget  ' });
+  let mine = (await author.get('/api/voice/posts')).body.posts.find((p) => p.id === id);
+  assert.equal(mine.status, 'rejected');
+  assert.equal(mine.reason, 'Not in the budget');
+  const adminItem = (await admin.get('/api/admin/voice/rejected')).body.items.find((i) => i.id === id);
+  assert.equal(adminItem.reason, 'Not in the budget');
+
+  // No reason is fine, and replaces the old one.
+  await admin.post(`/api/admin/voice/posts/${id}/approve`).send({});
+  mine = (await author.get('/api/voice/posts')).body.posts.find((p) => p.id === id);
+  assert.equal(mine.reason, '');
+
+  await admin.post(`/api/admin/voice/posts/${id}/approve`).send({ reason: 'Great idea' });
+  const edited = await author.patch(`/api/voice/posts/${id}`).send({ title: 'Why', category: 'Suggestion', body: 'Even more' });
+  assert.equal(edited.body.post.status, 'pending');
+  assert.equal(edited.body.post.reason, '');
+});
+
 test('rejecting a suggestion keeps it (status: rejected) instead of deleting it, and StuCo can approve it later', async () => {
   const author = await createLoggedInStudent('voice.rejectme@kpis.ac.th');
   const created = await author

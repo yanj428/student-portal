@@ -1,4 +1,4 @@
-import { getJSON, sendForm, del, withBusy } from './api.js';
+import { getJSON, sendForm, sendJSON, del, withBusy } from './api.js';
 import { pdfToImage } from './pdfToImage.js';
 
 // A "current picture, remove it, upload a new one" panel. The lunch menu and the
@@ -14,7 +14,7 @@ import { pdfToImage } from './pdfToImage.js';
 export function imageSlot({ ids, endpoint, contentKey, labelField, emptyLabel, noun }) {
   const el = Object.fromEntries(Object.entries(ids).map(([key, id]) => [key, document.getElementById(id)]));
 
-  function render(item) {
+  let render = function render(item) {
     el.current.hidden = !item.imageUrl;
     if (item.imageUrl) {
       const isPdf = /\.pdf$/i.test(item.imageUrl);
@@ -26,6 +26,45 @@ export function imageSlot({ ids, endpoint, contentKey, labelField, emptyLabel, n
       }
       el.label.textContent = item[labelField] || emptyLabel;
     }
+  };
+
+  // Optional: change just the label of what is already published.
+  if (el.editBtn) {
+    let currentLabel = '';
+    const showEditor = (on) => {
+      el.labelForm.hidden = !on;
+      el.editBtn.hidden = on;
+      el.labelError.hidden = true;
+      if (on) {
+        el.editInput.value = currentLabel;
+        el.editInput.focus();
+      }
+    };
+    const baseRender = render;
+    render = (item) => {
+      currentLabel = item[labelField] || '';
+      showEditor(false);
+      baseRender(item);
+    };
+    el.editBtn.addEventListener('click', () => showEditor(true));
+    el.labelCancel.addEventListener('click', () => showEditor(false));
+    el.labelForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      withBusy(el.labelSave, 'Savingâ€¦', async () => {
+        try {
+          const { ok, data } = await sendJSON(endpoint, 'PUT', { [labelField]: el.editInput.value.trim() });
+          if (!ok) {
+            el.labelError.textContent = data.error || `Could not save the label.`;
+            el.labelError.hidden = false;
+            return;
+          }
+          render(data[contentKey]);
+        } catch {
+          el.labelError.textContent = 'Could not reach the server. Please try again.';
+          el.labelError.hidden = false;
+        }
+      });
+    });
   }
 
   el.removeBtn.addEventListener('click', async () => {
@@ -47,7 +86,7 @@ export function imageSlot({ ids, endpoint, contentKey, labelField, emptyLabel, n
     e.preventDefault();
     el.error.hidden = true;
 
-    withBusy(el.submit, 'Uploading…', async () => {
+    withBusy(el.submit, 'Uploadingâ€¦', async () => {
       try {
         const formData = new FormData();
         formData.append(labelField, el.labelInput.value.trim());

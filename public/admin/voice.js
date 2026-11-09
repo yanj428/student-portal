@@ -85,6 +85,9 @@ function renderSection(status) {
       <div class="mod-item-details" ${isOpen ? '' : 'hidden'}>
         <div class="mod-item-meta">${escapeHtml(item.authorGrade)} &middot; Sent ${formatDate(item.createdAt)}</div>
         <p class="mod-item-body">${escapeHtml(item.body)}</p>
+        ${item.status !== 'pending' && item.reason ? `<p class="mod-item-meta">Reason given: ${escapeHtml(item.reason)}</p>` : ''}
+        <label class="field-label">Reason (optional, the student will see it)</label>
+        <textarea class="field-input mod-reason" rows="2" maxlength="500" placeholder="e.g. Great idea, we will try this in term 2">${escapeHtml(item.reason || '')}</textarea>
         <div class="mod-item-actions">
           ${status !== 'approved' ? '<button class="btn primary approve-btn">Approve</button>' : ''}
           ${status !== 'rejected' ? '<button class="btn reject reject-btn">Reject</button>' : ''}
@@ -109,7 +112,7 @@ function renderSection(status) {
         e.stopPropagation();
         withBusy(button, 'Saving…', async () => {
           try {
-            const { ok, data } = await sendJSON(`/api/admin/voice/posts/${item.id}/${action}`, 'POST', {});
+            const { ok, data } = await sendJSON(`/api/admin/voice/posts/${item.id}/${action}`, 'POST', { reason: div.querySelector('.mod-reason').value.trim() });
             if (!ok) alert(data.error || 'Could not update this suggestion.');
           } catch {
             alert('Could not reach the server. Please try again.');

@@ -87,6 +87,7 @@ function renderPost(post) {
         <span class="status-badge status-${escapeHtml(post.status)}">${escapeHtml(STATUS_LABEL[post.status] || post.status)}</span>
       </div>
       <p class="post-body">${escapeHtml(post.body)}</p>
+      ${post.reason && post.status !== 'pending' ? `<p class="post-reason"><strong>Reply from StuCo:</strong> ${escapeHtml(post.reason)}</p>` : ''}
       <div class="post-actions">
         <button class="post-action edit-btn" data-post-id="${escapeHtml(post.id)}">Edit</button>
         <button class="post-action post-action-danger delete-btn" data-post-id="${escapeHtml(post.id)}">Delete</button>

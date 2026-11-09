@@ -10,6 +10,7 @@ const router = express.Router();
 
 const VOICE_BODY_MAX = 2000;
 const VOICE_TITLE_MAX = 120;
+const VOICE_REASON_MAX = 500;
 const VOICE_CATEGORIES = ['Suggestion', 'Concern', 'Question', 'Shoutout', 'Other'];
 
 // Suggestions are never shared between students - only the author (their
@@ -23,6 +24,7 @@ function publicPost(post) {
     body: post.body,
     createdAt: post.createdAt,
     status: post.status,
+    reason: post.status === 'pending' ? '' : post.reason || '',
   };
 }
 
@@ -36,6 +38,7 @@ function adminPost(post) {
     body: post.body,
     createdAt: post.createdAt,
     status: post.status,
+    reason: post.reason || '',
   };
 }
 
@@ -110,6 +113,7 @@ router.patch('/api/voice/posts/:id', requireActiveStudent, voicePostLimiter, (re
   post.category = category;
   post.body = body.trim();
   post.status = 'pending';
+  post.reason = '';
   db.writeVoicePosts(posts);
 
   res.json({ post: publicPost(post) });
@@ -144,7 +148,13 @@ for (const [action, status] of [['approve', 'approved'], ['reject', 'rejected']]
     const posts = db.readVoicePosts();
     const post = posts.find((p) => p.id === req.params.id);
     if (!post) return res.status(404).json({ error: 'Suggestion not found.' });
+    // An optional note the student sees next to the decision.
+    const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim() : '';
+    if (reason.length > VOICE_REASON_MAX) {
+      return res.status(400).json({ error: `The reason is too long (max ${VOICE_REASON_MAX} characters).` });
+    }
     post.status = status;
+    post.reason = reason;
     db.writeVoicePosts(posts);
     res.json({ ok: true });
   });

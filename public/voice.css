@@ -174,3 +174,5 @@
   .voice-cats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .composer { padding: 16px; }
 }
+/* StuCo's note about a decision */
+.post-reason { margin: 10px 0 0; padding: 10px 12px; border-radius: 10px; background: #FAF7F6; font-size: 14px; line-height: 1.45; }

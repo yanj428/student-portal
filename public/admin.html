@@ -277,19 +277,18 @@
           <img id="lunch-current-image" alt="Current lunch schedule" />
           <a class="btn ghost" id="lunch-current-pdf" href="#" target="_blank" rel="noopener" hidden>View the PDF menu</a>
           <div class="current-image-info">
-            <span id="lunch-current-label"></span>
-            <button type="button" class="btn ghost" id="lunch-edit-label-btn">Edit label</button>
+            <span class="label-inline">
+              <span id="lunch-current-label"></span>
+              <button type="button" class="label-edit-btn" id="lunch-edit-label-btn" aria-label="Edit week label" title="Edit week label">Edit</button>
+              <form id="lunch-label-form" class="label-edit-form" hidden>
+                <input class="field-input" type="text" id="lunch-label-input" maxlength="100" placeholder="e.g. Week of Sep 8" aria-label="Week label" />
+                <button type="submit" class="btn primary" id="lunch-label-save">Save</button>
+                <button type="button" class="btn ghost" id="lunch-label-cancel">Cancel</button>
+                <span class="field-error" id="lunch-label-error" hidden></span>
+              </form>
+            </span>
             <button type="button" class="btn reject" id="lunch-remove-btn">Remove</button>
           </div>
-          <form id="lunch-label-form" class="archive-form" hidden>
-            <div class="form-field">
-              <label class="field-label" for="lunch-label-input">Week label</label>
-              <input class="field-input" type="text" id="lunch-label-input" maxlength="100" placeholder="e.g. Week of Sep 8" />
-            </div>
-            <p class="field-error" id="lunch-label-error" hidden></p>
-            <button type="submit" class="btn primary" id="lunch-label-save">Save label</button>
-            <button type="button" class="btn ghost" id="lunch-label-cancel">Cancel</button>
-          </form>
         </div>
 
         <form id="lunch-upload-form" class="archive-form">

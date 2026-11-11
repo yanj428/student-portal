@@ -34,6 +34,7 @@ export function imageSlot({ ids, endpoint, contentKey, labelField, emptyLabel, n
     const showEditor = (on) => {
       el.labelForm.hidden = !on;
       el.editBtn.hidden = on;
+      el.label.hidden = on;
       el.labelError.hidden = true;
       if (on) {
         el.editInput.value = currentLabel;

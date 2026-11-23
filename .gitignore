@@ -5,3 +5,4 @@ node_modules/
 /backups/
 /uploads/
 *.log
+/data/cs-evidence/

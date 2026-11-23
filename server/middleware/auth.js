@@ -1,6 +1,7 @@
 const db = require('../db');
 const { endRole } = require('../utils/sessionRoles');
 const { fullName } = require('../utils/studentName');
+const { isCsCoordinator } = require('../utils/csHours');
 const {
   SCHOOL_DOMAIN,
   STUDENT_SESSION_ABSOLUTE_MINUTES,
@@ -122,6 +123,7 @@ function publicStudent(student) {
     createdAt: student.createdAt,
     mustChangePassword: !!student.mustChangePassword,
     locked: db.getLockStatus(student.email).locked,
+    csCoordinator: isCsCoordinator(student),
   };
 }
 

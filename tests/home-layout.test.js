@@ -180,7 +180,7 @@ test('chosen content options are saved and drawn: tiles and the banner', async (
   assert.ok(!html.includes('home-hero-actions'), 'no buttons in the banner');
   assert.deepEqual(fromPage(html, 'events'), { count: 6, showSubtitle: true });
   assert.deepEqual(fromPage(html, 'clubs'), { ...DEFAULT_SETTINGS.clubs, type: 'after-school', count: 8 });
-  assert.deepEqual(fromPage(html, 'service'), { count: 2, showDescription: true });
+  assert.deepEqual(fromPage(html, 'service'), { count: 2, showDescription: true, showHours: true });
 });
 
 test('saving without content options keeps the ones already saved', async () => {

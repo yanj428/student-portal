@@ -35,7 +35,7 @@ const DEFAULT_SETTINGS = {
   jump: { tiles: ['announcements', 'lunch', 'calendar', 'clubs', 'voice', 'links'] }, // in the order shown
   events: { count: 3, showSubtitle: true },
   clubs: { type: 'all', count: 5, showNames: true, showMore: true, order: [] },
-  service: { count: 3, showDescription: true },
+  service: { count: 3, showDescription: true, showHours: true }, // showHours: the Grade 9-12 hours progress at the top
   links: { ids: null, order: [] }, // ids: null = every quick link
 };
 
@@ -89,10 +89,10 @@ const VALIDATORS = {
     return { settings: { type: s.type, count: s.count, showNames: s.showNames, showMore: s.showMore, order: s.order } };
   },
   service(input, base) {
-    const s = { ...base, ...pick(input, ['count', 'showDescription']) };
+    const s = { ...base, ...pick(input, ['count', 'showDescription', 'showHours']) };
     if (!isIntBetween(s.count, 1, 5)) return { error: 'Show between 1 and 5 posts.' };
-    if (!isBool(s.showDescription)) return { error: 'The post details must be on or off.' };
-    return { settings: { count: s.count, showDescription: s.showDescription } };
+    if (!isBool(s.showDescription) || !isBool(s.showHours)) return { error: 'The community service options must be on or off.' };
+    return { settings: { count: s.count, showDescription: s.showDescription, showHours: s.showHours } };
   },
   links(input, base) {
     const s = { ...base, ...pick(input, ['ids', 'order']) };

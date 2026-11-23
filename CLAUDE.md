@@ -74,6 +74,19 @@ empty volume, `start-fly.sh` runs the content seed once.
 (`fly secrets set`), never files in the image — `.dockerignore` excludes
 `.env`, `data/` and `uploads/`. Deploy with `fly deploy`.
 
+### Community service hours
+
+Grade 9-12 students log service as a Project Report (`/service-report`,
+mirroring the school's old Google Doc); the coordinator (a Teacher/Staff
+account an admin gives "hours access", the `csCoordinator` column) approves
+them on `/service-hours`. Reports live in the `csHours` collection and the
+100-hour / 25-per-year targets in `csHourTargets`; neither feeds the content
+seed. Evidence photos and PDFs are **not** in the public `uploads/` folder:
+they are in `DATA_DIR/cs-evidence/` and only served through
+`GET /api/cs-hours/evidence/:id`, which checks the viewer is the uploader or
+the coordinator. The report form shrinks photos in the browser before upload
+(the Fly volume is only 1 GB).
+
 ## Security patterns already in place — don't relax without a reason
 
 - Every admin-editable URL field goes through `server/utils/validateUrl.js`,

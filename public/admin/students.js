@@ -83,13 +83,14 @@ function renderStudents() {
       const created = new Date(student.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td>${escapeHtml(name)}${student.locked ? ' <span class="lock-badge">Locked</span>' : ''}</td>
+        <td>${escapeHtml(name)}${student.locked ? ' <span class="lock-badge">Locked</span>' : ''}${student.csCoordinator ? ' <span class="cs-coord-badge">Service hours</span>' : ''}</td>
         <td>${escapeHtml(student.email)}</td>
         <td><span class="grade-pill">${escapeHtml(student.grade)}</span></td>
         <td>${created}</td>
         <td><button class="edit-btn" aria-label="Edit account">Edit</button></td>
         <td><button class="reset-btn" aria-label="Reset password">Reset password</button></td>
         <td><button class="lock-toggle-btn" aria-label="${student.locked ? 'Unlock account' : 'Lock account'}">${student.locked ? 'Unlock' : 'Lock'}</button></td>
+        <td>${isStaffGrade(student.grade) ? `<button class="lock-toggle-btn cs-coord-btn" aria-pressed="${student.csCoordinator}" title="The community service coordinator reviews every student's service hours">${student.csCoordinator ? 'Remove hours access' : 'Give hours access'}</button>` : ''}</td>
         <td><button class="delete-btn" aria-label="Remove account">${TRASH_ICON}</button></td>
       `;
       // Bound per row (not by querying the whole page for .delete-btn, which
@@ -99,7 +100,9 @@ function renderStudents() {
         panel.startEdit(student);
       });
       tr.querySelector('.reset-btn').addEventListener('click', () => resetStudentPassword(student, name));
-      tr.querySelector('.lock-toggle-btn').addEventListener('click', () => toggleLock(student, name));
+      tr.querySelector('.lock-toggle-btn:not(.cs-coord-btn)').addEventListener('click', () => toggleLock(student, name));
+      const coordBtn = tr.querySelector('.cs-coord-btn');
+      if (coordBtn) coordBtn.addEventListener('click', () => toggleCsCoordinator(student, name));
       tr.querySelector('.delete-btn').addEventListener('click', () =>
         confirmDelete(`/api/admin/students/${student.id}`, 'Remove this student account? This cannot be undone.', () => {
           panel.reset();
@@ -123,6 +126,26 @@ async function studentAction(student, action, failureMessage) {
   } catch {
     alert('Could not reach the server. Please try again.');
     return null;
+  }
+}
+
+// Teacher and Staff accounts have a role instead of a grade number.
+const isStaffGrade = (grade) => !/\d/.test(String(grade || ''));
+
+// The community service coordinator signs in on the student site and gets a
+// Service Hours page to approve and track every student's hours.
+async function toggleCsCoordinator(student, name) {
+  const on = !student.csCoordinator;
+  const question = on
+    ? `Let ${name} review every student's service hours? They will get a Service Hours page on the student site.`
+    : `Remove ${name}'s access to students' service hours?`;
+  if (!confirm(question)) return;
+  try {
+    const { ok, data } = await sendJSON(`/api/admin/students/${student.id}/cs-coordinator`, 'POST', { on });
+    if (!ok) alert(data.error || 'Could not change service hours access.');
+    loadStudents();
+  } catch {
+    alert('Could not reach the server. Please try again.');
   }
 }
 

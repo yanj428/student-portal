@@ -92,9 +92,43 @@ async function loadClubs() {
       : '');
 }
 
+// A Grade 9-12 student's hours at the top of the Community service section:
+// progress toward graduation and this school year, and any new reply from
+// Ms. Gia. Fetched without ?seen=1, so a reply stays new until it is read on
+// the Community Service page.
+async function loadHomeHours() {
+  const el = document.getElementById('home-hours');
+  if (!el) return;
+  if (widgetSettings('service').showHours === false) {
+    el.hidden = true;
+    return;
+  }
+  const data = await fetchJson('/api/cs-hours');
+  if (!data) return;
+  const { totals, targets } = data;
+  const newReplies = data.entries.filter((e) => e.isNew).length;
+  const bar = (done, target, label) => {
+    const percent = Math.min(100, Math.round((done / target) * 100));
+    return `<span class="home-hours-row"><span class="home-hours-label">${label}</span><span class="home-hours-bar${done >= target ? ' done' : ''}"><span data-percent="${percent}"></span></span><span class="home-hours-num">${escapeHtml(formatHomeHours(done))} / ${escapeHtml(formatHomeHours(target))}</span></span>`;
+  };
+  el.innerHTML = `
+    <span class="home-hours-head"><strong>My service hours</strong>${newReplies ? `<span class="home-hours-new">${newReplies} new ${newReplies === 1 ? 'reply' : 'replies'} from Ms. Gia</span>` : ''}</span>
+    ${bar(totals.approved, targets.total, 'To graduate')}
+    ${bar(totals.approvedThisYear, targets.yearly, 'This year')}
+    ${totals.pending ? `<span class="home-hours-pending">${escapeHtml(formatHomeHours(totals.pending))} hours waiting for approval</span>` : ''}`;
+  // Set from script: the site's Content-Security-Policy blocks style="" attributes in HTML.
+  el.querySelectorAll('[data-percent]').forEach((fill) => { fill.style.width = `${fill.dataset.percent}%`; });
+  el.hidden = false;
+}
+
+function formatHomeHours(hours) {
+  return String(Math.round(hours * 100) / 100);
+}
+
 // The latest community service posts (three at most). The section always shows,
 // with a friendly message when nothing has been posted yet.
 async function loadCommunityService() {
+  loadHomeHours();
   const el = document.getElementById('cs-events-list');
   if (!el) return;
   const data = await fetchJson('/api/cs-events');

@@ -5,6 +5,8 @@ const bcrypt = require('bcryptjs');
 const db = require('../db');
 const { requireAdmin, isValidSchoolEmail, publicStudent } = require('../middleware/auth');
 const { defaultPasswordFor, SCHOOL_DOMAIN } = require('../config');
+const { isStaffRole } = require('../utils/csHours');
+const { removeEvidenceOfStudent } = require('../csEvidence');
 
 const router = express.Router();
 
@@ -84,6 +86,7 @@ router.put('/api/admin/students/:id', requireAdmin, (req, res) => {
 
 router.delete('/api/admin/students/:id', requireAdmin, (req, res) => {
   const student = db.findById(req.params.id);
+  if (student) removeEvidenceOfStudent(student.id);
   const removed = db.removeStudent(req.params.id);
   if (!removed) return res.status(404).json({ error: 'Student not found.' });
   db.logAuditEvent(req.session.adminUsername, 'student.delete', { email: student && student.email });
@@ -117,6 +120,21 @@ router.post('/api/admin/students/:id/unlock', requireAdmin, (req, res) => {
   db.clearThrottle(student.email);
   db.logAuditEvent(req.session.adminUsername, 'student.unlock', { email: student.email });
   res.json({ ok: true });
+});
+
+// Makes a teacher or staff account the community service coordinator (or
+// takes that away). The coordinator reviews every student's service hours on
+// the student site, so it is never given to a student account.
+router.post('/api/admin/students/:id/cs-coordinator', requireAdmin, (req, res) => {
+  const student = db.findById(req.params.id);
+  if (!student) return res.status(404).json({ error: 'Account not found.' });
+  const on = req.body?.on === true;
+  if (on && !isStaffRole(student.grade)) {
+    return res.status(400).json({ error: 'Only a Teacher or Staff account can be the community service coordinator.' });
+  }
+  db.setCsCoordinator(student.id, on);
+  db.logAuditEvent(req.session.adminUsername, on ? 'student.cs_coordinator_on' : 'student.cs_coordinator_off', { email: student.email });
+  res.json({ student: publicStudent(db.findById(student.id)) });
 });
 
 module.exports = router;

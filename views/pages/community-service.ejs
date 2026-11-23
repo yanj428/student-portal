@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <%- include('../partials/head-links', { pageTitle: 'Community Service', pageCss: 'community-service.css' }) %>
+  <link rel="stylesheet" href="service-hours.css" />
 </head>
 <body>
   <div class="app">
@@ -14,6 +15,38 @@
         <h1>Community Service</h1>
         <p><span class="cs-grades">Grades 9&ndash;12</span></p>
       </section>
+
+<% if (student.csCoordinator) { %>
+      <a class="hrs-review-link" href="/service-hours">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 11L11 13L15 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/></svg>
+        <span><strong>Review student hours</strong><small>Approve logged hours, see each student's progress and download a spreadsheet.</small></span>
+        <svg class="hrs-review-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+<% } %>
+<% if (logsHours) { %>
+      <section class="hrs-card" id="hrs-card">
+        <div class="hrs-head">
+          <div class="hrs-summary">
+            <h2 class="cs-label">My service hours</h2>
+            <p class="hrs-total"><strong id="hrs-approved">0</strong> <span id="hrs-total-text">of 100 hours to graduate</span></p>
+          </div>
+          <a class="hrs-btn primary" href="/service-report" id="hrs-log-btn">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Log hours
+          </a>
+        </div>
+        <div class="hrs-progress" id="hrs-progress" role="progressbar" aria-label="Progress toward the hours needed to graduate" aria-valuemin="0" aria-valuemax="100"><div class="hrs-progress-bar" id="hrs-progress-bar"></div></div>
+        <div class="hrs-year">
+          <p class="hrs-year-text" id="hrs-year-text"></p>
+          <div class="hrs-progress hrs-progress-thin" id="hrs-year-progress" role="progressbar" aria-label="Progress toward this school year's recommended hours" aria-valuemin="0" aria-valuemax="100"><div class="hrs-progress-bar" id="hrs-year-bar"></div></div>
+        </div>
+        <p class="hrs-pending" id="hrs-pending" hidden></p>
+
+        <div class="hrs-list" id="hrs-list"></div>
+        <p class="hrs-empty" id="hrs-empty" hidden>No reports yet. Press Log hours after each service project to fill in your project report.</p>
+        <button type="button" class="hrs-more" id="hrs-more" hidden></button>
+      </section>
+<% } %>
 
       <section class="cs-what">
         <h2 class="cs-label">What is community service?</h2>
@@ -79,5 +112,9 @@
 
   <script src="common.js"></script>
   <script src="community-service.js"></script>
+<% if (logsHours) { %>
+  <script src="hours-shared.js"></script>
+  <script src="cs-hours.js"></script>
+<% } %>
 </body>
 </html>

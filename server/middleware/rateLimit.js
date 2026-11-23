@@ -60,6 +60,16 @@ const voicePostLimiter = makeLimiter({
   message: 'Too many posts submitted. Please try again later.',
 });
 
+// Covers saving reports and uploading their evidence photos (a report can
+// have ten), so this only stops a script flooding the coordinator's review list.
+const csHoursLimiter = makeLimiter({
+  defaultWindowMinutes: 60,
+  limitEnv: 'CS_HOURS_RATE_LIMIT',
+  defaultLimit: 80,
+  keyGenerator: accountKey,
+  message: 'Too many reports or files saved. Please try again later.',
+});
+
 // Keeps one admin session from burning through the Gemini free-tier quota.
 const calendarAiLimiter = makeLimiter({
   defaultWindowMinutes: 60,
@@ -74,5 +84,6 @@ module.exports = {
   adminLoginLimiter,
   passwordChangeLimiter,
   voicePostLimiter,
+  csHoursLimiter,
   calendarAiLimiter,
 };

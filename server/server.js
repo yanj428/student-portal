@@ -90,6 +90,7 @@ app.use(require('./routes/calendarEvents'));
 app.use(require('./routes/council'));
 app.use(require('./routes/quickLinks'));
 app.use(require('./routes/voice'));
+app.use(require('./routes/csHours'));
 app.use(require('./routes/homeLayout'));
 app.use(require('./routes/studentAuth'));
 app.use(require('./routes/security'));

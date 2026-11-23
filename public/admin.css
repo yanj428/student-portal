@@ -467,6 +467,17 @@ tr:last-child td { border-bottom: none; }
   border-radius: 1298.7px;
   vertical-align: middle;
 }
+.cs-coord-badge {
+  display: inline-block;
+  background: #E3F3E6;
+  color: #2F7A3C;
+  font-size: 13.65px;
+  font-weight: 700;
+  padding: 2.6px 10.4px;
+  border-radius: 1298.7px;
+  vertical-align: middle;
+}
+.cs-coord-btn[aria-pressed="true"] { color: var(--primary); }
 .attempt-badge {
   display: inline-block;
   font-size: 13.65px;

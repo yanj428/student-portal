@@ -55,6 +55,8 @@
       { type: 'check', key: 'showMore', label: 'Show the "+ more clubs" circle' },
     ],
     service: () => [
+      // Only Grades 9-12 have service hours, so only they get this switch.
+      ...(document.getElementById('home-hours') ? [{ type: 'check', key: 'showHours', label: 'Show my service hours' }] : []),
       { type: 'select', key: 'count', label: 'How many posts', number: true, options: COUNT_OPTIONS([1, 2, 3, 4, 5]) },
       { type: 'check', key: 'showDescription', label: "Show each post's description" },
     ],

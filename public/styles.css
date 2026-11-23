@@ -890,3 +890,60 @@ html, body {
   .more-credit strong { color: var(--primary); font-weight: 600; }
   body.more-open { overflow: hidden; }
 }
+/* Visually hidden, still read out by screen readers. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* New replies (students) and reports waiting (the coordinator) next to a menu item. */
+.nav-badge {
+  margin-left: auto;
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+}
+.nav-item.active .nav-badge { background: var(--primary); color: #fff; }
+.more-item { position: relative; }
+.more-item .nav-badge { position: absolute; top: 6px; right: 8px; margin: 0; background: var(--primary); color: #fff; }
+.tab-icon { position: relative; }
+.tab-dot { position: absolute; top: 1px; right: 12px; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); border: 2px solid #fff; }
+
+/* A Grade 9-12 student's service hours on the home page */
+.home-hours {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  border: 1.3px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+.home-hours[hidden] { display: none; }
+.home-hours:hover { border-color: var(--primary-light); }
+.home-hours-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.home-hours-head strong { font-size: 16px; }
+.home-hours-new { padding: 2px 10px; border-radius: 999px; background: var(--primary); color: #fff; font-size: 13px; font-weight: 700; }
+.home-hours-row { display: grid; grid-template-columns: 90px minmax(0, 1fr) auto; align-items: center; gap: 10px; font-size: 14px; }
+.home-hours-label { color: var(--text-muted); }
+.home-hours-bar { height: 8px; border-radius: 999px; background: var(--primary-tint); overflow: hidden; }
+.home-hours-bar span { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--primary); }
+.home-hours-bar.done span { background: #2F7A3C; }
+.home-hours-num { font-weight: 600; font-variant-numeric: tabular-nums; }
+.home-hours-pending { font-size: 13.5px; color: #633806; }

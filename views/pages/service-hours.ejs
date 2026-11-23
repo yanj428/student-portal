@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('../partials/head-links', { pageTitle: 'Service Hours', pageCss: 'service-hours.css' }) %>
+</head>
+<body>
+  <div class="app">
+<%- include('../partials/sidebar', { activePage: 'service-hours' }) %>
+    <main class="main">
+<%- include('../partials/topbar', { student }) %>
+
+      <section class="page-header">
+        <h1>Service Hours</h1>
+        <p>Approve the hours Grade 9&ndash;12 students log and follow their progress toward graduation.</p>
+      </section>
+
+      <section class="sh-stats" aria-label="Summary">
+        <div class="sh-stat"><strong id="sh-stat-pending">0</strong><span>entries waiting for approval</span></div>
+        <div class="sh-stat"><strong id="sh-stat-year">0</strong><span id="sh-stat-year-label">students have 25 hours this school year</span></div>
+        <div class="sh-stat"><strong id="sh-stat-done">0</strong><span id="sh-stat-done-label">Grade 12 students have all 100 hours</span></div>
+      </section>
+
+      <div class="sh-toolbar">
+        <div class="sh-tabs" role="tablist" aria-label="Service hours views">
+          <button type="button" class="sh-tab active" role="tab" aria-selected="true" aria-controls="sh-panel-review" id="sh-tab-review" data-tab="review">To review <span class="sh-tab-count" id="sh-review-count">0</span></button>
+          <button type="button" class="sh-tab" role="tab" aria-selected="false" aria-controls="sh-panel-students" id="sh-tab-students" data-tab="students">Students</button>
+          <button type="button" class="sh-tab" role="tab" aria-selected="false" aria-controls="sh-panel-goals" id="sh-tab-goals" data-tab="goals">Requirements</button>
+        </div>
+        <a class="hrs-btn ghost sh-download" href="/api/cs-hours/export.csv" download>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4V15M12 15L7.5 10.5M12 15L16.5 10.5M5 19H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Download spreadsheet
+        </a>
+      </div>
+
+      <section class="sh-panel" id="sh-panel-review" role="tabpanel" aria-labelledby="sh-tab-review">
+        <p class="sh-hint">Oldest first. A note is optional and the student sees it next to your decision.</p>
+        <div class="sh-bulk" id="sh-bulk" hidden>
+          <label class="sh-only-behind"><input type="checkbox" id="sh-select-all" /> Select all</label>
+          <button type="button" class="hrs-btn primary" id="sh-approve-selected" disabled>Approve selected</button>
+        </div>
+        <div class="sh-review-list" id="sh-review-list"></div>
+        <div class="sh-empty" id="sh-review-empty" hidden>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12.5L10 17L19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>All caught up. New entries appear here as students log them.</span>
+        </div>
+      </section>
+
+      <section class="sh-panel" id="sh-panel-students" role="tabpanel" aria-labelledby="sh-tab-students" hidden>
+        <div class="sh-filters">
+          <input class="hrs-input sh-search" type="search" id="sh-search" placeholder="Search by name or email" aria-label="Search students" />
+          <div class="sh-grades" id="sh-grades" role="group" aria-label="Filter by grade"></div>
+          <label class="sh-only-behind"><input type="checkbox" id="sh-behind" /> <span id="sh-behind-label">Only students under 25 hours this year</span></label>
+        </div>
+        <div class="sh-table-wrap">
+          <table class="sh-table">
+            <thead>
+              <tr><th>Student</th><th>Grade</th><th>This school year</th><th>Total toward graduation</th><th class="num">Waiting</th></tr>
+            </thead>
+            <tbody id="sh-student-rows"></tbody>
+          </table>
+        </div>
+        <p class="sh-empty-line" id="sh-students-empty" hidden>No students match.</p>
+      </section>
+
+      <section class="sh-panel" id="sh-panel-goals" role="tabpanel" aria-labelledby="sh-tab-goals" hidden>
+        <p class="sh-hint">Only approved hours count. Students see both numbers on the Community Service page. The school year counts from August 1.</p>
+        <form id="sh-goals-form" class="sh-goals-form">
+          <div class="sh-goal-grid">
+            <label class="hrs-field sh-goal">
+              <span>Hours to graduate</span>
+              <span class="sh-goal-input"><input class="hrs-input" type="number" min="1" max="1000" step="0.25" inputmode="decimal" id="sh-target-total" required /><small>hours over Grades 9&ndash;12</small></span>
+            </label>
+            <label class="hrs-field sh-goal">
+              <span>Recommended per school year</span>
+              <span class="sh-goal-input"><input class="hrs-input" type="number" min="1" max="1000" step="0.25" inputmode="decimal" id="sh-target-yearly" required /><small>hours each year</small></span>
+            </label>
+          </div>
+          <p class="hrs-error" id="sh-goals-error" role="alert" hidden></p>
+          <p class="sh-saved" id="sh-goals-saved" role="status" hidden>Saved.</p>
+          <button type="submit" class="hrs-btn primary" id="sh-goals-save">Save</button>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script src="common.js"></script>
+  <script src="hours-shared.js"></script>
+  <script src="service-hours.js"></script>
+</body>
+</html>

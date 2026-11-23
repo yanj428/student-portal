@@ -3,5 +3,8 @@
           <h2>Community service</h2>
           <a href="/community-service" class="home-more">See all</a>
         </div>
+<% if (logsHours) { %>
+        <a class="home-hours" id="home-hours" href="/community-service#hrs-card" hidden></a>
+<% } %>
         <div class="home-cs" id="cs-events-list"></div>
       </section>

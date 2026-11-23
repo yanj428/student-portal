@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('../partials/head-links', { pageTitle: 'Community Service Report', pageCss: 'service-hours.css' }) %>
+</head>
+<body>
+  <div class="app">
+<%- include('../partials/sidebar', { activePage: 'community-service' }) %>
+    <main class="main">
+<%- include('../partials/topbar', { student }) %>
+
+      <section class="page-header">
+        <a class="sr-back" href="/community-service">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 6L9 12L15 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Community Service
+        </a>
+        <h1 id="sr-heading">Project Report</h1>
+        <p id="sr-intro">Fill this in after your service. It goes to Ms. Gia for approval, and your hours count once it's approved.</p>
+      </section>
+
+      <p class="sr-status-note" id="sr-status-note" hidden></p>
+      <p class="sr-draft-note" id="sr-draft-note" role="status" hidden></p>
+
+      <form class="sr-form" id="sr-form" data-student="<%= student.id %>" novalidate>
+        <section class="sr-section">
+          <h2 class="sr-step"><span>1</span>About the project</h2>
+          <div class="sr-who">
+            <p class="sr-meta"><strong><%= student.fullName %></strong> &middot; <%= student.gradeLabel %> &middot; <%= student.email %></p>
+          </div>
+          <label class="hrs-field"><span>Project title</span><input class="hrs-input" id="sr-title" maxlength="120" placeholder="e.g. Saturday reading club at Baan Kru" required /></label>
+
+          <fieldset class="sr-fieldset">
+            <legend>Who was it with?</legend>
+            <div class="sr-choice-row" role="radiogroup">
+              <label class="sr-choice"><input type="radio" name="sr-with" value="club" checked /><span>A KPIS community service club</span></label>
+              <label class="sr-choice"><input type="radio" name="sr-with" value="org" /><span>Another organization</span></label>
+              <label class="sr-choice"><input type="radio" name="sr-with" value="own" /><span>My own project</span></label>
+            </div>
+            <label class="hrs-field" id="sr-club-field"><span class="sr-only">Club</span>
+              <select class="hrs-input" id="sr-club"><option value="">Choose a club</option></select>
+            </label>
+            <label class="hrs-field" id="sr-org-field" hidden><span class="sr-only">Organization name</span>
+              <input class="hrs-input" id="sr-org" maxlength="120" placeholder="Organization name" />
+            </label>
+          </fieldset>
+
+          <div class="sr-dates">
+            <label class="hrs-field"><span>Project date</span><input class="hrs-input" type="date" id="sr-start" required /></label>
+            <label class="hrs-field"><span>End date <small>(if it ran over several days)</small></span><input class="hrs-input" type="date" id="sr-end" /></label>
+          </div>
+
+          <fieldset class="sr-fieldset">
+            <legend>Which causes did it help? <small>Choose up to 3 UN goals</small></legend>
+            <div class="sr-sdgs" id="sr-sdgs"></div>
+          </fieldset>
+        </section>
+
+        <section class="sr-section">
+          <h2 class="sr-step"><span>2</span>Need and goal</h2>
+          <label class="hrs-field"><span>What is the need in the community?</span><textarea class="hrs-input sr-text" id="sr-need" maxlength="2000" required></textarea></label>
+          <label class="hrs-field"><span>What is the goal for the project?</span><textarea class="hrs-input sr-text" id="sr-goal" maxlength="2000" required></textarea></label>
+        </section>
+
+        <section class="sr-section">
+          <h2 class="sr-step"><span>3</span>Investigate and plan</h2>
+          <fieldset class="sr-fieldset">
+            <legend>Did you plan this project yourself?</legend>
+            <div class="sr-choice-row" role="radiogroup">
+              <label class="sr-choice"><input type="radio" name="sr-planned" value="yes" /><span>Yes, I planned it</span></label>
+              <label class="sr-choice"><input type="radio" name="sr-planned" value="no" checked /><span>No, I joined something already planned</span></label>
+            </div>
+          </fieldset>
+          <div class="sr-planned" id="sr-planned-fields" hidden>
+            <label class="hrs-field"><span>Investigation summary</span><textarea class="hrs-input sr-text" id="sr-inv-summary" maxlength="2000"></textarea></label>
+            <label class="hrs-field"><span>Investigation evidence <small>(what you found out, or links)</small></span><textarea class="hrs-input sr-text sr-text-short" id="sr-inv-evidence" maxlength="2000"></textarea></label>
+            <label class="hrs-field"><span>Planning summary</span><textarea class="hrs-input sr-text" id="sr-plan-summary" maxlength="2000"></textarea></label>
+            <div class="hrs-field">
+              <span>Planning evidence <small>(photos or PDFs of your plan)</small></span>
+              <div class="sr-files" id="sr-files-planning"></div>
+              <label class="hrs-btn ghost sr-upload"><input type="file" accept="image/*,application/pdf" multiple data-section="planning" />Attach files</label>
+            </div>
+          </div>
+          <p class="sr-skip" id="sr-planned-skip">Nothing to fill in here when you joined a project someone else planned.</p>
+        </section>
+
+        <section class="sr-section">
+          <h2 class="sr-step"><span>4</span>Action</h2>
+          <label class="hrs-field"><span>What did you do?</span><textarea class="hrs-input sr-text" id="sr-action" maxlength="3000" required></textarea></label>
+          <div class="hrs-field">
+            <span>Evidence <small>(photos, certificates or links to video clips; at least one)</small></span>
+            <div class="sr-files" id="sr-files-action"></div>
+            <label class="hrs-btn ghost sr-upload"><input type="file" accept="image/*,application/pdf" multiple data-section="action" />Attach photos or certificates</label>
+            <div class="sr-links" id="sr-links"></div>
+            <button type="button" class="hrs-link" id="sr-add-link">+ Add a link</button>
+          </div>
+        </section>
+
+        <section class="sr-section">
+          <h2 class="sr-step"><span>5</span>Reflection</h2>
+          <label class="hrs-field">
+            <span>How do you feel after this project?</span>
+            <small class="sr-prompt">Were you successful? What did you learn about yourself? How could the project be improved?</small>
+            <textarea class="hrs-input sr-text sr-text-tall" id="sr-reflection" maxlength="3000" required></textarea>
+          </label>
+        </section>
+
+        <section class="sr-section">
+          <h2 class="sr-step"><span>6</span>Hours</h2>
+          <p class="sr-hint">Break your total hours down into the tasks you did.</p>
+          <div class="sr-tasks" id="sr-tasks"></div>
+          <div class="sr-tasks-footer">
+            <button type="button" class="hrs-link" id="sr-add-task">+ Add a task</button>
+            <p class="sr-total">Total: <strong id="sr-total">0 hours</strong></p>
+          </div>
+        </section>
+
+        <section class="sr-section">
+          <h2 class="sr-step"><span>7</span>Advisor</h2>
+          <div class="sr-dates">
+            <label class="hrs-field"><span>Advisor or contact person</span><input class="hrs-input" id="sr-advisor" maxlength="100" placeholder="e.g. Ms. Gia" required /></label>
+            <label class="hrs-field"><span>Their contact info <small>(if outside KPIS)</small></span><input class="hrs-input" id="sr-advisor-contact" maxlength="200" placeholder="Email or phone" /></label>
+          </div>
+        </section>
+
+        <div class="sr-submit">
+          <p class="hrs-error" id="sr-error" role="alert" hidden></p>
+          <p class="sr-draft-saved" id="sr-draft-saved" hidden>Draft saved on this device. You can come back and finish it later.</p>
+          <div class="hrs-form-buttons">
+            <a class="hrs-btn ghost" href="/community-service">Cancel</a>
+            <button type="submit" class="hrs-btn primary" id="sr-submit">Submit for approval</button>
+          </div>
+        </div>
+      </form>
+    </main>
+  </div>
+
+  <script src="common.js"></script>
+  <script src="hours-shared.js"></script>
+  <script src="service-report.js"></script>
+</body>
+</html>

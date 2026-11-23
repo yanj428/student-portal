@@ -3,6 +3,7 @@ const db = require('../db');
 const { requireStudentPage } = require('../middleware/pageAuth');
 const { WIDGETS, JUMP_TILES, resolveLayout } = require('../utils/homeLayout');
 const { NAV_ITEMS } = require('../utils/navItems');
+const { logsServiceHours } = require('../utils/csHours');
 
 const router = express.Router();
 
@@ -21,9 +22,24 @@ const PAGES = [
 
 for (const { paths, view } of PAGES) {
   router.get(paths, requireStudentPage, (req, res) => {
-    const extra = view === 'pages/home' ? { homeWidgets: WIDGETS, jumpTiles: JUMP_TILES, navItems: NAV_ITEMS, homeLayout: resolveLayout(db.getHomeLayout(res.locals.student.id)) } : {};
+    let extra = {};
+    if (view === 'pages/home') extra = { homeWidgets: WIDGETS, jumpTiles: JUMP_TILES, navItems: NAV_ITEMS, homeLayout: resolveLayout(db.getHomeLayout(res.locals.student.id)), logsHours: logsServiceHours(res.locals.student.grade) };
+    if (view === 'pages/community-service') extra = { logsHours: logsServiceHours(res.locals.student.grade) };
     res.render(view, { student: res.locals.student, ...extra });
   });
 }
+
+// The community service project report form (new, or ?id= to fix one).
+router.get('/service-report', requireStudentPage, (req, res) => {
+  if (!logsServiceHours(res.locals.student.grade)) return res.redirect('/community-service');
+  res.render('pages/service-report', { student: res.locals.student });
+});
+
+// Only the community service coordinator has this page; anyone else who
+// follows a link to it lands on the ordinary Community Service page.
+router.get('/service-hours', requireStudentPage, (req, res) => {
+  if (!res.locals.student.csCoordinator) return res.redirect('/community-service');
+  res.render('pages/service-hours', { student: res.locals.student });
+});
 
 module.exports = router;

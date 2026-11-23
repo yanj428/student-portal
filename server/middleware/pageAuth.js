@@ -2,6 +2,7 @@ const db = require('../db');
 const { publicStudent, sessionExpiredByAbsoluteLimit } = require('./auth');
 const { STUDENT_SESSION_ABSOLUTE_MINUTES } = require('../config');
 const { endRole } = require('../utils/sessionRoles');
+const { navBadges } = require('../utils/csHours');
 
 // Gates a rendered student page: redirects to the login page if there's no
 // session, or to the change-password page if the account still needs one —
@@ -23,6 +24,7 @@ function requireStudentPage(req, res, next) {
   if (pub.mustChangePassword) return res.redirect('/change-password');
 
   res.locals.student = pub;
+  res.locals.navBadges = navBadges(student, db.readCsHours());
   next();
 }
 

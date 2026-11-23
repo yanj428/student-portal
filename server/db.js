@@ -162,6 +162,9 @@ renameColumnIfNeeded('admin_audit_log', 'adminEmail', 'adminUsername');
 
 ensureColumn('students', 'nickname', "nickname TEXT NOT NULL DEFAULT ''");
 ensureColumn('students', 'middleName', "middleName TEXT NOT NULL DEFAULT ''");
+// A teacher or staff account an admin has made the community service
+// coordinator: it can review every student's service hours.
+ensureColumn('students', 'csCoordinator', 'csCoordinator INTEGER NOT NULL DEFAULT 0');
 const roleColumnJustAdded = ensureColumn('admins', 'role', "role TEXT NOT NULL DEFAULT 'editor'");
 
 // An admin account made with a temporary password must choose its own at the
@@ -215,6 +218,7 @@ function rowToStudent(row) {
     mustChangePassword: !!row.mustChangePassword,
     failedLoginAttempts: row.failedLoginAttempts,
     locked: !!row.locked,
+    csCoordinator: !!row.csCoordinator,
     createdAt: row.createdAt,
   };
 }
@@ -264,7 +268,14 @@ function updateStudent(id, { firstName, middleName, lastName, nickname, email, g
 
 function removeStudent(id) {
   db.prepare('DELETE FROM student_home_layouts WHERE studentId = ?').run(id);
+  const hours = csHours.read();
+  const keptHours = hours.filter((entry) => entry.studentId !== id);
+  if (keptHours.length !== hours.length) csHours.write(keptHours);
   return db.prepare('DELETE FROM students WHERE id = ?').run(id).changes > 0;
+}
+
+function setCsCoordinator(id, on) {
+  return db.prepare('UPDATE students SET csCoordinator = ? WHERE id = ?').run(on ? 1 : 0, id).changes > 0;
 }
 
 function getHomeLayout(studentId) {
@@ -517,6 +528,14 @@ const calendarEvents = jsonCollection('calendarEvents');
 const council = jsonCollection('council');
 const quickLinks = jsonCollection('quickLinks');
 const csResources = jsonCollection('csResources');
+// Students' logged service hours and the hour targets (to graduate, and per
+// year). Neither feeds the content seed: hours are student records, and the
+// targets belong to whichever deployment the coordinator set them on.
+const csHours = jsonCollection('csHours');
+const csHourTargets = jsonCollection('csHourTargets');
+// The photos and PDFs attached to service reports: who uploaded each one and
+// whether a saved report uses it (the files themselves are in cs-evidence/).
+const csEvidence = jsonCollection('csEvidence');
 
 // The Community Service page's Resources list used to be typed into the page.
 // These are those links, added once as the starting list so admins can edit it
@@ -561,6 +580,7 @@ module.exports = {
   clearHomeLayout,
   updateStudent,
   updateStudentPasswordHash,
+  setCsCoordinator,
   readContent,
   writeContent: withSeedSync(writeContent),
 
@@ -599,6 +619,13 @@ module.exports = {
 
   readCsResources: csResources.read,
   writeCsResources: withSeedSync(csResources.write),
+
+  readCsHours: csHours.read,
+  writeCsHours: csHours.write,
+  readCsHourTargets: csHourTargets.read,
+  writeCsHourTargets: csHourTargets.write,
+  readCsEvidence: csEvidence.read,
+  writeCsEvidence: csEvidence.write,
 
   DEFAULT_CONTENT,
 

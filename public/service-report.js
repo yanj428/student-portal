@@ -315,7 +315,7 @@ function fill(entry) {
   sr.intro.textContent = 'Saving sends this report back to Ms. Gia for approval.';
   sr.submit.textContent = 'Save and resubmit';
   if (entry.status === 'rejected' && entry.note) {
-    sr.statusNote.innerHTML = `<strong>Ms. Gia said:</strong> ${escapeHtml(entry.note)}`;
+    sr.statusNote.innerHTML = `<strong>${escapeHtml(entry.noteFrom)} said:</strong> ${escapeHtml(entry.note)}`;
     sr.statusNote.hidden = false;
   }
 }

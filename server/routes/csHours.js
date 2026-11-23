@@ -2,7 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 
 const db = require('../db');
-const { requireActiveStudent, publicStudent } = require('../middleware/auth');
+const { requireActiveStudent, requireAdmin, publicStudent } = require('../middleware/auth');
 const { csHoursLimiter } = require('../middleware/rateLimit');
 const { fullName } = require('../utils/studentName');
 const { validateOptionalUrl, normalizeUrl } = require('../utils/validateUrl');
@@ -155,12 +155,12 @@ function readReport(body, studentId) {
 
 // The full report as the student or coordinator sees it. The coordinator's
 // note is only shown to the student once there is a decision to explain.
-function reportView(entry, { forStudent }) {
+function reportView(entry, { forStudent, evidenceBase = '/api/cs-hours/evidence' }) {
   const clubs = new Map(communityServiceClubs().map((c) => [c.id, c]));
   const club = entry.clubId ? clubs.get(entry.clubId) : null;
   const evidence = (entry.evidence || []).flatMap((ref) => {
     const stored = findEvidence(ref.id);
-    return stored ? [{ id: stored.id, section: ref.section, name: stored.name, mimetype: stored.mimetype, url: `/api/cs-hours/evidence/${stored.id}` }] : [];
+    return stored ? [{ id: stored.id, section: ref.section, name: stored.name, mimetype: stored.mimetype, url: `${evidenceBase}/${stored.id}` }] : [];
   });
   return {
     id: entry.id,
@@ -189,6 +189,8 @@ function reportView(entry, { forStudent }) {
     // A decision the student has not seen yet (cleared when they open Community Service).
     isNew: forStudent && entry.status !== 'pending' && entry.studentSeen === false,
     note: forStudent && entry.status === 'pending' ? '' : entry.note || '',
+    // Who the student sees the note from: Ms. Gia, or StuCo when an admin decided.
+    noteFrom: entry.reviewedByRole === 'admin' ? 'Student Council' : 'Ms. Gia',
     reviewedBy: forStudent ? undefined : entry.reviewedBy || '',
     reviewedAt: forStudent ? undefined : entry.reviewedAt || '',
     createdAt: entry.createdAt,
@@ -230,12 +232,7 @@ router.post('/api/cs-hours/evidence', requireHourLogger, csHoursLimiter, receive
   res.status(201).json({ evidence: { id: item.id, name: item.name, mimetype: item.mimetype, url: `/api/cs-hours/evidence/${item.id}` } });
 });
 
-// Only the student who uploaded a file and the coordinator can open it.
-router.get('/api/cs-hours/evidence/:id', requireActiveStudent, (req, res) => {
-  const item = findEvidence(req.params.id);
-  if (!item || (item.studentId !== req.student.id && !isCsCoordinator(req.student))) {
-    return res.status(404).json({ error: 'File not found.' });
-  }
+function sendEvidence(item, res) {
   const isPdf = item.mimetype === 'application/pdf';
   res.set('Content-Type', item.mimetype);
   // A PDF is downloaded rather than opened on our own site, and nothing in
@@ -246,6 +243,16 @@ router.get('/api/cs-hours/evidence/:id', requireActiveStudent, (req, res) => {
   res.sendFile(fileFor(item), (err) => {
     if (err && !res.headersSent) res.status(404).json({ error: 'File not found.' });
   });
+}
+
+// Only the student who uploaded a file and the coordinator can open it here
+// (StuCo admins open it through /api/admin/cs-hours/evidence/:id).
+router.get('/api/cs-hours/evidence/:id', requireActiveStudent, (req, res) => {
+  const item = findEvidence(req.params.id);
+  if (!item || (item.studentId !== req.student.id && !isCsCoordinator(req.student))) {
+    return res.status(404).json({ error: 'File not found.' });
+  }
+  sendEvidence(item, res);
 });
 
 // ---- Students: their own reports ----
@@ -322,66 +329,99 @@ router.delete('/api/cs-hours/:id', requireHourLogger, (req, res) => {
   res.json({ ok: true });
 });
 
-// ---- The community service coordinator: review everyone's reports ----
+// ---- Reviewing everyone's reports ----
+// Two kinds of reviewer use the same routes under different paths: the
+// coordinator (Ms. Gia) on the student site at /api/cs-hours/review, and StuCo
+// admins in the admin panel at /api/admin/cs-hours. Both can view and decide;
+// only the coordinator sets the hour targets. Admin decisions are also logged
+// in the admin audit log.
+const REVIEWERS = [
+  {
+    base: '/api/cs-hours/review',
+    auth: requireCsCoordinator,
+    evidenceBase: '/api/cs-hours/evidence',
+    who: (req) => ({ reviewedBy: fullName(req.student), reviewedByRole: 'coordinator' }),
+    log: () => {},
+  },
+  {
+    base: '/api/admin/cs-hours',
+    auth: requireAdmin,
+    evidenceBase: '/api/admin/cs-hours/evidence',
+    who: (req) => ({ reviewedBy: req.admin.username, reviewedByRole: 'admin' }),
+    log: (req, action, details) => db.logAuditEvent(req.session.adminUsername, action, details),
+  },
+];
+const BULK_MAX = 100;
 
-router.get('/api/cs-hours/review', requireCsCoordinator, (req, res) => {
-  const yearStart = schoolYearStart();
-  const students = db.readStudents().filter((s) => logsServiceHours(s.grade));
-  const byStudent = new Map(students.map((s) => [s.id, []]));
-  const entries = db.readCsHours().filter((e) => byStudent.has(e.studentId));
-  entries.forEach((e) => byStudent.get(e.studentId).push(e));
+for (const reviewer of REVIEWERS) {
+  router.get(reviewer.base, reviewer.auth, (req, res) => {
+    const yearStart = schoolYearStart();
+    const students = db.readStudents().filter((s) => logsServiceHours(s.grade));
+    const byStudent = new Map(students.map((s) => [s.id, []]));
+    const entries = db.readCsHours().filter((e) => byStudent.has(e.studentId));
+    entries.forEach((e) => byStudent.get(e.studentId).push(e));
 
-  res.json({
-    students: students.map((s) => {
-      const pub = publicStudent(s);
-      return { id: s.id, fullName: pub.fullName, email: s.email, grade: s.grade, gradeLabel: pub.gradeLabel, gradeNumber: gradeNumber(s.grade), ...totals(byStudent.get(s.id), yearStart) };
-    }),
-    entries: entries.map((e) => reportView(e, { forStudent: false })),
-    targets: readTargets(),
-    yearStart,
+    res.json({
+      students: students.map((s) => {
+        const pub = publicStudent(s);
+        return { id: s.id, fullName: pub.fullName, email: s.email, grade: s.grade, gradeLabel: pub.gradeLabel, gradeNumber: gradeNumber(s.grade), ...totals(byStudent.get(s.id), yearStart) };
+      }),
+      entries: entries.map((e) => reportView(e, { forStudent: false, evidenceBase: reviewer.evidenceBase })),
+      targets: readTargets(),
+      yearStart,
+    });
   });
-});
 
-// The coordinator can also change a decision later, for example after
-// hearing back from the advisor.
-for (const [action, status] of [['approve', 'approved'], ['reject', 'rejected']]) {
-  router.post(`/api/cs-hours/review/:id/${action}`, requireCsCoordinator, (req, res) => {
-    const note = typeof req.body?.note === 'string' ? req.body.note.trim() : '';
-    if (note.length > NOTE_MAX) return res.status(400).json({ error: `The note must be ${NOTE_MAX} characters or fewer.` });
+  // A decision can also be changed later, for example after hearing back from the advisor.
+  for (const [action, status] of [['approve', 'approved'], ['reject', 'rejected']]) {
+    router.post(`${reviewer.base}/:id/${action}`, reviewer.auth, (req, res) => {
+      const note = typeof req.body?.note === 'string' ? req.body.note.trim() : '';
+      if (note.length > NOTE_MAX) return res.status(400).json({ error: `The note must be ${NOTE_MAX} characters or fewer.` });
+
+      const entries = db.readCsHours();
+      const entry = entries.find((e) => e.id === req.params.id);
+      if (!entry) return res.status(404).json({ error: 'Report not found.' });
+
+      Object.assign(entry, { status, note, ...reviewer.who(req), reviewedAt: new Date().toISOString(), studentSeen: false });
+      db.writeCsHours(entries);
+      reviewer.log(req, `cs_hours.${action}`, { report: entry.id, title: entry.title });
+      res.json({ ok: true });
+    });
+  }
+
+  // Approves several reports at once. Body: { items: [{ id, note }] }; each
+  // report keeps whatever note was typed on its own card.
+  router.post(`${reviewer.base}/approve-many`, reviewer.auth, (req, res) => {
+    const items = req.body?.items;
+    if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'Choose at least one report.' });
+    if (items.length > BULK_MAX) return res.status(400).json({ error: `Approve up to ${BULK_MAX} reports at a time.` });
 
     const entries = db.readCsHours();
-    const entry = entries.find((e) => e.id === req.params.id);
-    if (!entry) return res.status(404).json({ error: 'Report not found.' });
-
-    Object.assign(entry, { status, note, reviewedBy: fullName(req.student), reviewedAt: new Date().toISOString(), studentSeen: false });
+    const byId = new Map(entries.map((e) => [e.id, e]));
+    for (const item of items) {
+      if (!item || typeof item.id !== 'string' || !byId.has(item.id)) return res.status(404).json({ error: 'One of the reports was not found. Reload the page and try again.' });
+      if (item.note !== undefined && (typeof item.note !== 'string' || item.note.trim().length > NOTE_MAX)) {
+        return res.status(400).json({ error: `Notes must be ${NOTE_MAX} characters or fewer.` });
+      }
+    }
+    const who = reviewer.who(req);
+    const reviewedAt = new Date().toISOString();
+    items.forEach((item) => {
+      Object.assign(byId.get(item.id), { status: 'approved', note: (item.note || '').trim(), ...who, reviewedAt, studentSeen: false });
+    });
     db.writeCsHours(entries);
-    res.json({ ok: true });
+    reviewer.log(req, 'cs_hours.approve_many', { count: items.length });
+    res.json({ approved: items.length });
   });
+
+  router.get(`${reviewer.base}/export.csv`, reviewer.auth, sendExport);
 }
 
-// Approves several reports at once. Body: { items: [{ id, note }] }; each
-// report keeps whatever note the coordinator typed on its own card.
-const BULK_MAX = 100;
-router.post('/api/cs-hours/review/approve-many', requireCsCoordinator, (req, res) => {
-  const items = req.body?.items;
-  if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'Choose at least one report.' });
-  if (items.length > BULK_MAX) return res.status(400).json({ error: `Approve up to ${BULK_MAX} reports at a time.` });
-
-  const entries = db.readCsHours();
-  const byId = new Map(entries.map((e) => [e.id, e]));
-  for (const item of items) {
-    if (!item || typeof item.id !== 'string' || !byId.has(item.id)) return res.status(404).json({ error: 'One of the reports was not found. Reload the page and try again.' });
-    if (item.note !== undefined && (typeof item.note !== 'string' || item.note.trim().length > NOTE_MAX)) {
-      return res.status(400).json({ error: `Notes must be ${NOTE_MAX} characters or fewer.` });
-    }
-  }
-  const reviewedBy = fullName(req.student);
-  const reviewedAt = new Date().toISOString();
-  items.forEach((item) => {
-    Object.assign(byId.get(item.id), { status: 'approved', note: (item.note || '').trim(), reviewedBy, reviewedAt, studentSeen: false });
-  });
-  db.writeCsHours(entries);
-  res.json({ approved: items.length });
+// StuCo admins open evidence files from the admin panel.
+router.get('/api/admin/cs-hours/evidence/:id', requireAdmin, (req, res) => {
+  const item = findEvidence(req.params.id);
+  if (!item) return res.status(404).json({ error: 'File not found.' });
+  sendEvidence(item, res);
 });
 
 // Body: { total: 100, yearly: 25 } - the hours needed to graduate and the
@@ -411,7 +451,10 @@ function csvCell(value) {
 
 const STATUS_LABEL = { pending: 'Waiting for approval', approved: 'Approved', rejected: 'Not approved' };
 
-router.get('/api/cs-hours/export.csv', requireCsCoordinator, (req, res) => {
+// The old coordinator URL for the spreadsheet; the review routes above serve it too.
+router.get('/api/cs-hours/export.csv', requireCsCoordinator, sendExport);
+
+function sendExport(req, res) {
   const students = new Map(db.readStudents().map((s) => [s.id, s]));
   const rows = db
     .readCsHours()
@@ -433,6 +476,6 @@ router.get('/api/cs-hours/export.csv', requireCsCoordinator, (req, res) => {
   res.set('Content-Disposition', `attachment; filename="service-hours-${schoolToday()}.csv"`);
   // The BOM makes Excel read Thai names and other non-English text correctly.
   res.send(`﻿${lines.join('\r\n')}\r\n`);
-});
+}
 
 module.exports = router;

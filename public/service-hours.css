@@ -140,6 +140,7 @@ a.hrs-link:hover { text-decoration: underline; }
 .hrs-review-link .hrs-review-arrow { width: 20px; height: 20px; }
 
 /* ---- Coordinator: Service Hours page ---- */
+.sh-root { display: flex; flex-direction: column; gap: 28.6px; }
 .sh-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .sh-stat {
   background: var(--surface);

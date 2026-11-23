@@ -1,6 +1,16 @@
 // Shared by the student's My service hours card and the coordinator's
 // Service Hours page.
 
+// The student pages get escapeHtml from common.js; the admin panel does not
+// load that file, so it gets the same function here.
+if (typeof window.escapeHtml !== 'function') {
+  window.escapeHtml = (str) => {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  };
+}
+
 const HOURS_STATUS_LABEL = { pending: 'Waiting for approval', approved: 'Approved', rejected: 'Not approved' };
 
 // 2 -> "2", 2.5 -> "2.5", 1.25 -> "1.25"
@@ -30,7 +40,7 @@ async function sendHoursJson(url, method, body) {
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   if (res.status === 401) {
-    window.location.href = '/login';
+    window.location.href = document.body.dataset.loginUrl || '/login';
     return { ok: false, data: {} };
   }
   const data = await res.json().catch(() => ({}));

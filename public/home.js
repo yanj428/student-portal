@@ -93,8 +93,8 @@ async function loadClubs() {
 }
 
 // A Grade 9-12 student's hours at the top of the Community service section:
-// progress toward graduation and this school year, and any new reply from
-// Ms. Gia. Fetched without ?seen=1, so a reply stays new until it is read on
+// progress toward graduation and this school year, and any new reply on
+// their reports. Fetched without ?seen=1, so a reply stays new until it is read on
 // the Community Service page.
 async function loadHomeHours() {
   const el = document.getElementById('home-hours');
@@ -112,7 +112,7 @@ async function loadHomeHours() {
     return `<span class="home-hours-row"><span class="home-hours-label">${label}</span><span class="home-hours-bar${done >= target ? ' done' : ''}"><span data-percent="${percent}"></span></span><span class="home-hours-num">${escapeHtml(formatHomeHours(done))} / ${escapeHtml(formatHomeHours(target))}</span></span>`;
   };
   el.innerHTML = `
-    <span class="home-hours-head"><strong>My service hours</strong>${newReplies ? `<span class="home-hours-new">${newReplies} new ${newReplies === 1 ? 'reply' : 'replies'} from Ms. Gia</span>` : ''}</span>
+    <span class="home-hours-head"><strong>My service hours</strong>${newReplies ? `<span class="home-hours-new">${newReplies} new ${newReplies === 1 ? 'reply' : 'replies'} on your reports</span>` : ''}</span>
     ${bar(totals.approved, targets.total, 'To graduate')}
     ${bar(totals.approvedThisYear, targets.yearly, 'This year')}
     ${totals.pending ? `<span class="home-hours-pending">${escapeHtml(formatHomeHours(totals.pending))} hours waiting for approval</span>` : ''}`;

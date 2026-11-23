@@ -1,5 +1,18 @@
-// The community service coordinator's Service Hours page: the review queue,
-// every Grade 9-12 student's progress, and the hour requirements.
+// Service Hours: the review queue, every Grade 9-12 student's progress, and
+// the hour requirements. Used on the coordinator's page on the student site and
+// in the admin panel's Service Hours section; #sh-root says which:
+//   data-api     the review endpoint (decisions go to <api>/<id>/approve etc.)
+//   data-login   where to go when the sign-in has run out
+//   data-targets "edit" if this viewer may change the hour requirements
+//   data-badge   id of the menu badge showing how many reports wait
+
+(function () {
+const root = document.getElementById('sh-root');
+if (!root) return;
+const API = root.dataset.api;
+// An empty data-login (the admin panel) means: leave it to the page's own sign-in screen.
+const LOGIN = root.dataset.login === undefined ? '/login' : root.dataset.login;
+const CAN_SET_TARGETS = root.dataset.targets === 'edit';
 
 const sh = {
   statPending: document.getElementById('sh-stat-pending'),
@@ -38,7 +51,7 @@ const shSelected = new Set();
 // Notes typed but not sent yet, kept by report so redrawing a list (opening a
 // full report, say) never wipes what the coordinator was writing.
 const shNotes = new Map();
-document.querySelector('.main').addEventListener('input', (e) => {
+root.addEventListener('input', (e) => {
   if (e.target.classList.contains('sh-note')) shNotes.set(e.target.dataset.id, e.target.value);
 });
 
@@ -51,9 +64,9 @@ function reportToggle(entry) {
 const studentsById = () => new Map(shData.students.map((s) => [s.id, s]));
 
 // ---- Tabs ----
-document.querySelectorAll('.sh-tab').forEach((tab) => {
+root.querySelectorAll('.sh-tab').forEach((tab) => {
   tab.addEventListener('click', () => {
-    document.querySelectorAll('.sh-tab').forEach((t) => {
+    root.querySelectorAll('.sh-tab').forEach((t) => {
       const active = t === tab;
       t.classList.toggle('active', active);
       t.setAttribute('aria-selected', String(active));
@@ -75,6 +88,11 @@ function renderStats() {
   sh.statDone.textContent = `${seniors.filter((s) => s.approved >= total).length} / ${seniors.length}`;
   sh.statDoneLabel.textContent = `Grade 12 students have all ${formatHours(total)} hours`;
   sh.behindLabel.textContent = `Only students under ${formatHours(yearly)} hours this year`;
+  const badge = root.dataset.badge && document.getElementById(root.dataset.badge);
+  if (badge) {
+    badge.textContent = pending.length;
+    badge.hidden = pending.length === 0;
+  }
 }
 
 // ---- Review queue ----
@@ -94,7 +112,7 @@ function renderReview() {
   const students = studentsById();
   const pending = shData.entries
     .filter((e) => e.status === 'pending')
-    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   sh.reviewEmpty.hidden = pending.length > 0;
   const pendingIds = new Set(pending.map((e) => e.id));
   [...shSelected].forEach((id) => { if (!pendingIds.has(id)) shSelected.delete(id); });
@@ -149,7 +167,7 @@ sh.approveSelected.addEventListener('click', async () => {
   if (!items.length || !confirm(`Approve ${items.length} ${items.length === 1 ? 'report' : 'reports'}? Each student sees the note you typed on their report, if any.`)) return;
   sh.approveSelected.disabled = true;
   try {
-    const { ok, data } = await sendHoursJson('/api/cs-hours/review/approve-many', 'POST', { items });
+    const { ok, data } = await sendHoursJson(`${API}/approve-many`, 'POST', { items });
     if (!ok) alert(data.error || 'Could not approve the reports.');
     else items.forEach(({ id }) => { shSelected.delete(id); shNotes.delete(id); });
   } catch {
@@ -242,7 +260,7 @@ sh.studentRows.addEventListener('click', (e) => {
 });
 
 // Read full report, in both the review queue and a student's list.
-document.querySelector('.main').addEventListener('click', (e) => {
+root.addEventListener('click', (e) => {
   const id = e.target.closest('[data-report]')?.dataset.report;
   if (!id) return;
   if (shOpenReports.has(id)) shOpenReports.delete(id);
@@ -259,14 +277,14 @@ sh.studentRows.addEventListener('keydown', (e) => {
 });
 
 // ---- Approve / not approve (both the queue and a student's entries) ----
-document.querySelector('.main').addEventListener('click', async (e) => {
+root.addEventListener('click', async (e) => {
   const btn = e.target.closest('[data-decide]');
   if (!btn) return;
   const container = btn.closest('.sh-decide');
   const note = container.querySelector('.sh-note').value.trim();
   container.querySelectorAll('button').forEach((b) => { b.disabled = true; });
   try {
-    const { ok, data } = await sendHoursJson(`/api/cs-hours/review/${btn.dataset.id}/${btn.dataset.decide}`, 'POST', { note });
+    const { ok, data } = await sendHoursJson(`${API}/${btn.dataset.id}/${btn.dataset.decide}`, 'POST', { note });
     if (!ok) alert(data.error || 'Could not save the decision.');
     else {
       shNotes.delete(btn.dataset.id);
@@ -282,6 +300,12 @@ document.querySelector('.main').addEventListener('click', async (e) => {
 function renderTargets() {
   sh.targetTotal.value = shData.targets.total;
   sh.targetYearly.value = shData.targets.yearly;
+}
+// Only the coordinator sets the requirements; other viewers just see them.
+if (!CAN_SET_TARGETS) {
+  sh.targetTotal.disabled = true;
+  sh.targetYearly.disabled = true;
+  sh.goalsSave.hidden = true;
 }
 
 sh.goalsForm.addEventListener('submit', async (e) => {
@@ -308,8 +332,18 @@ sh.goalsForm.addEventListener('submit', async (e) => {
 });
 
 async function loadReview() {
-  const data = await fetchJson('/api/cs-hours/review');
-  if (!data) return;
+  let data;
+  try {
+    const res = await fetch(API);
+    if (res.status === 401) {
+      if (LOGIN) window.location.href = LOGIN;
+      return;
+    }
+    if (!res.ok) return;
+    data = await res.json();
+  } catch {
+    return;
+  }
   shData = data;
   renderStats();
   renderReview();
@@ -320,3 +354,19 @@ async function loadReview() {
 }
 
 loadReview();
+
+// New reports show up on their own: every minute while the page is in view,
+// and straight away when it comes back into view. A refresh waits while
+// something is being typed, so a half-written note is never interrupted.
+const typingHere = () => root.contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)
+  && document.activeElement.type !== 'checkbox';
+const inView = () => document.visibilityState === 'visible' && root.offsetParent !== null;
+function refreshSoon() {
+  if (inView() && !typingHere()) loadReview();
+}
+setInterval(refreshSoon, 60 * 1000);
+document.addEventListener('visibilitychange', refreshSoon);
+// In the admin panel the section is shown and hidden by the sidebar.
+const section = root.closest('.admin-page-section');
+if (section) new MutationObserver(refreshSoon).observe(section, { attributes: true, attributeFilter: ['hidden'] });
+})();

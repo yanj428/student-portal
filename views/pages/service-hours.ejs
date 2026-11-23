@@ -14,6 +14,7 @@
         <p>Approve the hours Grade 9&ndash;12 students log and follow their progress toward graduation.</p>
       </section>
 
+      <div class="sh-root" id="sh-root" data-api="/api/cs-hours/review" data-login="/login" data-targets="edit" data-badge="nav-hours-badge">
       <section class="sh-stats" aria-label="Summary">
         <div class="sh-stat"><strong id="sh-stat-pending">0</strong><span>entries waiting for approval</span></div>
         <div class="sh-stat"><strong id="sh-stat-year">0</strong><span id="sh-stat-year-label">students have 25 hours this school year</span></div>
@@ -33,7 +34,7 @@
       </div>
 
       <section class="sh-panel" id="sh-panel-review" role="tabpanel" aria-labelledby="sh-tab-review">
-        <p class="sh-hint">Oldest first. A note is optional and the student sees it next to your decision.</p>
+        <p class="sh-hint">Newest first. This list updates by itself. A note is optional and the student sees it next to your decision.</p>
         <div class="sh-bulk" id="sh-bulk" hidden>
           <label class="sh-only-behind"><input type="checkbox" id="sh-select-all" /> Select all</label>
           <button type="button" class="hrs-btn primary" id="sh-approve-selected" disabled>Approve selected</button>
@@ -80,6 +81,7 @@
           <button type="submit" class="hrs-btn primary" id="sh-goals-save">Save</button>
         </form>
       </section>
+      </div>
 <%- include('../partials/sdg-notice') %>
     </main>
   </div>

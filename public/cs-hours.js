@@ -65,7 +65,7 @@ function entryHtml(entry) {
       <div class="hrs-entry-main">
         <p class="hrs-entry-activity">${entry.isNew ? '<span class="hrs-new">New reply</span>' : ''}${escapeHtml(entry.title)}</p>
         <p class="hrs-entry-sub">${escapeHtml(reportWith(entry))} &middot; ${escapeHtml(reportDates(entry))} &middot; ${escapeHtml(hoursWord(entry.hours))}</p>
-        ${entry.note ? `<p class="hrs-entry-note"><strong>Ms. Gia:</strong> ${escapeHtml(entry.note)}</p>` : ''}
+        ${entry.note ? `<p class="hrs-entry-note"><strong>${escapeHtml(entry.noteFrom)}:</strong> ${escapeHtml(entry.note)}</p>` : ''}
         <div class="hrs-entry-actions">
           <button type="button" class="hrs-link" data-toggle="${escapeHtml(entry.id)}" aria-expanded="${open}">${open ? 'Hide report' : 'View report'}</button>
           ${canChange ? `<a class="hrs-link" href="/service-report?id=${encodeURIComponent(entry.id)}">${entry.status === 'rejected' ? 'Fix and resubmit' : 'Edit'}</a>

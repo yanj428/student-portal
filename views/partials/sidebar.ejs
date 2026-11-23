@@ -63,8 +63,8 @@
             <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M9 11L11 13L15 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </span>
           <span>Service Hours</span>
-<% if (badges.waiting) { %>          <span class="nav-badge" title="Reports waiting for approval"><%= badges.waiting %><span class="sr-only"> waiting</span></span>
-<% } %>        </a>
+          <span class="nav-badge" id="nav-hours-badge" title="Reports waiting for approval"<%= badges.waiting ? '' : ' hidden' %>><%= badges.waiting %></span>
+        </a>
 <% } %>
         <a href="/student-voice" class="nav-item<%= activePage === 'student-voice' ? ' active' : '' %>" data-page="student-voice">
           <span class="nav-icon">

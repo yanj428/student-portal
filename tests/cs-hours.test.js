@@ -375,3 +375,34 @@ test('the home page shows service hours only to Grades 9 to 12, and it can be sw
   assert.deepEqual(validateWidgetSettings('service', { showHours: false }, null).settings, { count: 3, showDescription: true, showHours: false });
   assert.ok(validateWidgetSettings('service', { showHours: 'no' }, null).error);
 });
+
+test('StuCo admins can view and decide on reports from the admin panel, signed as Student Council', async () => {
+  const student = await signedIn('hrs.adminview@kpis.ac.th', 'Grade 10');
+  const coord = await coordinator('hrs.adminviewcoord@kpis.ac.th');
+  const uploaded = (await student.agent.post('/api/cs-hours/evidence').attach('file', PNG, 'proof.png')).body.evidence;
+  const a = (await student.agent.post('/api/cs-hours').send(entry({ evidence: [{ id: uploaded.id, section: 'action' }] }))).body.entry;
+  const b = (await student.agent.post('/api/cs-hours').send(entry({ hours: 3 }))).body.entry;
+  const c = (await student.agent.post('/api/cs-hours').send(entry({ hours: 1 }))).body.entry;
+
+  assert.equal((await request(app).get('/api/admin/cs-hours')).status, 401);
+  assert.equal((await student.agent.get('/api/admin/cs-hours')).status, 401);
+
+  const view = await (await admin()).get('/api/admin/cs-hours');
+  assert.equal(view.status, 200);
+  const seen = view.body.entries.find((e) => e.id === a.id);
+  assert.equal(seen.evidence[0].url, `/api/admin/cs-hours/evidence/${uploaded.id}`);
+  assert.equal((await (await admin()).get(seen.evidence[0].url)).status, 200);
+  assert.equal((await (await admin()).get('/api/admin/cs-hours/export.csv')).status, 200);
+
+  assert.equal((await (await admin()).post(`/api/admin/cs-hours/${a.id}/approve`).send({ note: 'Nice work from StuCo' })).status, 200);
+  assert.equal((await (await admin()).post('/api/admin/cs-hours/approve-many').send({ items: [{ id: b.id }] })).status, 200);
+  await coord.agent.post(`/api/cs-hours/review/${c.id}/reject`).send({ note: 'Add evidence' });
+
+  const mine = (await student.agent.get('/api/cs-hours')).body.entries;
+  assert.equal(mine.find((e) => e.id === a.id).noteFrom, 'Student Council');
+  assert.equal(mine.find((e) => e.id === c.id).noteFrom, 'Ms. Gia');
+  assert.ok(db.listAuditLog({ limit: 20 }).some((row) => row.action === 'cs_hours.approve'));
+
+  // The hour requirements stay with the coordinator.
+  assert.equal((await (await admin()).put('/api/admin/cs-hours/targets').send({ total: 1, yearly: 1 })).status, 404);
+});

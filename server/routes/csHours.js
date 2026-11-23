@@ -357,26 +357,13 @@ router.delete('/api/cs-hours/:id', requireHourLogger, (req, res) => {
 });
 
 // ---- Reviewing everyone's reports ----
-// Two kinds of reviewer use the same routes under different paths: the
-// coordinator (Ms. Gia) on the student site at /api/cs-hours/review, and StuCo
-// admins in the admin panel at /api/admin/cs-hours. Both can view and decide;
-// only the coordinator sets the hour targets. Admin decisions are also logged
-// in the admin audit log.
+// The coordinator (Ms. Gia) reviews on the student site at /api/cs-hours/review
+// and is the only one who approves, declines or sets the hour targets. StuCo
+// admins see the same reports in the admin panel at /api/admin/cs-hours, view
+// only (the school decided StuCo should not approve hours).
 const REVIEWERS = [
-  {
-    base: '/api/cs-hours/review',
-    auth: requireCsCoordinator,
-    evidenceBase: '/api/cs-hours/evidence',
-    who: (req) => ({ reviewedBy: fullName(req.student), reviewedByRole: 'coordinator', approvedBy: '' }),
-    log: () => {},
-  },
-  {
-    base: '/api/admin/cs-hours',
-    auth: requireAdmin,
-    evidenceBase: '/api/admin/cs-hours/evidence',
-    who: (req) => ({ reviewedBy: req.admin.username, reviewedByRole: 'admin', approvedBy: '' }),
-    log: (req, action, details) => db.logAuditEvent(req.session.adminUsername, action, details),
-  },
+  { base: '/api/cs-hours/review', auth: requireCsCoordinator, evidenceBase: '/api/cs-hours/evidence', canDecide: true },
+  { base: '/api/admin/cs-hours', auth: requireAdmin, evidenceBase: '/api/admin/cs-hours/evidence', canDecide: false },
 ];
 const BULK_MAX = 100;
 
@@ -400,47 +387,47 @@ for (const reviewer of REVIEWERS) {
     });
   });
 
-  // A decision can also be changed later, for example after hearing back from the advisor.
-  for (const [action, status] of [['approve', 'approved'], ['reject', 'rejected']]) {
-    router.post(`${reviewer.base}/:id/${action}`, reviewer.auth, (req, res) => {
-      const note = typeof req.body?.note === 'string' ? req.body.note.trim() : '';
-      if (note.length > NOTE_MAX) return res.status(400).json({ error: `The note must be ${NOTE_MAX} characters or fewer.` });
+  if (reviewer.canDecide) {
+    // A decision can also be changed later, for example after hearing back from the advisor.
+    for (const [action, status] of [['approve', 'approved'], ['reject', 'rejected']]) {
+      router.post(`${reviewer.base}/:id/${action}`, reviewer.auth, (req, res) => {
+        const note = typeof req.body?.note === 'string' ? req.body.note.trim() : '';
+        if (note.length > NOTE_MAX) return res.status(400).json({ error: `The note must be ${NOTE_MAX} characters or fewer.` });
+
+        const entries = db.readCsHours();
+        const entry = entries.find((e) => e.id === req.params.id);
+        if (!entry) return res.status(404).json({ error: 'Report not found.' });
+
+        Object.assign(entry, { status, note, reviewedBy: fullName(req.student), reviewedByRole: 'coordinator', approvedBy: '', reviewedAt: new Date().toISOString(), studentSeen: false });
+        db.writeCsHours(entries);
+        res.json({ ok: true });
+      });
+    }
+
+    // Approves several reports at once. Body: { items: [{ id, note }] }; each
+    // report keeps whatever note was typed on its own card.
+    router.post(`${reviewer.base}/approve-many`, reviewer.auth, (req, res) => {
+      const items = req.body?.items;
+      if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'Choose at least one report.' });
+      if (items.length > BULK_MAX) return res.status(400).json({ error: `Approve up to ${BULK_MAX} reports at a time.` });
 
       const entries = db.readCsHours();
-      const entry = entries.find((e) => e.id === req.params.id);
-      if (!entry) return res.status(404).json({ error: 'Report not found.' });
-
-      Object.assign(entry, { status, note, ...reviewer.who(req), reviewedAt: new Date().toISOString(), studentSeen: false });
+      const byId = new Map(entries.map((e) => [e.id, e]));
+      for (const item of items) {
+        if (!item || typeof item.id !== 'string' || !byId.has(item.id)) return res.status(404).json({ error: 'One of the reports was not found. Reload the page and try again.' });
+        if (item.note !== undefined && (typeof item.note !== 'string' || item.note.trim().length > NOTE_MAX)) {
+          return res.status(400).json({ error: `Notes must be ${NOTE_MAX} characters or fewer.` });
+        }
+      }
+      const who = { reviewedBy: fullName(req.student), reviewedByRole: 'coordinator', approvedBy: '' };
+      const reviewedAt = new Date().toISOString();
+      items.forEach((item) => {
+        Object.assign(byId.get(item.id), { status: 'approved', note: (item.note || '').trim(), ...who, reviewedAt, studentSeen: false });
+      });
       db.writeCsHours(entries);
-      reviewer.log(req, `cs_hours.${action}`, { report: entry.id, title: entry.title });
-      res.json({ ok: true });
+      res.json({ approved: items.length });
     });
   }
-
-  // Approves several reports at once. Body: { items: [{ id, note }] }; each
-  // report keeps whatever note was typed on its own card.
-  router.post(`${reviewer.base}/approve-many`, reviewer.auth, (req, res) => {
-    const items = req.body?.items;
-    if (!Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'Choose at least one report.' });
-    if (items.length > BULK_MAX) return res.status(400).json({ error: `Approve up to ${BULK_MAX} reports at a time.` });
-
-    const entries = db.readCsHours();
-    const byId = new Map(entries.map((e) => [e.id, e]));
-    for (const item of items) {
-      if (!item || typeof item.id !== 'string' || !byId.has(item.id)) return res.status(404).json({ error: 'One of the reports was not found. Reload the page and try again.' });
-      if (item.note !== undefined && (typeof item.note !== 'string' || item.note.trim().length > NOTE_MAX)) {
-        return res.status(400).json({ error: `Notes must be ${NOTE_MAX} characters or fewer.` });
-      }
-    }
-    const who = reviewer.who(req);
-    const reviewedAt = new Date().toISOString();
-    items.forEach((item) => {
-      Object.assign(byId.get(item.id), { status: 'approved', note: (item.note || '').trim(), ...who, reviewedAt, studentSeen: false });
-    });
-    db.writeCsHours(entries);
-    reviewer.log(req, 'cs_hours.approve_many', { count: items.length });
-    res.json({ approved: items.length });
-  });
 
   router.get(`${reviewer.base}/export.csv`, reviewer.auth, sendExport);
 }

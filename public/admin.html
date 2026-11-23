@@ -862,9 +862,9 @@
       <section class="admin-page-section" data-section="hours" hidden>
       <section class="panel">
         <h2>Service Hours</h2>
-        <p class="panel-hint">Every Grade 9&ndash;12 student's community service reports. Ms. Gia reviews these on the student site; StuCo admins can review them here too. Decisions made here are recorded in the admin audit log.</p>
+        <p class="panel-hint">Every Grade 9&ndash;12 student's community service reports and progress, view only. Ms. Gia approves or declines reports on her Service Hours page on the student site.</p>
       </section>
-      <div class="sh-root" id="sh-root" data-api="/api/admin/cs-hours" data-login="" data-targets="view" data-badge="nav-admin-hours-badge">
+      <div class="sh-root" id="sh-root" data-api="/api/admin/cs-hours" data-login="" data-targets="view" data-decide="view" data-badge="nav-admin-hours-badge">
       <section class="sh-stats" aria-label="Summary">
         <div class="sh-stat"><strong id="sh-stat-pending">0</strong><span>entries waiting for approval</span></div>
         <div class="sh-stat"><strong id="sh-stat-year">0</strong><span id="sh-stat-year-label">students have 25 hours this school year</span></div>
@@ -884,7 +884,7 @@
       </div>
 
       <section class="sh-panel" id="sh-panel-review" role="tabpanel" aria-labelledby="sh-tab-review">
-        <p class="sh-hint">Newest first. This list updates by itself. A note is optional; the student sees it next to your decision, signed &ldquo;Student Council&rdquo;.</p>
+        <p class="sh-hint">Newest first. This list updates by itself. These reports are waiting for Ms. Gia to approve them.</p>
         <div class="sh-bulk" id="sh-bulk" hidden>
           <label class="sh-only-behind"><input type="checkbox" id="sh-select-all" /> Select all</label>
           <button type="button" class="hrs-btn primary" id="sh-approve-selected" disabled>Approve selected</button>

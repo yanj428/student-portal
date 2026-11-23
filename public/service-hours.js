@@ -5,6 +5,7 @@
 //   data-login   where to go when the sign-in has run out
 //   data-targets "edit" if this viewer may change the hour requirements
 //   data-badge   id of the menu badge showing how many reports wait
+//   data-decide  "view" where reports can be read but not approved (StuCo)
 
 (function () {
 const root = document.getElementById('sh-root');
@@ -13,6 +14,7 @@ const API = root.dataset.api;
 // An empty data-login (the admin panel) means: leave it to the page's own sign-in screen.
 const LOGIN = root.dataset.login === undefined ? '/login' : root.dataset.login;
 const CAN_SET_TARGETS = root.dataset.targets === 'edit';
+const CAN_DECIDE = root.dataset.decide !== 'view';
 
 const sh = {
   statPending: document.getElementById('sh-stat-pending'),
@@ -98,6 +100,7 @@ function renderStats() {
 
 // ---- Review queue ----
 function decisionButtons(entry) {
+  if (!CAN_DECIDE) return '';
   return `
     <div class="sh-decide">
       <label class="sr-only" for="sh-note-${escapeHtml(entry.id)}">Note to the student (optional)</label>
@@ -117,7 +120,7 @@ function renderReview() {
   sh.reviewEmpty.hidden = pending.length > 0;
   const pendingIds = new Set(pending.map((e) => e.id));
   [...shSelected].forEach((id) => { if (!pendingIds.has(id)) shSelected.delete(id); });
-  sh.bulk.hidden = pending.length < 2;
+  sh.bulk.hidden = !CAN_DECIDE || pending.length < 2;
   updateBulk(pending.length);
   sh.reviewList.innerHTML = pending
     .map((entry) => {
@@ -125,7 +128,7 @@ function renderReview() {
       return `
       <article class="sh-review-card${shSelected.has(entry.id) ? ' selected' : ''}">
         <div class="sh-review-top">
-          <label class="sh-pick"><input type="checkbox" data-pick="${escapeHtml(entry.id)}"${shSelected.has(entry.id) ? ' checked' : ''} /><span class="sr-only">Select ${escapeHtml(entry.title)}</span></label>
+          ${CAN_DECIDE ? `<label class="sh-pick"><input type="checkbox" data-pick="${escapeHtml(entry.id)}"${shSelected.has(entry.id) ? ' checked' : ''} /><span class="sr-only">Select ${escapeHtml(entry.title)}</span></label>` : ''}
           <div class="sh-review-main">
             <p class="sh-review-name">${escapeHtml(student.fullName)} <span class="sh-grade-pill">${escapeHtml(student.gradeLabel)}</span></p>
             <p class="sh-review-activity">${escapeHtml(entry.title)}</p>

@@ -384,7 +384,7 @@ test('the home page shows service hours only to Grades 9 to 12, and it can be sw
   assert.ok(validateWidgetSettings('service', { showHours: 'no' }, null).error);
 });
 
-test('StuCo admins can view and decide on reports from the admin panel, signed as Student Council', async () => {
+test('StuCo admins can view every report from the admin panel but cannot approve or decline', async () => {
   const student = await signedIn('hrs.adminview@kpis.ac.th', 'Grade 10');
   const coord = await coordinator('hrs.adminviewcoord@kpis.ac.th');
   const uploaded = (await student.agent.post('/api/cs-hours/evidence').attach('file', PNG, 'proof.png')).body.evidence;
@@ -402,14 +402,16 @@ test('StuCo admins can view and decide on reports from the admin panel, signed a
   assert.equal((await (await admin()).get(seen.evidence[0].url)).status, 200);
   assert.equal((await (await admin()).get('/api/admin/cs-hours/export.csv')).status, 200);
 
-  assert.equal((await (await admin()).post(`/api/admin/cs-hours/${a.id}/approve`).send({ note: 'Nice work from StuCo' })).status, 200);
-  assert.equal((await (await admin()).post('/api/admin/cs-hours/approve-many').send({ items: [{ id: b.id }] })).status, 200);
-  await coord.agent.post(`/api/cs-hours/review/${c.id}/reject`).send({ note: 'Add evidence' });
+  // Only Ms. Gia decides: the admin routes for it do not exist.
+  assert.equal((await (await admin()).post(`/api/admin/cs-hours/${a.id}/approve`).send({ note: 'Nice work from StuCo' })).status, 404);
+  assert.equal((await (await admin()).post(`/api/admin/cs-hours/${a.id}/reject`).send({})).status, 404);
+  assert.equal((await (await admin()).post('/api/admin/cs-hours/approve-many').send({ items: [{ id: b.id }] })).status, 404);
+  assert.ok(view.body.entries.filter((e) => e.studentId === student.id).every((e) => e.status === 'pending'));
 
+  await coord.agent.post(`/api/cs-hours/review/${c.id}/reject`).send({ note: 'Add evidence' });
   const mine = (await student.agent.get('/api/cs-hours')).body.entries;
-  assert.equal(mine.find((e) => e.id === a.id).noteFrom, 'Student Council');
+  assert.equal(mine.find((e) => e.id === a.id).status, 'pending');
   assert.equal(mine.find((e) => e.id === c.id).noteFrom, 'Ms. Gia');
-  assert.ok(db.listAuditLog({ limit: 20 }).some((row) => row.action === 'cs_hours.approve'));
 
   // The hour requirements stay with the coordinator.
   assert.equal((await (await admin()).put('/api/admin/cs-hours/targets').send({ total: 1, yearly: 1 })).status, 404);
@@ -439,16 +441,17 @@ test('an after-school club marked for service hours can be picked on a report an
 
 test("the grade a student chose wins over the date, and feeds the per-grade totals", async () => {
   const student = await signedIn('hrs.gradetotals@kpis.ac.th', 'Grade 11');
+  const coord = await coordinator('hrs.gradetotalscoord@kpis.ac.th');
   const lastYear = new Date(Date.parse(`${schoolYearStart()}T00:00:00Z`) - 86400000).toISOString().slice(0, 10);
   // Done last school year, so the date alone would say Grade 10; the student says Grade 9.
   const chosen = (await student.agent.post('/api/cs-hours').send(entry({ date: lastYear, serviceGrade: 9, hours: 2 }))).body.entry;
   const thisYear = (await student.agent.post('/api/cs-hours').send(entry({ serviceGrade: 11, hours: 3 }))).body.entry;
-  await (await admin()).post('/api/admin/cs-hours/approve-many').send({ items: [{ id: chosen.id }, { id: thisYear.id }] });
+  await coord.agent.post('/api/cs-hours/review/approve-many').send({ items: [{ id: chosen.id }, { id: thisYear.id }] });
 
   const data = (await student.agent.get('/api/cs-hours')).body;
   assert.equal(data.entries.find((e) => e.id === chosen.id).grade, 9);
   assert.deepEqual(data.gradeTotals, { 9: 2, 10: 0, 11: 3, 12: 0 });
-  assert.equal(data.entries.find((e) => e.id === chosen.id).approvedBy, 'StuCo');
+  assert.equal(data.entries.find((e) => e.id === chosen.id).approvedBy, 'CT');
 });
 
 test('hours imported from the school sheet (no report, maybe no date) show everywhere without errors', async () => {

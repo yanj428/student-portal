@@ -11,7 +11,6 @@
   justify-content: center;
 }
 .cs-icon svg { width: 24px; height: 24px; }
-.cs-icon-solid { background: var(--primary); color: #fff; }
 
 .cs-grades {
   display: inline-block;
@@ -24,65 +23,18 @@
   font-weight: 600;
 }
 
-/* What is community service */
-.cs-what {
-  background: var(--surface);
-  border: 1.3px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 18px 20px;
-}
-.cs-what p { font-size: 16px; line-height: 1.5; margin: 0 0 14px 0; }
-.cs-ways { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.cs-way {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: 14px 10px;
-  background: var(--primary-tint);
-  border-radius: var(--radius-sm);
-  color: var(--primary-dark);
-  text-align: center;
-}
-.cs-way svg { width: 26px; height: 26px; color: var(--primary); margin-bottom: 4px; }
-.cs-way strong { font-size: 17px; }
-.cs-way small { font-size: 13.5px; }
-
 /* Two columns */
-.cs-layout { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr); gap: 20px; align-items: start; }
-.cs-main, .cs-rail { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.cs-rail { display: flex; flex-direction: column; gap: 20px; min-width: 0; max-width: 640px; }
 .cs-label { font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--primary); margin: 0 0 12px 0; }
 .cs-heading { font-size: 20.8px; font-weight: 700; margin: 0 0 14px 0; }
 
-/* Path */
-.cs-path-card, .cs-toolkit {
+/* Toolkit */
+.cs-toolkit {
   background: var(--surface);
   border: 1.3px solid var(--border);
   border-radius: var(--radius-md);
   padding: 18px 20px;
 }
-.cs-path {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  text-align: center;
-}
-.cs-path::before {
-  content: "";
-  position: absolute;
-  top: 22px;
-  left: 12.5%;
-  right: 12.5%;
-  height: 3px;
-  background: var(--primary-tint);
-}
-.cs-path li { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 0 6px; }
-.cs-path .cs-icon { margin-bottom: 6px; box-shadow: 0 0 0 5px var(--surface); }
-.cs-path strong { font-size: 17px; }
-.cs-path small { font-size: 13.5px; line-height: 1.35; color: var(--text-muted); }
 
 /* Events feed */
 .cs-events-list { display: flex; flex-direction: column; gap: 12px; }
@@ -203,12 +155,15 @@ p.cs-events-empty { display: block; }
 .cs-idea svg { width: 24px; height: 24px; color: var(--primary); flex-shrink: 0; }
 
 @media (max-width: 900px) {
-  .cs-layout { grid-template-columns: 1fr; }
 }
 @media (max-width: 560px) {
-  .cs-ways { grid-template-columns: 1fr; }
-  .cs-path { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 18px; }
-  .cs-path::before { display: none; }
   .cs-event-date { width: 64px; }
   .cs-event-body { padding: 14px; }
 }
+/* Tabs */
+.cs-tabs { display: flex; gap: 4px; border-bottom: 1.3px solid var(--border); margin: 0 0 20px; overflow-x: auto; }
+.cs-tab { padding: 10px 18px; background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1.3px; font: inherit; font-size: 15.5px; font-weight: 600; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+.cs-tab:hover { color: var(--primary); }
+.cs-tab[aria-selected="true"] { color: var(--primary); border-bottom-color: var(--primary); }
+.cs-tab:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.cs-panel[hidden] { display: none; }

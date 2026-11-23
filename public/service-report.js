@@ -15,6 +15,8 @@ const sr = {
   orgField: $('sr-org-field'),
   start: $('sr-start'),
   end: $('sr-end'),
+  endField: $('sr-end-field'),
+  startLabel: $('sr-start-label'),
   sdgs: $('sr-sdgs'),
   need: $('sr-need'),
   goal: $('sr-goal'),
@@ -48,6 +50,7 @@ let evidence = []; // { id, name, mimetype, url, section }
 let editingId = new URLSearchParams(window.location.search).get('id');
 
 const withValue = () => sr.form.querySelector('input[name="sr-with"]:checked').value;
+const isMultiDay = () => sr.form.querySelector('input[name="sr-span"]:checked').value === 'many';
 const isPlanned = () => sr.form.querySelector('input[name="sr-planned"]:checked').value === 'yes';
 
 function showError(message) {
@@ -63,6 +66,13 @@ function updateWith() {
   sr.orgField.hidden = value !== 'org';
 }
 sr.form.querySelectorAll('input[name="sr-with"]').forEach((r) => r.addEventListener('change', updateWith));
+
+function updateSpan() {
+  sr.endField.hidden = !isMultiDay();
+  sr.startLabel.textContent = isMultiDay() ? 'First day' : 'Project date';
+  if (!isMultiDay()) sr.end.value = '';
+}
+sr.form.querySelectorAll('input[name="sr-span"]').forEach((r) => r.addEventListener('change', updateSpan));
 
 // Choosing a club fills in its causes and advisor, unless the student has
 // already picked their own.
@@ -254,7 +264,7 @@ function formState() {
     clubId: sr.club.value,
     organization: sr.org.value,
     startDate: sr.start.value,
-    endDate: sr.end.value,
+    endDate: isMultiDay() ? sr.end.value : '',
     sdgs: checkedSdgs(),
     need: sr.need.value,
     goal: sr.goal.value,
@@ -284,6 +294,8 @@ function fillState(state) {
   sr.org.value = state.organization || '';
   if (state.startDate) sr.start.value = state.startDate;
   sr.end.value = state.endDate || '';
+  sr.form.querySelector(`input[name="sr-span"][value="${state.endDate ? 'many' : 'one'}"]`).checked = true;
+  updateSpan();
   sr.sdgs.querySelectorAll('input').forEach((box) => { box.checked = (state.sdgs || []).includes(Number(box.value)); });
   sr.need.value = state.need || '';
   sr.goal.value = state.goal || '';
@@ -303,6 +315,7 @@ function fillState(state) {
   sr.advisorContact.value = state.advisorContact || '';
   updateWith();
   updatePlanned();
+  updateSpan();
   updateSdgLimit();
   renderFiles();
 }
@@ -442,6 +455,7 @@ sr.form.addEventListener('submit', async (e) => {
   }
   updateWith();
   updatePlanned();
+  updateSpan();
   updateSdgLimit();
   renderFiles();
   await restoreDraft();

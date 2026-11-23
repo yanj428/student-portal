@@ -7,7 +7,7 @@ const { csHoursLimiter } = require('../middleware/rateLimit');
 const { fullName } = require('../utils/studentName');
 const { validateOptionalUrl, normalizeUrl } = require('../utils/validateUrl');
 const { SDG_NAMES, sdgBadges, allSdgs } = require('../utils/sdgs');
-const { gradeNumber, logsServiceHours, isCsCoordinator, targetsFrom, totals, schoolToday, schoolYearStart } = require('../utils/csHours');
+const { gradeNumber, logsServiceHours, isCsCoordinator, targetsFrom, totals, schoolToday, schoolYearStart, entryGrade, initialsOf, gradeTotals } = require('../utils/csHours');
 const { receiveEvidence, saveEvidence, syncAttachedEvidence, findEvidence, fileFor } = require('../csEvidence');
 
 const router = express.Router();
@@ -170,7 +170,7 @@ function readReport(body, student) {
 
 // The full report as the student or coordinator sees it. The coordinator's
 // note is only shown to the student once there is a decision to explain.
-function reportView(entry, { forStudent, evidenceBase = '/api/cs-hours/evidence' }) {
+function reportView(entry, { forStudent, evidenceBase = '/api/cs-hours/evidence', currentGrade }) {
   const clubs = new Map(communityServiceClubs().map((c) => [c.id, c]));
   const club = entry.clubId ? clubs.get(entry.clubId) : null;
   const evidence = (entry.evidence || []).flatMap((ref) => {
@@ -201,7 +201,16 @@ function reportView(entry, { forStudent, evidenceBase = '/api/cs-hours/evidence'
     hours: entry.hours,
     advisorName: entry.advisorName,
     advisorContact: entry.advisorContact || '',
+    // Hours the coordinator recorded without a project report have nothing to open.
+    hasReport: !!(entry.need || entry.actionSummary || entry.reflection),
     status: entry.status,
+    // The grade the service was done in: what the student chose on the form,
+    // else what the school's sheet said for an imported row, else worked out
+    // from the date.
+    grade: entryGrade(entry, currentGrade),
+    // Initials of whoever approved it: from the school's sheet for imported
+    // rows, else the reviewer's; an admin's approval shows as StuCo.
+    approvedBy: entry.status === 'approved' ? entry.approvedBy || (entry.reviewedByRole === 'admin' ? 'StuCo' : initialsOf(entry.reviewedBy)) : '',
     // A decision the student has not seen yet (cleared when they open Community Service).
     isNew: forStudent && entry.status !== 'pending' && entry.studentSeen === false,
     note: forStudent && entry.status === 'pending' ? '' : entry.note || '',
@@ -279,8 +288,9 @@ router.get('/api/cs-hours/evidence/:id', requireActiveStudent, (req, res) => {
 router.get('/api/cs-hours', requireHourLogger, (req, res) => {
   const all = db.readCsHours();
   const entries = all.filter((e) => e.studentId === req.student.id);
-  entries.sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
-  const views = entries.map((e) => reportView(e, { forStudent: true }));
+  // Hours imported from the school's sheet can have no date when the sheet's was unreadable.
+  entries.sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.createdAt.localeCompare(a.createdAt));
+  const views = entries.map((e) => reportView(e, { forStudent: true, currentGrade: req.student.grade }));
   if (req.query.seen === '1' && entries.some((e) => e.studentSeen === false)) {
     entries.forEach((e) => { e.studentSeen = true; });
     db.writeCsHours(all);
@@ -288,6 +298,7 @@ router.get('/api/cs-hours', requireHourLogger, (req, res) => {
   res.json({
     entries: views,
     totals: totals(entries),
+    gradeTotals: gradeTotals(entries, req.student.grade),
     targets: readTargets(),
     today: schoolToday(),
   });
@@ -356,14 +367,14 @@ const REVIEWERS = [
     base: '/api/cs-hours/review',
     auth: requireCsCoordinator,
     evidenceBase: '/api/cs-hours/evidence',
-    who: (req) => ({ reviewedBy: fullName(req.student), reviewedByRole: 'coordinator' }),
+    who: (req) => ({ reviewedBy: fullName(req.student), reviewedByRole: 'coordinator', approvedBy: '' }),
     log: () => {},
   },
   {
     base: '/api/admin/cs-hours',
     auth: requireAdmin,
     evidenceBase: '/api/admin/cs-hours/evidence',
-    who: (req) => ({ reviewedBy: req.admin.username, reviewedByRole: 'admin' }),
+    who: (req) => ({ reviewedBy: req.admin.username, reviewedByRole: 'admin', approvedBy: '' }),
     log: (req, action, details) => db.logAuditEvent(req.session.adminUsername, action, details),
   },
 ];
@@ -376,13 +387,14 @@ for (const reviewer of REVIEWERS) {
     const byStudent = new Map(students.map((s) => [s.id, []]));
     const entries = db.readCsHours().filter((e) => byStudent.has(e.studentId));
     entries.forEach((e) => byStudent.get(e.studentId).push(e));
+    const gradeOf = new Map(students.map((s) => [s.id, s.grade]));
 
     res.json({
       students: students.map((s) => {
         const pub = publicStudent(s);
         return { id: s.id, fullName: pub.fullName, email: s.email, grade: s.grade, gradeLabel: pub.gradeLabel, gradeNumber: gradeNumber(s.grade), ...totals(byStudent.get(s.id), yearStart) };
       }),
-      entries: entries.map((e) => reportView(e, { forStudent: false, evidenceBase: reviewer.evidenceBase })),
+      entries: entries.map((e) => reportView(e, { forStudent: false, evidenceBase: reviewer.evidenceBase, currentGrade: gradeOf.get(e.studentId) })),
       targets: readTargets(),
       yearStart,
     });
@@ -475,17 +487,17 @@ function sendExport(req, res) {
   const rows = db
     .readCsHours()
     .filter((e) => students.has(e.studentId))
-    .map((e) => ({ e: reportView(e, { forStudent: false }), s: students.get(e.studentId) }))
-    .sort((a, b) => fullName(a.s).localeCompare(fullName(b.s)) || a.e.date.localeCompare(b.e.date));
+    .map((e) => ({ e: reportView(e, { forStudent: false, currentGrade: students.get(e.studentId).grade }), s: students.get(e.studentId) }))
+    .sort((a, b) => fullName(a.s).localeCompare(fullName(b.s)) || (a.e.date || '').localeCompare(b.e.date || ''));
 
   const header = ['Student', 'Email', 'Grade now', 'Grade when done', 'Project title', 'Club or organization', 'Start date', 'End date', 'Hours', 'UN goals',
     'Need in the community', 'Goal', 'Action summary', 'Reflection', 'Hours by task', 'Advisor', 'Advisor contact',
-    'Status', 'Note', 'Reviewed by', 'Reviewed on', 'Submitted on'];
+    'Status', 'Note', 'Reviewed by', 'Admin initials', 'Reviewed on', 'Submitted on'];
   const lines = [header, ...rows.map(({ e, s }) => [
-    fullName(s), s.email, s.grade, e.serviceGrade ? `Grade ${e.serviceGrade}` : '', e.title, e.clubName || e.organization || 'Own project', e.date, e.endDate, e.hours,
+    fullName(s), s.email, s.grade, e.grade ? `Grade ${e.grade}` : '', e.title, e.clubName || e.organization || 'Own project', e.date, e.endDate, e.hours,
     e.sdgs.map((g) => `${g.number}. ${g.name}`).join('; '), e.need, e.goal, e.actionSummary, e.reflection,
     e.tasks.map((t) => `${t.task} (${t.hours})`).join('; '), e.advisorName, e.advisorContact,
-    STATUS_LABEL[e.status] || e.status, e.note, e.reviewedBy, e.reviewedAt ? e.reviewedAt.slice(0, 10) : '', e.createdAt.slice(0, 10),
+    STATUS_LABEL[e.status] || e.status, e.note, e.reviewedBy, e.approvedBy, e.reviewedAt ? e.reviewedAt.slice(0, 10) : '', e.createdAt.slice(0, 10),
   ])].map((cells) => cells.map(csvCell).join(','));
 
   res.set('Content-Type', 'text/csv; charset=utf-8');

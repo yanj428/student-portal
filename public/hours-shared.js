@@ -25,6 +25,7 @@ function hoursWord(hours) {
 // "2026-11-08" -> "Nov 8, 2026". Parsed as a plain calendar date so the
 // viewer's own time zone can never move it to the day before.
 function formatEntryDate(iso, { withYear = true } = {}) {
+  if (!iso) return 'No date';
   const [y, m, d] = iso.split('-').map(Number);
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-US', {
     timeZone: 'UTC', month: 'short', day: 'numeric', ...(withYear ? { year: 'numeric' } : {}),
@@ -54,10 +55,12 @@ function reportDates(entry) {
   return `${formatEntryDate(entry.date, { withYear: !sameYear })} - ${formatEntryDate(entry.endDate)}`;
 }
 
-// "Done in Grade 10 · " before the rest of a report's details; empty for
-// reports logged before students were asked.
+// "Done in Grade 10 · " before the rest of a report's details. The server
+// works the grade out (the student's answer, an imported school record, or
+// the date), so it is only missing when none of those is known.
 function reportGrade(entry) {
-  return entry.serviceGrade ? `Done in Grade ${entry.serviceGrade} · ` : '';
+  const grade = entry.grade || entry.serviceGrade;
+  return grade ? `Done in Grade ${grade} · ` : '';
 }
 
 function reportWith(entry) {

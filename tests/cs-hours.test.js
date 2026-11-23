@@ -436,3 +436,41 @@ test('an after-school club marked for service hours can be picked on a report an
   const afterSchool = (await student.agent.get('/api/clubs?type=after-school')).body.clubs.map((c) => c.name);
   assert.ok(afterSchool.includes('Photo Club Test'));
 });
+
+test("the grade a student chose wins over the date, and feeds the per-grade totals", async () => {
+  const student = await signedIn('hrs.gradetotals@kpis.ac.th', 'Grade 11');
+  const lastYear = new Date(Date.parse(`${schoolYearStart()}T00:00:00Z`) - 86400000).toISOString().slice(0, 10);
+  // Done last school year, so the date alone would say Grade 10; the student says Grade 9.
+  const chosen = (await student.agent.post('/api/cs-hours').send(entry({ date: lastYear, serviceGrade: 9, hours: 2 }))).body.entry;
+  const thisYear = (await student.agent.post('/api/cs-hours').send(entry({ serviceGrade: 11, hours: 3 }))).body.entry;
+  await (await admin()).post('/api/admin/cs-hours/approve-many').send({ items: [{ id: chosen.id }, { id: thisYear.id }] });
+
+  const data = (await student.agent.get('/api/cs-hours')).body;
+  assert.equal(data.entries.find((e) => e.id === chosen.id).grade, 9);
+  assert.deepEqual(data.gradeTotals, { 9: 2, 10: 0, 11: 3, 12: 0 });
+  assert.equal(data.entries.find((e) => e.id === chosen.id).approvedBy, 'StuCo');
+});
+
+test('hours imported from the school sheet (no report, maybe no date) show everywhere without errors', async () => {
+  const student = await signedIn('hrs.imported@kpis.ac.th', 'Grade 12');
+  const coord = await coordinator('hrs.importedcoord@kpis.ac.th');
+  const now = new Date().toISOString();
+  const imported = (date, grade, title) => ({
+    id: `import-${title}`, studentId: student.id, title, clubId: '', organization: '', date, endDate: '', grade,
+    sdgs: [], links: [], evidence: [], tasks: [], hours: 5, advisorName: 'Ms. Gia', status: 'approved', approvedBy: 'GM', createdAt: now,
+  });
+  db.writeCsHours([...db.readCsHours(), imported('2024-12-14', 10, 'Food drive'), imported(null, 11, 'Fun run')]);
+
+  const mine = await student.agent.get('/api/cs-hours');
+  assert.equal(mine.status, 200);
+  assert.equal(mine.body.totals.approved, 10);
+  const row = mine.body.entries.find((e) => e.title === 'Food drive');
+  assert.equal(row.hasReport, false);
+  assert.equal(row.grade, 10);
+  assert.equal(row.approvedBy, 'GM');
+
+  for (const res of [await coord.agent.get('/api/cs-hours/review'), await (await admin()).get('/api/admin/cs-hours'),
+    await coord.agent.get('/api/cs-hours/export.csv'), await (await admin()).get('/api/admin/cs-hours/export.csv')]) {
+    assert.equal(res.status, 200, res.text);
+  }
+});

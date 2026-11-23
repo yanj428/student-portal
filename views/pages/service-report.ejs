@@ -50,9 +50,18 @@
 <% for (var g = 9; g <= currentGrade; g++) { %>              <option value="<%= g %>"<%= g === currentGrade ? ' selected' : '' %>>Grade <%= g %></option>
 <% } %>            </select>
           </label>
+
+          <fieldset class="sr-fieldset">
+            <legend>How long did it run?</legend>
+            <div class="sr-choice-row" role="radiogroup">
+              <label class="sr-choice"><input type="radio" name="sr-span" value="one" checked /><span>One day</span></label>
+              <label class="sr-choice"><input type="radio" name="sr-span" value="many" /><span>Several days</span></label>
+            </div>
+          </fieldset>
+
           <div class="sr-dates">
-            <label class="hrs-field"><span>Project date</span><input class="hrs-input" type="date" id="sr-start" required /></label>
-            <label class="hrs-field"><span>End date <small>(if it ran over several days)</small></span><input class="hrs-input" type="date" id="sr-end" /></label>
+            <label class="hrs-field"><span id="sr-start-label">Project date</span><input class="hrs-input" type="date" id="sr-start" required /></label>
+            <label class="hrs-field" id="sr-end-field" hidden><span>End date</span><input class="hrs-input" type="date" id="sr-end" /></label>
           </div>
 
           <fieldset class="sr-fieldset">

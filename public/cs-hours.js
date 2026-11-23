@@ -11,6 +11,9 @@ const hrs = {
   yearProgress: document.getElementById('hrs-year-progress'),
   yearBar: document.getElementById('hrs-year-bar'),
   pending: document.getElementById('hrs-pending'),
+  grades: document.getElementById('hrs-grades'),
+  grand: document.getElementById('hrs-grand'),
+  filters: document.getElementById('hrs-filters'),
   list: document.getElementById('hrs-list'),
   empty: document.getElementById('hrs-empty'),
   more: document.getElementById('hrs-more'),
@@ -21,6 +24,8 @@ const HRS_FIRST_SHOWN = 5;
 
 let hrsEntries = [];
 let hrsShowAll = false;
+let hrsFilter = 'all';
+let hrsYearStart = '';
 // Reports opened to read in full.
 const hrsOpen = new Set();
 
@@ -54,36 +59,69 @@ function renderHoursSummary(totals, targets) {
   hrs.pending.textContent = `${hoursWord(totals.pending)} waiting for approval`;
 }
 
+// 14-Dec-2023, the way the school's sheet writes it.
+function sheetDate(iso) {
+  if (!iso) return '\u2014';
+  const [y, m, d] = iso.split('-').map(Number);
+  return `${d}-${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1]}-${y}`;
+}
+
 function entryHtml(entry) {
-  const [, , day] = entry.date.split('-');
-  const month = formatEntryDate(entry.date, { withYear: false }).split(' ')[0];
   const canChange = entry.status !== 'approved';
-  const open = hrsOpen.has(entry.id);
+  const open = entry.hasReport && hrsOpen.has(entry.id);
+  const [tag, attrs] = entry.hasReport ? ['button', ` type="button" data-toggle="${escapeHtml(entry.id)}" aria-expanded="${open}"`] : ['div', ''];
   return `
-    <div class="hrs-entry-top">
-      <div class="hrs-date" aria-hidden="true"><span>${escapeHtml(month.toUpperCase())}</span><strong>${Number(day)}</strong></div>
-      <div class="hrs-entry-main">
-        <p class="hrs-entry-activity">${entry.isNew ? '<span class="hrs-new">New reply</span>' : ''}${escapeHtml(entry.title)}</p>
-        <p class="hrs-entry-sub">${escapeHtml(reportGrade(entry))}${escapeHtml(reportWith(entry))} &middot; ${escapeHtml(reportDates(entry))} &middot; ${escapeHtml(hoursWord(entry.hours))}</p>
-        ${entry.note ? `<p class="hrs-entry-note"><strong>${escapeHtml(entry.noteFrom)}:</strong> ${escapeHtml(entry.note)}</p>` : ''}
-        <div class="hrs-entry-actions">
-          <button type="button" class="hrs-link" data-toggle="${escapeHtml(entry.id)}" aria-expanded="${open}">${open ? 'Hide report' : 'View report'}</button>
-          ${canChange ? `<a class="hrs-link" href="/service-report?id=${encodeURIComponent(entry.id)}">${entry.status === 'rejected' ? 'Fix and resubmit' : 'Edit'}</a>
-          <button type="button" class="hrs-link danger" data-delete="${escapeHtml(entry.id)}">Delete</button>` : ''}
-        </div>
-      </div>
+    <${tag} class="hrs-entry-top${entry.hasReport ? '' : ' static'}"${attrs}>
+      <span>${escapeHtml(sheetDate(entry.date))}</span>
+      <span>${entry.grade || ''}</span>
+      <span class="hrs-act">${entry.isNew ? '<span class="hrs-new">New reply</span>' : ''}${escapeHtml(entry.title)}${entry.hasReport ? `<span class="hrs-chev" aria-hidden="true">${open ? '&#9650;' : '&#9660;'}</span>` : ''}</span>
+      <span class="hrs-num">${escapeHtml(formatHours(entry.hours))}</span>
+      <span>${escapeHtml(entry.advisorName)}</span>
       <span class="hrs-status status-${escapeHtml(entry.status)}">${escapeHtml(HOURS_STATUS_LABEL[entry.status] || entry.status)}</span>
-    </div>
-    ${open ? reportDetailsHtml(entry) : ''}`;
+      <span>${escapeHtml(entry.approvedBy || '')}</span>
+    </${tag}>
+    ${open ? `<div class="hrs-detail">
+      <p class="hrs-entry-sub">${escapeHtml(reportWith(entry))} &middot; ${escapeHtml(reportDates(entry))}</p>
+      ${entry.note ? `<p class="hrs-entry-note"><strong>${escapeHtml(entry.noteFrom)}:</strong> ${escapeHtml(entry.note)}</p>` : ''}
+      ${reportDetailsHtml(entry)}
+      ${canChange ? `<div class="hrs-entry-actions"><a class="hrs-link" href="/service-report?id=${encodeURIComponent(entry.id)}">${entry.status === 'rejected' ? 'Fix and resubmit' : 'Edit'}</a>
+        <button type="button" class="hrs-link danger" data-delete="${escapeHtml(entry.id)}">Delete</button></div>` : ''}
+    </div>` : ''}`;
+}
+
+function visibleEntries() {
+  if (hrsFilter === 'year') return hrsEntries.filter((e) => e.date >= hrsYearStart);
+  if (hrsFilter === 'pending') return hrsEntries.filter((e) => e.status === 'pending');
+  return hrsEntries;
 }
 
 function renderHoursList() {
-  const shown = hrsShowAll ? hrsEntries : hrsEntries.slice(0, HRS_FIRST_SHOWN);
+  const matching = visibleEntries();
+  const shown = hrsShowAll ? matching : matching.slice(0, HRS_FIRST_SHOWN);
   renderList(hrs.list, hrs.empty, shown, 'article', 'hrs-entry', entryHtml, (el, entry) => {
     el.classList.add(`status-${entry.status}`);
+    el.classList.toggle('open', hrsOpen.has(entry.id));
   });
-  hrs.more.hidden = hrsEntries.length <= HRS_FIRST_SHOWN;
-  hrs.more.textContent = hrsShowAll ? 'Show fewer' : `Show all ${hrsEntries.length} reports`;
+  hrs.more.hidden = matching.length <= HRS_FIRST_SHOWN;
+  hrs.more.textContent = hrsShowAll ? 'Show fewer' : `Show all ${matching.length} reports`;
+}
+
+hrs.filters.addEventListener('click', (e) => {
+  const chip = e.target.closest('[data-filter]');
+  if (!chip) return;
+  hrsFilter = chip.dataset.filter;
+  hrs.filters.querySelectorAll('[data-filter]').forEach((c) => {
+    c.classList.toggle('on', c === chip);
+    c.setAttribute('aria-pressed', String(c === chip));
+  });
+  renderHoursList();
+});
+
+function renderGradeTotals(gradeTotals, grand) {
+  hrs.grades.innerHTML = [9, 10, 11, 12]
+    .map((g) => `<tr><th scope="row">${g}</th><td>${escapeHtml(formatHours(gradeTotals[g] || 0))}</td></tr>`)
+    .join('');
+  hrs.grand.textContent = formatHours(grand);
 }
 
 hrs.list.addEventListener('click', async (e) => {
@@ -118,7 +156,9 @@ async function loadHours() {
   if (!data) return;
   clearReplyBadges();
   hrsEntries = data.entries;
+  hrsYearStart = `${Number(data.today.slice(5, 7)) >= 8 ? data.today.slice(0, 4) : Number(data.today.slice(0, 4)) - 1}-08-01`;
   renderHoursSummary(data.totals, data.targets);
+  renderGradeTotals(data.gradeTotals, data.totals.approved);
   renderHoursList();
 }
 

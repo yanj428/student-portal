@@ -20,9 +20,12 @@ function logsServiceHours(grade) {
 
 // The coordinator flag only counts on a teacher or staff account, so an
 // account whose grade is later changed to a student grade loses review access
-// without anyone having to remember to switch the flag off.
+// without anyone having to remember to switch the flag off. An admin's own
+// account (its email is the admin username) reviews hours without the flag.
+// db is required here, not at the top, because db.js loads this file.
 function isCsCoordinator(student) {
-  return !!(student && student.csCoordinator && isStaffRole(student.grade));
+  if (!student || !isStaffRole(student.grade)) return false;
+  return !!student.csCoordinator || !!require('../db').findAdminByUsername(student.email);
 }
 
 // The school's rule: 100 approved hours over Grades 9-12 to graduate, with 25
@@ -48,6 +51,47 @@ function schoolToday() {
 function schoolYearStart(today = schoolToday()) {
   const [year, month] = today.split('-').map(Number);
   return `${month >= 8 ? year : year - 1}-08-01`;
+}
+
+// The school year a date falls in, named by the year it starts (Aug 2026 to
+// Jun 2027 is 2026).
+function schoolYearOf(date) {
+  const [year, month] = date.split('-').map(Number);
+  return month >= 8 ? year : year - 1;
+}
+
+// Reports do not store a grade, so the grade a project was done in is worked
+// out from the student's grade now and how many school years ago it happened.
+function gradeAtDate(currentGrade, date, today = schoolToday()) {
+  const now = gradeNumber(currentGrade);
+  if (now === null) return null;
+  const grade = now - (schoolYearOf(today) - schoolYearOf(date));
+  return Math.min(12, Math.max(9, grade));
+}
+
+// "Gia M. Mee" becomes "GMM".
+function initialsOf(name) {
+  return String(name || '').split(/\s+/).filter(Boolean).map((w) => w[0].toUpperCase()).join('');
+}
+
+// The grade a project was done in: what the student chose on the report form,
+// else the grade written in the school's sheet for imported hours, else worked
+// out from the date (reports sent before the form asked).
+function entryGrade(entry, currentGrade, today = schoolToday()) {
+  if (entry.serviceGrade) return entry.serviceGrade;
+  if (entry.grade) return entry.grade;
+  return entry.date && currentGrade ? gradeAtDate(currentGrade, entry.date, today) : null;
+}
+
+// Approved hours per grade (9 to 12), for the Running totals card.
+function gradeTotals(entries, currentGrade, today = schoolToday()) {
+  const byGrade = { 9: 0, 10: 0, 11: 0, 12: 0 };
+  entries.filter((e) => e.status === 'approved').forEach((e) => {
+    const grade = entryGrade(e, currentGrade, today);
+    if (grade) byGrade[grade] += e.hours;
+  });
+  Object.keys(byGrade).forEach((g) => { byGrade[g] = Math.round(byGrade[g] * 100) / 100; });
+  return byGrade;
 }
 
 // Totals of one student's entries. Hours are kept to quarter hours, so
@@ -86,4 +130,8 @@ module.exports = {
   schoolToday,
   schoolYearStart,
   totals,
+  gradeAtDate,
+  entryGrade,
+  initialsOf,
+  gradeTotals,
 };

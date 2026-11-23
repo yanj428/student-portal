@@ -128,7 +128,7 @@ function renderReview() {
           <div class="sh-review-main">
             <p class="sh-review-name">${escapeHtml(student.fullName)} <span class="sh-grade-pill">${escapeHtml(student.gradeLabel)}</span></p>
             <p class="sh-review-activity">${escapeHtml(entry.title)}</p>
-            <p class="sh-review-sub">${escapeHtml(reportWith(entry))} &middot; ${escapeHtml(reportDates(entry))} &middot; sent ${escapeHtml(formatEntryDate(entry.createdAt.slice(0, 10)))}</p>
+            <p class="sh-review-sub">${escapeHtml(reportGrade(entry))}${escapeHtml(reportWith(entry))} &middot; ${escapeHtml(reportDates(entry))} &middot; sent ${escapeHtml(formatEntryDate(entry.createdAt.slice(0, 10)))}</p>
             ${sdgBadgesHtml(entry)}
           </div>
           <span class="sh-review-hours">${escapeHtml(hoursWord(entry.hours))}</span>
@@ -211,7 +211,7 @@ function studentEntriesHtml(student) {
       <div class="sh-entry">
         <div class="sh-entry-main">
           <p class="sh-review-activity">${escapeHtml(entry.title)}</p>
-          <p class="sh-review-sub">${escapeHtml(reportWith(entry))} &middot; ${escapeHtml(reportDates(entry))} &middot; ${escapeHtml(hoursWord(entry.hours))}${entry.reviewedBy ? ` &middot; reviewed by ${escapeHtml(entry.reviewedBy)}` : ''}</p>
+          <p class="sh-review-sub">${escapeHtml(reportGrade(entry))}${escapeHtml(reportWith(entry))} &middot; ${escapeHtml(reportDates(entry))} &middot; ${escapeHtml(hoursWord(entry.hours))}${entry.reviewedBy ? ` &middot; reviewed by ${escapeHtml(entry.reviewedBy)}` : ''}</p>
           ${entry.note && entry.status !== 'pending' ? `<p class="hrs-entry-note"><strong>Note:</strong> ${escapeHtml(entry.note)}</p>` : ''}
         </div>
         <span class="hrs-status status-${escapeHtml(entry.status)}">${escapeHtml(HOURS_STATUS_LABEL[entry.status])}</span>

@@ -8,6 +8,7 @@ const sr = {
   intro: $('sr-intro'),
   statusNote: $('sr-status-note'),
   title: $('sr-title'),
+  grade: $('sr-grade'),
   club: $('sr-club'),
   clubField: $('sr-club-field'),
   org: $('sr-org'),
@@ -249,6 +250,7 @@ function formState() {
   return {
     with: withValue(),
     title: sr.title.value,
+    serviceGrade: Number(sr.grade.value),
     clubId: sr.club.value,
     organization: sr.org.value,
     startDate: sr.start.value,
@@ -275,6 +277,8 @@ function formState() {
 
 function fillState(state) {
   sr.title.value = state.title || '';
+  // A grade the list does not offer (an old report, say) keeps the current grade.
+  if (state.serviceGrade && sr.grade.querySelector(`option[value="${state.serviceGrade}"]`)) sr.grade.value = String(state.serviceGrade);
   sr.form.querySelector(`input[name="sr-with"][value="${['club', 'org', 'own'].includes(state.with) ? state.with : 'club'}"]`).checked = true;
   sr.club.value = clubs.some((c) => c.id === state.clubId) ? state.clubId : '';
   sr.org.value = state.organization || '';

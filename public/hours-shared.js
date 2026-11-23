@@ -54,6 +54,12 @@ function reportDates(entry) {
   return `${formatEntryDate(entry.date, { withYear: !sameYear })} - ${formatEntryDate(entry.endDate)}`;
 }
 
+// "Done in Grade 10 · " before the rest of a report's details; empty for
+// reports logged before students were asked.
+function reportGrade(entry) {
+  return entry.serviceGrade ? `Done in Grade ${entry.serviceGrade} · ` : '';
+}
+
 function reportWith(entry) {
   return entry.clubName || entry.organization || 'Own project';
 }

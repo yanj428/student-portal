@@ -64,7 +64,7 @@ function entryHtml(entry) {
       <div class="hrs-date" aria-hidden="true"><span>${escapeHtml(month.toUpperCase())}</span><strong>${Number(day)}</strong></div>
       <div class="hrs-entry-main">
         <p class="hrs-entry-activity">${entry.isNew ? '<span class="hrs-new">New reply</span>' : ''}${escapeHtml(entry.title)}</p>
-        <p class="hrs-entry-sub">${escapeHtml(reportWith(entry))} &middot; ${escapeHtml(reportDates(entry))} &middot; ${escapeHtml(hoursWord(entry.hours))}</p>
+        <p class="hrs-entry-sub">${escapeHtml(reportGrade(entry))}${escapeHtml(reportWith(entry))} &middot; ${escapeHtml(reportDates(entry))} &middot; ${escapeHtml(hoursWord(entry.hours))}</p>
         ${entry.note ? `<p class="hrs-entry-note"><strong>${escapeHtml(entry.noteFrom)}:</strong> ${escapeHtml(entry.note)}</p>` : ''}
         <div class="hrs-entry-actions">
           <button type="button" class="hrs-link" data-toggle="${escapeHtml(entry.id)}" aria-expanded="${open}">${open ? 'Hide report' : 'View report'}</button>

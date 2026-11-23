@@ -44,6 +44,12 @@
             </label>
           </fieldset>
 
+<% var currentGrade = Math.min(12, parseInt(String(student.grade).replace(/\D+/g, ''), 10) || 12); %>
+          <label class="hrs-field sr-grade-field"><span>Which grade were you in when you did this?</span>
+            <select class="hrs-input" id="sr-grade" required>
+<% for (var g = 9; g <= currentGrade; g++) { %>              <option value="<%= g %>"<%= g === currentGrade ? ' selected' : '' %>>Grade <%= g %></option>
+<% } %>            </select>
+          </label>
           <div class="sr-dates">
             <label class="hrs-field"><span>Project date</span><input class="hrs-input" type="date" id="sr-start" required /></label>
             <label class="hrs-field"><span>End date <small>(if it ran over several days)</small></span><input class="hrs-input" type="date" id="sr-end" /></label>

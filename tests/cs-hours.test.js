@@ -46,6 +46,7 @@ async function coordinator(email) {
 // the start date, a single task's hours and the title.
 const entry = ({ date = schoolToday(), hours = 2, activity = 'Beach clean-up', ...fields } = {}) => ({
   title: activity,
+  serviceGrade: 9,
   startDate: date,
   endDate: '',
   clubId: '',
@@ -257,6 +258,10 @@ test('a report follows the Project Report form', async () => {
     ['after-school club', entry({ clubId: 'club-media' })],
     ['no tasks', entry({ tasks: [] })],
     ['task without hours', entry({ tasks: [{ task: 'Helping', hours: null }] })],
+    ['no grade', entry({ serviceGrade: undefined })],
+    ['grade 8', entry({ serviceGrade: 8 })],
+    ['grade as text', entry({ serviceGrade: '10' })],
+    ['a grade above the one they are in now', entry({ serviceGrade: 11 })],
     ['over 300 hours in one report', entry({ tasks: [{ task: 'Camp', hours: 200 }, { task: 'Follow-up', hours: 101 }] })],
   ]) {
     assert.equal((await agent.post('/api/cs-hours').send(bad)).status, 400, label);
@@ -275,6 +280,9 @@ test('a report follows the Project Report form', async () => {
   assert.equal(planned.status, 201, planned.text);
   const saved = planned.body.entry;
   assert.equal(saved.clubName, 'Green Club');
+  assert.equal(saved.serviceGrade, 9);
+  const tenth = (await agent.post('/api/cs-hours').send(entry({ serviceGrade: 10 }))).body.entry;
+  assert.equal(tenth.serviceGrade, 10);
   assert.equal(saved.organization, '');
   assert.equal(saved.hours, 3.75);
   assert.deepEqual(saved.sdgs.map((g) => g.name), ['Climate Action', 'Life on Land']);

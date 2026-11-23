@@ -60,10 +60,23 @@ const QUESTION = {
   advisorName: 'your advisor',
 };
 
-// Returns { report } or { error }. `studentId` is whose evidence may be attached.
-function readReport(body, studentId) {
+// Returns { report } or { error }. `student` is who is saving it: whose evidence
+// may be attached, and the highest grade the service can have been done in.
+function readReport(body, student) {
   if (!body || typeof body !== 'object') return { error: 'Please fill in the form.' };
+  const studentId = student.id;
   const report = {};
+
+  // The grade the student was in when they did the service (Grades 9-12, and
+  // never above the grade they are in now).
+  const currentGrade = gradeNumber(student.grade);
+  if (!Number.isInteger(body.serviceGrade) || body.serviceGrade < 9 || body.serviceGrade > 12) {
+    return { error: 'Please choose the grade you were in when you did this service.' };
+  }
+  if (currentGrade !== null && body.serviceGrade > currentGrade) {
+    return { error: `You are in Grade ${currentGrade} now, so the service cannot be from a later grade.` };
+  }
+  report.serviceGrade = body.serviceGrade;
 
   const planned = body.planned === true;
   const textFields = [
@@ -168,6 +181,7 @@ function reportView(entry, { forStudent, evidenceBase = '/api/cs-hours/evidence'
     clubId: entry.clubId || '',
     clubName: club ? club.name : entry.clubName || '',
     organization: entry.organization || '',
+    serviceGrade: entry.serviceGrade || null,
     date: entry.date,
     endDate: entry.endDate || '',
     sdgs: (entry.sdgs || []).map((n) => ({ number: n, name: SDG_NAMES[n - 1], url: (sdgBadges([n])[0] || {}).url || '' })),
@@ -278,7 +292,7 @@ router.get('/api/cs-hours', requireHourLogger, (req, res) => {
 });
 
 router.post('/api/cs-hours', requireHourLogger, csHoursLimiter, (req, res) => {
-  const { report, error } = readReport(req.body, req.student.id);
+  const { report, error } = readReport(req.body, req.student);
   if (error) return res.status(400).json({ error });
 
   const now = new Date().toISOString();
@@ -309,7 +323,7 @@ router.put('/api/cs-hours/:id', requireHourLogger, csHoursLimiter, (req, res) =>
   const entries = db.readCsHours();
   const entry = findOwnChangeable(req, res, entries);
   if (!entry) return;
-  const { report, error } = readReport(req.body, req.student.id);
+  const { report, error } = readReport(req.body, req.student);
   if (error) return res.status(400).json({ error });
 
   const before = (entry.evidence || []).map((e) => e.id);
@@ -462,11 +476,11 @@ function sendExport(req, res) {
     .map((e) => ({ e: reportView(e, { forStudent: false }), s: students.get(e.studentId) }))
     .sort((a, b) => fullName(a.s).localeCompare(fullName(b.s)) || a.e.date.localeCompare(b.e.date));
 
-  const header = ['Student', 'Email', 'Grade', 'Project title', 'Club or organization', 'Start date', 'End date', 'Hours', 'UN goals',
+  const header = ['Student', 'Email', 'Grade now', 'Grade when done', 'Project title', 'Club or organization', 'Start date', 'End date', 'Hours', 'UN goals',
     'Need in the community', 'Goal', 'Action summary', 'Reflection', 'Hours by task', 'Advisor', 'Advisor contact',
     'Status', 'Note', 'Reviewed by', 'Reviewed on', 'Submitted on'];
   const lines = [header, ...rows.map(({ e, s }) => [
-    fullName(s), s.email, s.grade, e.title, e.clubName || e.organization || 'Own project', e.date, e.endDate, e.hours,
+    fullName(s), s.email, s.grade, e.serviceGrade ? `Grade ${e.serviceGrade}` : '', e.title, e.clubName || e.organization || 'Own project', e.date, e.endDate, e.hours,
     e.sdgs.map((g) => `${g.number}. ${g.name}`).join('; '), e.need, e.goal, e.actionSummary, e.reflection,
     e.tasks.map((t) => `${t.task} (${t.hours})`).join('; '), e.advisorName, e.advisorContact,
     STATUS_LABEL[e.status] || e.status, e.note, e.reviewedBy, e.reviewedAt ? e.reviewedAt.slice(0, 10) : '', e.createdAt.slice(0, 10),

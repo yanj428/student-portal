@@ -43,6 +43,7 @@ document.querySelector('.main').addEventListener('input', (e) => {
 });
 
 function reportToggle(entry) {
+  if (!entry.hasReport) return '';
   const open = shOpenReports.has(entry.id);
   return `<button type="button" class="hrs-link sh-read" data-report="${escapeHtml(entry.id)}" aria-expanded="${open}">${open ? 'Hide full report' : 'Read full report'}</button>
     ${open ? reportDetailsHtml(entry) : ''}`;
@@ -193,7 +194,7 @@ function studentEntriesHtml(student) {
       <div class="sh-entry">
         <div class="sh-entry-main">
           <p class="sh-review-activity">${escapeHtml(entry.title)}</p>
-          <p class="sh-review-sub">${escapeHtml(reportWith(entry))} &middot; ${escapeHtml(reportDates(entry))} &middot; ${escapeHtml(hoursWord(entry.hours))}${entry.reviewedBy ? ` &middot; reviewed by ${escapeHtml(entry.reviewedBy)}` : ''}</p>
+          <p class="sh-review-sub">${escapeHtml(reportWith(entry))} &middot; ${escapeHtml(reportDates(entry))} &middot; ${escapeHtml(hoursWord(entry.hours))}${entry.grade ? ` &middot; Grade ${entry.grade}` : ''}${entry.hasReport ? '' : ' &middot; no report (from the school record)'}${entry.reviewedBy || entry.approvedBy ? ` &middot; reviewed by ${escapeHtml(entry.reviewedBy || entry.approvedBy)}` : ''}</p>
           ${entry.note && entry.status !== 'pending' ? `<p class="hrs-entry-note"><strong>Note:</strong> ${escapeHtml(entry.note)}</p>` : ''}
         </div>
         <span class="hrs-status status-${escapeHtml(entry.status)}">${escapeHtml(HOURS_STATUS_LABEL[entry.status])}</span>

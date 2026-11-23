@@ -15,6 +15,7 @@ function hoursWord(hours) {
 // "2026-11-08" -> "Nov 8, 2026". Parsed as a plain calendar date so the
 // viewer's own time zone can never move it to the day before.
 function formatEntryDate(iso, { withYear = true } = {}) {
+  if (!iso) return 'No date';
   const [y, m, d] = iso.split('-').map(Number);
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-US', {
     timeZone: 'UTC', month: 'short', day: 'numeric', ...(withYear ? { year: 'numeric' } : {}),

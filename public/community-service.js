@@ -45,3 +45,19 @@ function dateTile(text) {
       </a>`)
     .join('');
 })();
+// Log hours / Events / Information. The chosen tab is kept in the address
+// (#events) so a refresh or a shared link opens the same one.
+(function tabs() {
+  const tabs = [...document.querySelectorAll('.cs-tab')];
+  const names = tabs.map((t) => t.dataset.tab);
+  function show(name) {
+    tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.tab === name)));
+    document.querySelectorAll('.cs-panel').forEach((p) => { p.hidden = p.id !== `cs-panel-${name}`; });
+  }
+  tabs.forEach((t) => t.addEventListener('click', () => {
+    show(t.dataset.tab);
+    history.replaceState(null, '', `#${t.dataset.tab}`);
+  }));
+  const wanted = location.hash.slice(1);
+  show(names.includes(wanted) ? wanted : names[0]);
+})();

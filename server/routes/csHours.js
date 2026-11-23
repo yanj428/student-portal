@@ -7,7 +7,7 @@ const { csHoursLimiter } = require('../middleware/rateLimit');
 const { fullName } = require('../utils/studentName');
 const { validateOptionalUrl, normalizeUrl } = require('../utils/validateUrl');
 const { SDG_NAMES, sdgBadges, allSdgs } = require('../utils/sdgs');
-const { gradeNumber, logsServiceHours, isCsCoordinator, targetsFrom, totals, schoolToday, schoolYearStart } = require('../utils/csHours');
+const { gradeNumber, logsServiceHours, isCsCoordinator, targetsFrom, totals, schoolToday, schoolYearStart, entryGrade, initialsOf, gradeTotals } = require('../utils/csHours');
 const { receiveEvidence, saveEvidence, syncAttachedEvidence, findEvidence, fileFor } = require('../csEvidence');
 
 const router = express.Router();
@@ -155,7 +155,7 @@ function readReport(body, studentId) {
 
 // The full report as the student or coordinator sees it. The coordinator's
 // note is only shown to the student once there is a decision to explain.
-function reportView(entry, { forStudent }) {
+function reportView(entry, { forStudent, currentGrade }) {
   const clubs = new Map(communityServiceClubs().map((c) => [c.id, c]));
   const club = entry.clubId ? clubs.get(entry.clubId) : null;
   const evidence = (entry.evidence || []).flatMap((ref) => {
@@ -185,7 +185,11 @@ function reportView(entry, { forStudent }) {
     hours: entry.hours,
     advisorName: entry.advisorName,
     advisorContact: entry.advisorContact || '',
+    // Hours the coordinator recorded without a project report have nothing to open.
+    hasReport: !!(entry.need || entry.actionSummary || entry.reflection),
     status: entry.status,
+    grade: currentGrade ? entryGrade(entry, currentGrade) : null,
+    approvedBy: entry.status === 'approved' ? entry.approvedBy || initialsOf(entry.reviewedBy) : '',
     // A decision the student has not seen yet (cleared when they open Community Service).
     isNew: forStudent && entry.status !== 'pending' && entry.studentSeen === false,
     note: forStudent && entry.status === 'pending' ? '' : entry.note || '',
@@ -257,7 +261,7 @@ router.get('/api/cs-hours', requireHourLogger, (req, res) => {
   const all = db.readCsHours();
   const entries = all.filter((e) => e.studentId === req.student.id);
   entries.sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
-  const views = entries.map((e) => reportView(e, { forStudent: true }));
+  const views = entries.map((e) => reportView(e, { forStudent: true, currentGrade: req.student.grade }));
   if (req.query.seen === '1' && entries.some((e) => e.studentSeen === false)) {
     entries.forEach((e) => { e.studentSeen = true; });
     db.writeCsHours(all);
@@ -265,6 +269,7 @@ router.get('/api/cs-hours', requireHourLogger, (req, res) => {
   res.json({
     entries: views,
     totals: totals(entries),
+    gradeTotals: gradeTotals(entries, req.student.grade),
     targets: readTargets(),
     today: schoolToday(),
   });
@@ -330,13 +335,14 @@ router.get('/api/cs-hours/review', requireCsCoordinator, (req, res) => {
   const byStudent = new Map(students.map((s) => [s.id, []]));
   const entries = db.readCsHours().filter((e) => byStudent.has(e.studentId));
   entries.forEach((e) => byStudent.get(e.studentId).push(e));
+  const gradeOf = new Map(students.map((s) => [s.id, s.grade]));
 
   res.json({
     students: students.map((s) => {
       const pub = publicStudent(s);
       return { id: s.id, fullName: pub.fullName, email: s.email, grade: s.grade, gradeLabel: pub.gradeLabel, gradeNumber: gradeNumber(s.grade), ...totals(byStudent.get(s.id), yearStart) };
     }),
-    entries: entries.map((e) => reportView(e, { forStudent: false })),
+    entries: entries.map((e) => reportView(e, { forStudent: false, currentGrade: gradeOf.get(e.studentId) })),
     targets: readTargets(),
     yearStart,
   });
@@ -353,7 +359,7 @@ for (const [action, status] of [['approve', 'approved'], ['reject', 'rejected']]
     const entry = entries.find((e) => e.id === req.params.id);
     if (!entry) return res.status(404).json({ error: 'Report not found.' });
 
-    Object.assign(entry, { status, note, reviewedBy: fullName(req.student), reviewedAt: new Date().toISOString(), studentSeen: false });
+    Object.assign(entry, { status, note, approvedBy: '', reviewedBy: fullName(req.student), reviewedAt: new Date().toISOString(), studentSeen: false });
     db.writeCsHours(entries);
     res.json({ ok: true });
   });
@@ -378,7 +384,7 @@ router.post('/api/cs-hours/review/approve-many', requireCsCoordinator, (req, res
   const reviewedBy = fullName(req.student);
   const reviewedAt = new Date().toISOString();
   items.forEach((item) => {
-    Object.assign(byId.get(item.id), { status: 'approved', note: (item.note || '').trim(), reviewedBy, reviewedAt, studentSeen: false });
+    Object.assign(byId.get(item.id), { status: 'approved', note: (item.note || '').trim(), approvedBy: '', reviewedBy, reviewedAt, studentSeen: false });
   });
   db.writeCsHours(entries);
   res.json({ approved: items.length });
@@ -416,17 +422,17 @@ router.get('/api/cs-hours/export.csv', requireCsCoordinator, (req, res) => {
   const rows = db
     .readCsHours()
     .filter((e) => students.has(e.studentId))
-    .map((e) => ({ e: reportView(e, { forStudent: false }), s: students.get(e.studentId) }))
+    .map((e) => ({ e: reportView(e, { forStudent: false, currentGrade: students.get(e.studentId).grade }), s: students.get(e.studentId) }))
     .sort((a, b) => fullName(a.s).localeCompare(fullName(b.s)) || a.e.date.localeCompare(b.e.date));
 
   const header = ['Student', 'Email', 'Grade', 'Project title', 'Club or organization', 'Start date', 'End date', 'Hours', 'UN goals',
     'Need in the community', 'Goal', 'Action summary', 'Reflection', 'Hours by task', 'Advisor', 'Advisor contact',
-    'Status', 'Note', 'Reviewed by', 'Reviewed on', 'Submitted on'];
+    'Status', 'Note', 'Reviewed by', 'Admin initials', 'Reviewed on', 'Submitted on', 'Grade at project'];
   const lines = [header, ...rows.map(({ e, s }) => [
     fullName(s), s.email, s.grade, e.title, e.clubName || e.organization || 'Own project', e.date, e.endDate, e.hours,
     e.sdgs.map((g) => `${g.number}. ${g.name}`).join('; '), e.need, e.goal, e.actionSummary, e.reflection,
     e.tasks.map((t) => `${t.task} (${t.hours})`).join('; '), e.advisorName, e.advisorContact,
-    STATUS_LABEL[e.status] || e.status, e.note, e.reviewedBy, e.reviewedAt ? e.reviewedAt.slice(0, 10) : '', e.createdAt.slice(0, 10),
+    STATUS_LABEL[e.status] || e.status, e.note, e.reviewedBy, e.approvedBy, e.reviewedAt ? e.reviewedAt.slice(0, 10) : '', e.createdAt.slice(0, 10), e.grade,
   ])].map((cells) => cells.map(csvCell).join(','));
 
   res.set('Content-Type', 'text/csv; charset=utf-8');

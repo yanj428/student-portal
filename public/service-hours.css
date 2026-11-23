@@ -84,33 +84,43 @@
 
 .hrs-form-buttons { display: flex; gap: 10px; }
 
-.hrs-list { display: flex; flex-direction: column; gap: 8px; }
+.hrs-list { display: flex; flex-direction: column; }
 .hrs-list:empty { display: none; }
-.hrs-entry {
-  padding: 12px 14px;
-  border: 1.3px solid var(--border);
-  border-radius: var(--radius-sm);
-}
-.hrs-entry-top { display: flex; align-items: flex-start; gap: 12px; }
+.hrs-entry { border-top: 1.3px solid var(--border); }
 .hrs-entry.status-rejected { background: #FBF8F8; }
-.hrs-date {
-  flex-shrink: 0;
-  width: 46px;
-  padding: 5px 0;
-  border-radius: 10px;
-  background: var(--primary-tint);
-  color: var(--primary);
-  display: flex;
-  flex-direction: column;
+.hrs-cols, .hrs-entry-top {
+  display: grid;
+  grid-template-columns: 96px 44px minmax(0, 1fr) 54px 130px 96px 84px;
+  gap: 10px;
   align-items: center;
-  line-height: 1.05;
 }
-.hrs-date span { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
-.hrs-date strong { font-size: 19px; }
-.hrs-entry-main { flex: 1; min-width: 0; }
-.hrs-entry-activity { margin: 0; font-size: 16px; font-weight: 600; overflow-wrap: anywhere; }
+.hrs-cols { padding: 0 8px 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--primary); }
+.hrs-entry-top { width: 100%; padding: 12px 8px; background: none; border: 0; font: inherit; text-align: left; color: inherit; cursor: pointer; border-radius: 8px; }
+.hrs-entry-top:hover, .hrs-entry.open .hrs-entry-top { background: var(--primary-tint); }
+.hrs-entry-top.static { cursor: default; }
+.hrs-entry-top.static:hover { background: none; }
+.hrs-entry-top:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.hrs-entry-top > span { min-width: 0; overflow-wrap: anywhere; font-size: 14.5px; }
+.hrs-num { text-align: right; }
+.hrs-act { font-weight: 600; }
+.hrs-chev { display: inline-block; margin-left: 6px; font-size: 12px; color: var(--text-muted); }
+.hrs-detail { padding: 4px 8px 16px; }
+.hrs-detail .hrs-entry-note { margin-top: 0; }
+.hrs-status { justify-self: start; }
+.hrs-chip { padding: 4px 12px; border: 1.3px solid var(--border); border-radius: 999px; background: #fff; font: inherit; font-size: 13.5px; font-weight: 600; color: var(--text-muted); cursor: pointer; }
+.hrs-chip.on { border-color: var(--primary); background: var(--primary-tint); color: var(--primary); }
+.hrs-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.hrs-activities-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.hrs-activities-head .cs-label { margin: 0; }
+.cs-top { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px; margin-bottom: 16px; align-items: start; }
+.hrs-grades { width: 100%; border-collapse: collapse; font-size: 15px; }
+.hrs-grades th, .hrs-grades td { padding: 8px 0; text-align: left; border-top: 1px solid var(--border); font-weight: 400; }
+.hrs-grades thead th { border-top: 0; padding-top: 0; font-size: 13px; color: var(--text-muted); }
+.hrs-grades td, .hrs-grades thead th:last-child { text-align: right; }
+.hrs-grades tfoot th, .hrs-grades tfoot td { font-weight: 700; color: var(--primary); background: var(--primary-tint); border-top: 2px solid var(--primary); padding: 8px 10px; }
+.hrs-grades tfoot th { border-radius: 8px 0 0 8px; }
+.hrs-grades tfoot td { border-radius: 0 8px 8px 0; }
 .hrs-new { display: inline-block; margin-right: 8px; padding: 1px 8px; border-radius: 999px; background: var(--primary); color: #fff; font-size: 12px; font-weight: 700; vertical-align: 2px; }
-.hrs-entry-sub { margin: 2px 0 0; font-size: 14px; color: var(--text-muted); }
 .hrs-entry-actions { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; }
 a.hrs-link { text-decoration: none; }
 a.hrs-link:hover { text-decoration: underline; }
@@ -264,6 +274,11 @@ a.hrs-link:hover { text-decoration: underline; }
 }
 @media (max-width: 560px) {
   .hrs-card, .sh-panel { padding: 16px; }
+  .cs-top { grid-template-columns: 1fr; }
+  .hrs-cols { display: none; }
+  .hrs-entry-top { grid-template-columns: 1fr auto; row-gap: 4px; }
+  .hrs-entry-top > span { grid-column: 1; }
+  .hrs-entry-top > .hrs-num, .hrs-entry-top > .hrs-status { grid-column: 2; grid-row: auto; justify-self: end; }
   .hrs-form-buttons { width: 100%; }
   .hrs-form-buttons .hrs-btn { flex: 1; }
   .sh-decide-buttons { width: 100%; }

@@ -23,72 +23,76 @@
         <svg class="hrs-review-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
 <% } %>
+      <nav class="cs-tabs" role="tablist" aria-label="Community service sections">
 <% if (logsHours) { %>
-      <section class="hrs-card" id="hrs-card">
-        <div class="hrs-head">
-          <div class="hrs-summary">
-            <h2 class="cs-label">My service hours</h2>
-            <p class="hrs-total"><strong id="hrs-approved">0</strong> <span id="hrs-total-text">of 100 hours to graduate</span></p>
-          </div>
-          <a class="hrs-btn primary" href="/service-report" id="hrs-log-btn">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            Log hours
-          </a>
-        </div>
-        <div class="hrs-progress" id="hrs-progress" role="progressbar" aria-label="Progress toward the hours needed to graduate" aria-valuemin="0" aria-valuemax="100"><div class="hrs-progress-bar" id="hrs-progress-bar"></div></div>
-        <div class="hrs-year">
-          <p class="hrs-year-text" id="hrs-year-text"></p>
-          <div class="hrs-progress hrs-progress-thin" id="hrs-year-progress" role="progressbar" aria-label="Progress toward this school year's recommended hours" aria-valuemin="0" aria-valuemax="100"><div class="hrs-progress-bar" id="hrs-year-bar"></div></div>
-        </div>
-        <p class="hrs-pending" id="hrs-pending" hidden></p>
+        <button type="button" role="tab" class="cs-tab" id="cs-tab-log" data-tab="log" aria-selected="true">Log hours</button>
+<% } %>
+        <button type="button" role="tab" class="cs-tab" id="cs-tab-events" data-tab="events" aria-selected="<%= logsHours ? 'false' : 'true' %>">Events</button>
+        <button type="button" role="tab" class="cs-tab" id="cs-tab-info" data-tab="info" aria-selected="false">Information</button>
+      </nav>
 
-        <div class="hrs-list" id="hrs-list"></div>
-        <p class="hrs-empty" id="hrs-empty" hidden>No reports yet. Press Log hours after each service project to fill in your project report.</p>
-        <button type="button" class="hrs-more" id="hrs-more" hidden></button>
+<% if (logsHours) { %>
+      <section class="cs-panel" id="cs-panel-log" role="tabpanel" aria-labelledby="cs-tab-log">
+        <div class="cs-top">
+          <section class="hrs-card" id="hrs-card">
+            <div class="hrs-head">
+              <div class="hrs-summary">
+                <h2 class="cs-label">My service hours</h2>
+                <p class="hrs-total"><strong id="hrs-approved">0</strong> <span id="hrs-total-text">of 100 hours to graduate</span></p>
+              </div>
+              <a class="hrs-btn primary" href="/service-report" id="hrs-log-btn">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                Log hours
+              </a>
+            </div>
+            <div class="hrs-progress" id="hrs-progress" role="progressbar" aria-label="Progress toward the hours needed to graduate" aria-valuemin="0" aria-valuemax="100"><div class="hrs-progress-bar" id="hrs-progress-bar"></div></div>
+            <div class="hrs-year">
+              <p class="hrs-year-text" id="hrs-year-text"></p>
+              <div class="hrs-progress hrs-progress-thin" id="hrs-year-progress" role="progressbar" aria-label="Progress toward this school year's recommended hours" aria-valuemin="0" aria-valuemax="100"><div class="hrs-progress-bar" id="hrs-year-bar"></div></div>
+            </div>
+            <p class="hrs-pending" id="hrs-pending" hidden></p>
+          </section>
+
+          <section class="hrs-card hrs-running" aria-labelledby="hrs-running-label">
+            <h2 class="cs-label" id="hrs-running-label">Running totals</h2>
+            <table class="hrs-grades">
+              <thead><tr><th scope="col">Grade</th><th scope="col">Hours</th></tr></thead>
+              <tbody id="hrs-grades"></tbody>
+              <tfoot><tr><th scope="row">Grand total</th><td id="hrs-grand">0</td></tr></tfoot>
+            </table>
+          </section>
+        </div>
+
+        <section class="hrs-card hrs-activities">
+          <div class="hrs-activities-head">
+            <h2 class="cs-label">Past activities</h2>
+            <div class="hrs-filters" id="hrs-filters" role="group" aria-label="Filter activities">
+              <button type="button" class="hrs-chip on" data-filter="all" aria-pressed="true">All</button>
+              <button type="button" class="hrs-chip" data-filter="year" aria-pressed="false">This year</button>
+              <button type="button" class="hrs-chip" data-filter="pending" aria-pressed="false">Pending</button>
+            </div>
+          </div>
+          <div class="hrs-cols" aria-hidden="true"><span>Date</span><span>Grade</span><span>Activity</span><span>Hours</span><span>Staff name</span><span>Status</span><span>Admin initials</span></div>
+          <div class="hrs-list" id="hrs-list"></div>
+          <p class="hrs-empty" id="hrs-empty" hidden>No reports yet. Press Log hours after each service project to fill in your project report.</p>
+          <button type="button" class="hrs-more" id="hrs-more" hidden></button>
+        </section>
       </section>
 <% } %>
 
-      <section class="cs-what">
-        <h2 class="cs-label">What is community service?</h2>
-        <p>Giving your time to help a community in a way that matters, through a cause you care about.</p>
-        <div class="cs-ways">
-          <div class="cs-way">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 19C3.5 15.9 6 14 9 14C12 14 14.5 15.9 14.5 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16 5.5C17.7 5.8 19 7.2 19 9C19 10.5 18.2 11.7 17 12.3M17.5 14.3C19.6 14.9 21 16.5 21 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-            <strong>With</strong><small>Work alongside people</small>
-          </div>
-          <div class="cs-way">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="9" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M12 9V20M3 9H21V6.5C21 6.2 20.8 6 20.5 6H3.5C3.2 6 3 6.2 3 6.5V9Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 6C12 6 10.5 3 8.5 3.5C7 4 7.5 6 9 6H12ZM12 6C12 6 13.5 3 15.5 3.5C17 4 16.5 6 15 6H12Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
-            <strong>For</strong><small>Do something for them</small>
-          </div>
-          <div class="cs-way">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 10V14C3 14.6 3.4 15 4 15H6.5L13 19V5L6.5 9H4C3.4 9 3 9.4 3 10Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M17.5 9.5C18.5 10.6 18.5 13.4 17.5 14.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M20 7C22 9.5 22 14.5 20 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-            <strong>About</strong><small>Speak up on an issue</small>
-          </div>
-        </div>
-      </section>
-      <div class="cs-layout">
-        <div class="cs-main">
-          <section class="cs-path-card">
-            <h2 class="cs-label">Your path</h2>
-            <ol class="cs-path">
-              <li><span class="cs-icon cs-icon-solid"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"/><path d="M16 16L20.5 20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><strong>Investigate</strong><small>Find a need and research it</small></li>
-              <li><span class="cs-icon cs-icon-solid"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M9 4V3H15V4M9 10H15M9 14H13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><strong>Plan</strong><small>Design a project or pick an organization</small></li>
-              <li><span class="cs-icon cs-icon-solid"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 21V4M5 4H17L14.5 8L17 12H5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><strong>Act</strong><small>Carry out your service</small></li>
-              <li><span class="cs-icon cs-icon-solid"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3L14.5 8.5L20.5 9.2L16 13.2L17.3 19.2L12 16L6.7 19.2L8 13.2L3.5 9.2L9.5 8.5L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><strong>Reflect</strong><small>Think about your impact</small></li>
-            </ol>
-          </section>
-
-          <section class="cs-events-section" id="cs-events-section">
+      <section class="cs-panel" id="cs-panel-events" role="tabpanel" aria-labelledby="cs-tab-events"<% if (logsHours) { %> hidden<% } %>>
+        <section class="cs-events-section" id="cs-events-section">
             <h2 class="cs-heading">Open opportunities</h2>
             <div class="cs-events-list" id="cs-events-list"></div>
             <div class="cs-events-empty" id="cs-events-empty">
               <span class="cs-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M3 9H21M8 2V5M16 2V5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
               <span>Nothing posted right now. Clubs add volunteer opportunities here, so check back soon.</span>
             </div>
-          </section>
-        </div>
+        </section>
+      </section>
 
-        <aside class="cs-rail">
+      <section class="cs-panel" id="cs-panel-info" role="tabpanel" aria-labelledby="cs-tab-info" hidden>
+        <div class="cs-rail">
           <section class="cs-toolkit cs-resources">
             <h2 class="cs-label">Toolkit</h2>
             <div class="resource-list" id="cs-resources-list"></div>
@@ -105,8 +109,8 @@
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M3 12H21M12 3C14.5 5.5 14.5 18.5 12 21M12 3C9.5 5.5 9.5 18.5 12 21" stroke="currentColor" stroke-width="1.8"/></svg>
             <span>Need an idea? Browse the UN global goals</span>
           </a>
-        </aside>
-      </div>
+        </div>
+      </section>
     </main>
   </div>
 

@@ -29,8 +29,10 @@ function readTargets() {
   return targetsFrom(db.readCsHourTargets());
 }
 
+// The clubs a report can be "with": every community service club, plus any
+// after-school club an admin has marked as also doing community service.
 function communityServiceClubs() {
-  return db.readClubs().filter((c) => c.type === 'community-service');
+  return db.readClubs().filter((c) => c.type === 'community-service' || c.serviceHours);
 }
 
 const isQuarterHours = (n) => typeof n === 'number' && Number.isFinite(n) && Math.round(n * 4) === n * 4;
@@ -102,7 +104,7 @@ function readReport(body, student) {
   report.clubId = '';
   if (body.clubId) {
     const club = communityServiceClubs().find((c) => c.id === body.clubId);
-    if (!club) return { error: 'Please choose one of the community service clubs.' };
+    if (!club) return { error: 'Please choose one of the clubs in the list.' };
     report.clubId = club.id;
     report.clubName = club.name;
     report.organization = '';

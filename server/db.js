@@ -557,6 +557,20 @@ const DEFAULT_CS_RESOURCES = [
   db.prepare("INSERT INTO app_flags (name) VALUES ('csResourcesDefaults')").run();
 })();
 
+// Media Club is an after-school club whose members also log community service
+// hours, so it starts out marked that way (the user asked for this when the
+// report form was added). Done once: if an admin later unticks it, it stays
+// unticked. Waits until a club with that name exists.
+(function markMediaClubForServiceHours() {
+  if (db.prepare("SELECT 1 FROM app_flags WHERE name = 'mediaClubServiceHours'").get()) return;
+  const all = clubs.read();
+  const media = all.find((c) => c.type === 'after-school' && String(c.name).trim().toLowerCase() === 'media club');
+  if (!media) return;
+  media.serviceHours = true;
+  clubs.write(all);
+  db.prepare("INSERT INTO app_flags (name) VALUES ('mediaClubServiceHours')").run();
+})();
+
 // Only these collections (public site content, not accounts or the private
 // Voice suggestion box) feed the checked-in seed - see seedWriter.js for why
 // this stays a no-op outside a normal local dev run.

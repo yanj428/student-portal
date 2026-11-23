@@ -414,3 +414,25 @@ test('StuCo admins can view and decide on reports from the admin panel, signed a
   // The hour requirements stay with the coordinator.
   assert.equal((await (await admin()).put('/api/admin/cs-hours/targets').send({ total: 1, yearly: 1 })).status, 404);
 });
+
+test('an after-school club marked for service hours can be picked on a report and stays after-school', async () => {
+  const student = await signedIn('hrs.media@kpis.ac.th', 'Grade 11');
+  const make = async (name, serviceHours) => (await admin()).post('/api/admin/clubs').field('type', 'after-school').field('name', name).field('serviceHours', serviceHours);
+  const media = await make('Photo Club Test', 'true');
+  const debate = await make('Debate Club Test', 'false');
+  assert.equal(media.status, 201, media.text);
+  assert.equal(media.body.club.type, 'after-school');
+  assert.equal(media.body.club.serviceHours, true);
+  assert.equal(debate.body.club.serviceHours, false);
+
+  const names = (await student.agent.get('/api/cs-hours/options')).body.clubs.map((c) => c.name);
+  assert.ok(names.includes('Photo Club Test'));
+  assert.ok(!names.includes('Debate Club Test'));
+
+  assert.equal((await student.agent.post('/api/cs-hours').send(entry({ clubId: media.body.club.id }))).status, 201);
+  assert.equal((await student.agent.post('/api/cs-hours').send(entry({ clubId: debate.body.club.id }))).status, 400);
+
+  // The Clubs page still lists it as an after-school club.
+  const afterSchool = (await student.agent.get('/api/clubs?type=after-school')).body.clubs.map((c) => c.name);
+  assert.ok(afterSchool.includes('Photo Club Test'));
+});

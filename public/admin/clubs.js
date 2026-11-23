@@ -19,6 +19,7 @@ const meetingDayInput = document.getElementById('club-meeting-day');
 const meetingTimeInput = document.getElementById('club-meeting-time');
 const advisorInput = document.getElementById('club-advisor');
 const signupInput = document.getElementById('club-signup');
+const serviceHoursInput = document.getElementById('club-service-hours');
 const typeFieldGroups = document.querySelectorAll('.club-type-fields');
 
 const LISTS = {
@@ -144,6 +145,7 @@ const panel = crudPanel({
       meetingDay: only('after-school', meetingDayInput),
       meetingTime: only('after-school', meetingTimeInput),
       signupUrl: only('after-school', signupInput),
+      serviceHours: currentType() === 'after-school' && serviceHoursInput.checked ? 'true' : 'false',
     };
     const formData = new FormData();
     Object.entries(fields).forEach(([key, value]) => formData.append(key, value));
@@ -167,6 +169,7 @@ const panel = crudPanel({
     meetingTimeInput.value = club.meetingTime || '';
     advisorInput.value = club.advisor;
     signupInput.value = club.signupUrl;
+    serviceHoursInput.checked = !!club.serviceHours;
     logoInput.value = '';
     removeLogoInput.checked = false;
     removeLogoRow.hidden = !club.logoUrl;
@@ -195,6 +198,7 @@ function chipsHtml(club) {
     club.type === 'after-school' && club.schedule ? chip(club.schedule) : '',
     club.type === 'community-service' && club.applicationFormUrl ? chip('Application open', ' ok') : '',
     club.type === 'after-school' && club.signupUrl ? chip('Sign-up open', ' ok') : '',
+    club.type === 'after-school' && club.serviceHours ? chip('Logs service hours', ' ok') : '',
   ];
   const gaps = [
     !club.mission ? 'Needs mission' : '',

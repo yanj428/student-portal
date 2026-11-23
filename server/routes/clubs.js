@@ -35,6 +35,7 @@ function publicClub(club) {
     schedule: club.schedule || '',
     advisor: club.advisor || '',
     signupUrl: club.signupUrl || '',
+    serviceHours: !!club.serviceHours,
     createdAt: club.createdAt,
   };
 }
@@ -69,7 +70,7 @@ function parseSdgs(value) {
 }
 
 function readClubFields(body) {
-  const { type, name, mission, goals, sdgs, leaders, contacts, instagramUrl, applicationFormUrl, schedule, meetingDay, meetingTime, advisor, signupUrl } = body || {};
+  const { type, name, mission, goals, sdgs, leaders, contacts, instagramUrl, applicationFormUrl, schedule, meetingDay, meetingTime, advisor, signupUrl, serviceHours } = body || {};
   if (!CLUB_TYPES.includes(type)) {
     return { error: 'Club type must be either community-service or after-school.' };
   }
@@ -109,6 +110,10 @@ function readClubFields(body) {
       meetingTime: typeof meetingTime === 'string' ? meetingTime.trim() : '',
       advisor: typeof advisor === 'string' ? advisor.trim() : '',
       signupUrl: normalizeUrl(signupUrl),
+      // An after-school club whose members also do community service (Media
+      // Club, say) can be picked on the service hours report form. Community
+      // service clubs always can, so it is only stored for after-school ones.
+      serviceHours: type === 'after-school' && (serviceHours === 'true' || serviceHours === true),
     },
   };
 }

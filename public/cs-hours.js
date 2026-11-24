@@ -77,7 +77,7 @@ function entryHtml(entry) {
       <span class="hrs-act">${entry.isNew ? '<span class="hrs-new">New reply</span>' : ''}${escapeHtml(entry.title)}${entry.hasReport ? `<span class="hrs-chev" aria-hidden="true">${open ? '&#9650;' : '&#9660;'}</span>` : ''}</span>
       <span class="hrs-num">${escapeHtml(formatHours(entry.hours))}</span>
       <span>${escapeHtml(entry.advisorName)}</span>
-      <span class="hrs-status status-${escapeHtml(entry.status)}">${escapeHtml(HOURS_STATUS_LABEL[entry.status] || entry.status)}</span>
+      <span class="hrs-status status-${escapeHtml(entry.status)}">${escapeHtml(entry.status === 'pending' && entry.resubmitted ? 'Resubmitted, waiting' : HOURS_STATUS_LABEL[entry.status] || entry.status)}</span>
       <span>${escapeHtml(entry.approvedBy || '')}</span>
     </${tag}>
     ${open ? `<div class="hrs-detail">

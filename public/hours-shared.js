@@ -103,7 +103,6 @@ function reportDetailsHtml(entry) {
     <div class="rp">
       <div class="rp-causes">${sdgBadgesHtml(entry)}<span>${entry.sdgs.map((g) => escapeHtml(g.name)).join(', ')}</span></div>
       ${section('What is the need in the community?', paragraphs(entry.need))}
-      ${section('What is the goal for the project?', paragraphs(entry.goal))}
       ${entry.planned ? section('Investigation summary', paragraphs(entry.investigationSummary)) : ''}
       ${entry.planned && entry.investigationEvidence ? section('Investigation evidence', paragraphs(entry.investigationEvidence)) : ''}
       ${entry.planned ? section('Planning summary', paragraphs(entry.planningSummary)) : ''}

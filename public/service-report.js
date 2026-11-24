@@ -19,7 +19,6 @@ const sr = {
   startLabel: $('sr-start-label'),
   sdgs: $('sr-sdgs'),
   need: $('sr-need'),
-  goal: $('sr-goal'),
   plannedFields: $('sr-planned-fields'),
   plannedSkip: $('sr-planned-skip'),
   invSummary: $('sr-inv-summary'),
@@ -267,7 +266,6 @@ function formState() {
     endDate: isMultiDay() ? sr.end.value : '',
     sdgs: checkedSdgs(),
     need: sr.need.value,
-    goal: sr.goal.value,
     planned: isPlanned(),
     investigationSummary: sr.invSummary.value,
     investigationEvidence: sr.invEvidence.value,
@@ -298,7 +296,6 @@ function fillState(state) {
   updateSpan();
   sr.sdgs.querySelectorAll('input').forEach((box) => { box.checked = (state.sdgs || []).includes(Number(box.value)); });
   sr.need.value = state.need || '';
-  sr.goal.value = state.goal || '';
   sr.form.querySelector(`input[name="sr-planned"][value="${state.planned ? 'yes' : 'no'}"]`).checked = true;
   sr.invSummary.value = state.investigationSummary || '';
   sr.invEvidence.value = state.investigationEvidence || '';

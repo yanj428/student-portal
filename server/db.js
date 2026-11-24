@@ -271,6 +271,8 @@ function removeStudent(id) {
   const hours = csHours.read();
   const keptHours = hours.filter((entry) => entry.studentId !== id);
   if (keptHours.length !== hours.length) csHours.write(keptHours);
+  const targets = csStudentTargets.read();
+  if (targets.some((t) => t.id === id)) csStudentTargets.write(targets.filter((t) => t.id !== id));
   return db.prepare('DELETE FROM students WHERE id = ?').run(id).changes > 0;
 }
 
@@ -533,6 +535,9 @@ const csResources = jsonCollection('csResources');
 // targets belong to whichever deployment the coordinator set them on.
 const csHours = jsonCollection('csHours');
 const csHourTargets = jsonCollection('csHourTargets');
+// A student's own hours-to-graduate when it differs from the school's (someone
+// who joined in Grade 10 needs 75, say), keyed by student id.
+const csStudentTargets = jsonCollection('csStudentTargets');
 // The photos and PDFs attached to service reports: who uploaded each one and
 // whether a saved report uses it (the files themselves are in cs-evidence/).
 const csEvidence = jsonCollection('csEvidence');
@@ -638,6 +643,8 @@ module.exports = {
   writeCsHours: csHours.write,
   readCsHourTargets: csHourTargets.read,
   writeCsHourTargets: csHourTargets.write,
+  readCsStudentTargets: csStudentTargets.read,
+  writeCsStudentTargets: csStudentTargets.write,
   readCsEvidence: csEvidence.read,
   writeCsEvidence: csEvidence.write,
 

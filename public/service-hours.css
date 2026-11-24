@@ -395,3 +395,16 @@ a.hrs-link:hover { text-decoration: underline; }
   .sr-submit { align-items: stretch; }
 }
 .sr-form .hrs-link { align-self: flex-start; }
+
+/* Reports sent again after "Not approved", and the feedback they answered */
+.sh-resub { display: inline-block; margin-right: 8px; padding: 1px 9px; border-radius: 999px; background: #E8EEF9; color: #2A4A8A; font-size: 12.5px; font-weight: 700; vertical-align: 2px; }
+.sh-prev-note { margin: 6px 0 0; padding: 8px 12px; border-radius: 10px; background: #FAEEDA; color: #633806; font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
+
+/* A student's own hours-to-graduate */
+.sh-own-target { display: inline-block; margin-top: 4px; padding: 0 7px; border-radius: 999px; background: var(--primary-tint); color: var(--primary); font-size: 11.5px; font-weight: 700; }
+.sh-target { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 10px 0 12px; border-bottom: 1px solid var(--border); }
+.sh-target-label { font-size: 14px; font-weight: 600; }
+.sh-target-input { width: 110px; padding: 8px 10px; font-size: 15px; }
+.sh-target .hrs-btn { padding: 8px 14px; font-size: 14px; }
+.sh-target-hint { font-size: 13.5px; color: var(--text-muted); }
+.sh-target-note { margin: 8px 0; font-size: 14px; color: var(--text-muted); }

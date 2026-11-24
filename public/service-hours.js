@@ -80,7 +80,7 @@ root.querySelectorAll('.sh-tab').forEach((tab) => {
 
 // ---- Summary ----
 function renderStats() {
-  const { total, yearly } = shData.targets;
+  const { yearly } = shData.targets;
   const pending = shData.entries.filter((e) => e.status === 'pending');
   const seniors = shData.students.filter((s) => s.gradeNumber === 12);
   sh.statPending.textContent = pending.length;
@@ -88,8 +88,8 @@ function renderStats() {
   sh.reviewCount.hidden = pending.length === 0;
   sh.statYear.textContent = `${shData.students.filter((s) => s.approvedThisYear >= yearly).length} / ${shData.students.length}`;
   sh.statYearLabel.textContent = `students have ${formatHours(yearly)} hours this school year`;
-  sh.statDone.textContent = `${seniors.filter((s) => s.approved >= total).length} / ${seniors.length}`;
-  sh.statDoneLabel.textContent = `Grade 12 students have all ${formatHours(total)} hours`;
+  sh.statDone.textContent = `${seniors.filter((s) => s.approved >= s.target).length} / ${seniors.length}`;
+  sh.statDoneLabel.textContent = 'Grade 12 students have all the hours they need';
   sh.behindLabel.textContent = `Only students under ${formatHours(yearly)} hours this year`;
   const badge = root.dataset.badge && document.getElementById(root.dataset.badge);
   if (badge) {
@@ -99,6 +99,24 @@ function renderStats() {
 }
 
 // ---- Review queue ----
+// A report the student fixed and sent again after it was not approved. The tag
+// only shows while it waits; the earlier feedback reminds the coordinator what
+// she asked for.
+function resubmittedTag(entry) {
+  if (!entry.resubmitted || entry.status !== 'pending') return '';
+  const times = entry.resubmissions > 1 ? ` (${ordinal(entry.resubmissions)} time)` : '';
+  return `<span class="sh-resub">Resubmitted${times}</span>`;
+}
+
+function ordinal(n) {
+  const end = n % 100 >= 11 && n % 100 <= 13 ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th');
+  return `${n}${end}`;
+}
+
+function earlierFeedback(entry) {
+  if (!entry.resubmitted || entry.status !== 'pending' || !entry.previousNote) return '';
+  return `<p class="sh-prev-note"><strong>${CAN_DECIDE ? 'Your' : "Ms. Gia's"} earlier feedback:</strong> ${escapeHtml(entry.previousNote)}</p>`;
+}
 function decisionButtons(entry) {
   if (!CAN_DECIDE) return '';
   return `
@@ -116,7 +134,7 @@ function renderReview() {
   const students = studentsById();
   const pending = shData.entries
     .filter((e) => e.status === 'pending')
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    .sort((a, b) => b.sentAt.localeCompare(a.sentAt));
   sh.reviewEmpty.hidden = pending.length > 0;
   const pendingIds = new Set(pending.map((e) => e.id));
   [...shSelected].forEach((id) => { if (!pendingIds.has(id)) shSelected.delete(id); });
@@ -131,8 +149,9 @@ function renderReview() {
           ${CAN_DECIDE ? `<label class="sh-pick"><input type="checkbox" data-pick="${escapeHtml(entry.id)}"${shSelected.has(entry.id) ? ' checked' : ''} /><span class="sr-only">Select ${escapeHtml(entry.title)}</span></label>` : ''}
           <div class="sh-review-main">
             <p class="sh-review-name">${escapeHtml(student.fullName)} <span class="sh-grade-pill">${escapeHtml(student.gradeLabel)}</span></p>
-            <p class="sh-review-activity">${escapeHtml(entry.title)}</p>
-            <p class="sh-review-sub">${escapeHtml(reportGrade(entry))}${escapeHtml(reportWith(entry))} &middot; ${escapeHtml(reportDates(entry))} &middot; sent ${escapeHtml(formatEntryDate(entry.createdAt.slice(0, 10)))}</p>
+            <p class="sh-review-activity">${resubmittedTag(entry)}${escapeHtml(entry.title)}</p>
+            <p class="sh-review-sub">${escapeHtml(reportGrade(entry))}${escapeHtml(reportWith(entry))} &middot; ${escapeHtml(reportDates(entry))} &middot; ${entry.resubmitted ? 'resubmitted' : 'sent'} ${escapeHtml(formatEntryDate(entry.sentAt.slice(0, 10)))}</p>
+            ${earlierFeedback(entry)}
             ${sdgBadgesHtml(entry)}
           </div>
           <span class="sh-review-hours">${escapeHtml(hoursWord(entry.hours))}</span>
@@ -205,16 +224,35 @@ function progressCell(hours, target) {
   return `<div class="sh-progress-cell"><div class="hrs-progress${done ? ' done' : ''}"><div class="hrs-progress-bar" data-percent="${percent}"></div></div><span>${escapeHtml(formatHours(hours))} / ${escapeHtml(formatHours(target))}</span></div>`;
 }
 
+// How many hours this student needs to graduate. The coordinator can give a
+// student their own number (75 for someone who joined in Grade 10, say);
+// everyone else sees it.
+function targetHtml(student) {
+  const school = formatHours(shData.targets.total);
+  if (!CAN_SET_TARGETS) {
+    return student.customTarget
+      ? `<p class="sh-target-note">Needs <strong>${escapeHtml(formatHours(student.target))} hours</strong> to graduate (set by Ms. Gia; the school's number is ${escapeHtml(school)}).</p>`
+      : '';
+  }
+  return `
+    <div class="sh-target" data-target-for="${escapeHtml(student.id)}">
+      <label class="sh-target-label" for="sh-target-${escapeHtml(student.id)}">Hours this student needs to graduate</label>
+      <input class="hrs-input sh-target-input" id="sh-target-${escapeHtml(student.id)}" type="number" min="1" max="1000" step="0.25" inputmode="decimal" value="${escapeHtml(String(student.target))}" />
+      <button type="button" class="hrs-btn primary" data-save-target="${escapeHtml(student.id)}">Save</button>
+      ${student.customTarget ? `<button type="button" class="hrs-btn ghost" data-reset-target="${escapeHtml(student.id)}">Use the school's ${escapeHtml(school)}</button>` : `<span class="sh-target-hint">The school's number is ${escapeHtml(school)}. Change it for a student who joined later.</span>`}
+    </div>`;
+}
+
 function studentEntriesHtml(student) {
   const entries = shData.entries
     .filter((e) => e.studentId === student.id)
     .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-  if (entries.length === 0) return '<p class="sh-empty-line">No reports yet.</p>';
-  return entries
+  if (entries.length === 0) return `${targetHtml(student)}<p class="sh-empty-line">No reports yet.</p>`;
+  return targetHtml(student) + entries
     .map((entry) => `
       <div class="sh-entry">
         <div class="sh-entry-main">
-          <p class="sh-review-activity">${escapeHtml(entry.title)}</p>
+          <p class="sh-review-activity">${resubmittedTag(entry)}${escapeHtml(entry.title)}</p>
           <p class="sh-review-sub">${escapeHtml(reportGrade(entry))}${escapeHtml(reportWith(entry))} &middot; ${escapeHtml(reportDates(entry))} &middot; ${escapeHtml(hoursWord(entry.hours))}${entry.hasReport ? '' : ' &middot; no report (from the school record)'}${entry.reviewedBy || entry.approvedBy ? ` &middot; reviewed by ${escapeHtml(entry.reviewedBy || entry.approvedBy)}` : ''}</p>
           ${entry.note && entry.status !== 'pending' ? `<p class="hrs-entry-note"><strong>Note:</strong> ${escapeHtml(entry.note)}</p>` : ''}
         </div>
@@ -242,7 +280,7 @@ function renderStudents() {
         <td><span class="sh-student-name">${escapeHtml(s.fullName)}</span><span class="sh-student-email">${escapeHtml(s.email)}</span></td>
         <td>${escapeHtml(s.gradeLabel)}</td>
         <td>${progressCell(s.approvedThisYear, shData.targets.yearly)}</td>
-        <td>${progressCell(s.approved, shData.targets.total)}</td>
+        <td>${progressCell(s.approved, s.target)}${s.customTarget ? '<span class="sh-own-target">own target</span>' : ''}</td>
         <td class="num">${s.pending ? escapeHtml(formatHours(s.pending)) : '-'}</td>
       </tr>
       ${open ? `<tr class="sh-student-detail"><td colspan="5">${studentEntriesHtml(s)}</td></tr>` : ''}`;
@@ -278,6 +316,29 @@ sh.studentRows.addEventListener('keydown', (e) => {
     e.preventDefault();
     toggleStudent(row);
   }
+});
+
+// ---- A student's own hours-to-graduate ----
+root.addEventListener('click', async (e) => {
+  const saveId = e.target.closest('[data-save-target]')?.dataset.saveTarget;
+  const resetId = e.target.closest('[data-reset-target]')?.dataset.resetTarget;
+  const id = saveId || resetId;
+  if (!id) return;
+  let total = null;
+  if (saveId) {
+    total = Number(root.querySelector(`#sh-target-${CSS.escape(id)}`).value);
+    if (!(total > 0)) return alert('Type the number of hours this student needs.');
+  }
+  e.target.disabled = true;
+  try {
+    const { ok, data } = await sendHoursJson(`${API}/students/${encodeURIComponent(id)}/target`, 'PUT', { total });
+    if (!ok) alert(data.error || 'Could not save the hours.');
+  } catch {
+    alert('Could not reach the server. Please try again.');
+  }
+  // The box loses focus here, so the refresh is not held back as "typing".
+  document.activeElement.blur();
+  loadReview();
 });
 
 // ---- Approve / not approve (both the queue and a student's entries) ----

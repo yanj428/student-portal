@@ -29,6 +29,13 @@ function readTargets() {
   return targetsFrom(db.readCsHourTargets());
 }
 
+// The school's targets with this student's own hours-to-graduate, if the
+// coordinator set one. `custom` says the total is theirs, not the school's.
+function targetsForStudent(studentId, school = readTargets(), own = db.readCsStudentTargets()) {
+  const mine = own.find((t) => t.id === studentId);
+  return mine ? { ...school, total: mine.total, custom: true } : { ...school, custom: false };
+}
+
 // The clubs a report can be "with": every community service club, plus any
 // after-school club an admin has marked as also doing community service.
 function communityServiceClubs() {
@@ -54,7 +61,6 @@ function text(body, key, { required }) {
 const QUESTION = {
   title: 'the project title',
   need: 'what the need in the community is',
-  goal: 'the goal of the project',
   investigationSummary: 'the investigation summary',
   planningSummary: 'the planning summary',
   actionSummary: 'what you did',
@@ -82,7 +88,7 @@ function readReport(body, student) {
 
   const planned = body.planned === true;
   const textFields = [
-    ['title', true], ['organization', false], ['need', true], ['goal', true],
+    ['title', true], ['organization', false], ['need', true],
     ['investigationSummary', planned], ['investigationEvidence', false], ['planningSummary', planned],
     ['actionSummary', true], ['reflection', true], ['advisorName', true], ['advisorContact', false],
   ];
@@ -188,7 +194,6 @@ function reportView(entry, { forStudent, evidenceBase = '/api/cs-hours/evidence'
     endDate: entry.endDate || '',
     sdgs: (entry.sdgs || []).map((n) => ({ number: n, name: SDG_NAMES[n - 1], url: (sdgBadges([n])[0] || {}).url || '' })),
     need: entry.need,
-    goal: entry.goal,
     planned: !!entry.planned,
     investigationSummary: entry.investigationSummary || '',
     investigationEvidence: entry.investigationEvidence || '',
@@ -204,6 +209,13 @@ function reportView(entry, { forStudent, evidenceBase = '/api/cs-hours/evidence'
     // Hours the coordinator recorded without a project report have nothing to open.
     hasReport: !!(entry.need || entry.actionSummary || entry.reflection),
     status: entry.status,
+    // A report the student fixed and sent again after it was not approved:
+    // when, how many times, and the feedback they were answering.
+    resubmitted: !!entry.resubmittedAt,
+    resubmissions: entry.resubmissions || 0,
+    previousNote: entry.previousNote || '',
+    // When it last reached the coordinator, for ordering the review list.
+    sentAt: entry.resubmittedAt || entry.createdAt,
     // The grade the service was done in: what the student chose on the form,
     // else what the school's sheet said for an imported row, else worked out
     // from the date.
@@ -299,7 +311,7 @@ router.get('/api/cs-hours', requireHourLogger, (req, res) => {
     entries: views,
     totals: totals(entries),
     gradeTotals: gradeTotals(entries, req.student.grade),
-    targets: readTargets(),
+    targets: targetsForStudent(req.student.id),
     today: schoolToday(),
   });
 });
@@ -340,7 +352,11 @@ router.put('/api/cs-hours/:id', requireHourLogger, csHoursLimiter, (req, res) =>
   if (error) return res.status(400).json({ error });
 
   const before = (entry.evidence || []).map((e) => e.id);
-  Object.assign(entry, report, { status: 'pending', note: '', reviewedBy: '', reviewedAt: '', updatedAt: new Date().toISOString() });
+  const resubmitting = entry.status === 'rejected';
+  const feedback = entry.note || '';
+  const now = new Date().toISOString();
+  Object.assign(entry, report, { status: 'pending', note: '', reviewedBy: '', reviewedAt: '', updatedAt: now });
+  if (resubmitting) Object.assign(entry, { resubmittedAt: now, resubmissions: (entry.resubmissions || 0) + 1, previousNote: feedback });
   if (!report.clubId) delete entry.clubName;
   db.writeCsHours(entries);
   syncAttachedEvidence(req.student.id, entry.evidence.map((e) => e.id), before);
@@ -375,11 +391,17 @@ for (const reviewer of REVIEWERS) {
     const entries = db.readCsHours().filter((e) => byStudent.has(e.studentId));
     entries.forEach((e) => byStudent.get(e.studentId).push(e));
     const gradeOf = new Map(students.map((s) => [s.id, s.grade]));
+    const school = readTargets();
+    const own = db.readCsStudentTargets();
 
     res.json({
       students: students.map((s) => {
         const pub = publicStudent(s);
-        return { id: s.id, fullName: pub.fullName, email: s.email, grade: s.grade, gradeLabel: pub.gradeLabel, gradeNumber: gradeNumber(s.grade), ...totals(byStudent.get(s.id), yearStart) };
+        const mine = targetsForStudent(s.id, school, own);
+        return {
+          id: s.id, fullName: pub.fullName, email: s.email, grade: s.grade, gradeLabel: pub.gradeLabel, gradeNumber: gradeNumber(s.grade),
+          target: mine.total, customTarget: mine.custom, ...totals(byStudent.get(s.id), yearStart),
+        };
       }),
       entries: entries.map((e) => reportView(e, { forStudent: false, evidenceBase: reviewer.evidenceBase, currentGrade: gradeOf.get(e.studentId) })),
       targets: readTargets(),
@@ -388,6 +410,24 @@ for (const reviewer of REVIEWERS) {
   });
 
   if (reviewer.canDecide) {
+    // A student's own hours-to-graduate. Body: { total: 75 }, or { total: null }
+    // to go back to the school's number.
+    router.put(`${reviewer.base}/students/:id/target`, reviewer.auth, (req, res) => {
+      const student = db.findById(req.params.id);
+      if (!student || !logsServiceHours(student.grade)) return res.status(404).json({ error: 'Student not found.' });
+      const total = req.body?.total;
+      const rest = db.readCsStudentTargets().filter((t) => t.id !== student.id);
+      if (total === null) {
+        db.writeCsStudentTargets(rest);
+        return res.json({ target: readTargets().total, customTarget: false });
+      }
+      if (!isQuarterHours(total) || total <= 0 || total > TARGET_MAX) {
+        return res.status(400).json({ error: `Hours to graduate must be a number of hours from 1 to ${TARGET_MAX}.` });
+      }
+      db.writeCsStudentTargets([...rest, { id: student.id, total }]);
+      res.json({ target: total, customTarget: true });
+    });
+
     // A decision can also be changed later, for example after hearing back from the advisor.
     for (const [action, status] of [['approve', 'approved'], ['reject', 'rejected']]) {
       router.post(`${reviewer.base}/:id/${action}`, reviewer.auth, (req, res) => {
@@ -478,11 +518,11 @@ function sendExport(req, res) {
     .sort((a, b) => fullName(a.s).localeCompare(fullName(b.s)) || (a.e.date || '').localeCompare(b.e.date || ''));
 
   const header = ['Student', 'Email', 'Grade now', 'Grade when done', 'Project title', 'Club or organization', 'Start date', 'End date', 'Hours', 'UN goals',
-    'Need in the community', 'Goal', 'Action summary', 'Reflection', 'Hours by task', 'Advisor', 'Advisor contact',
+    'Need in the community', 'Action summary', 'Reflection', 'Hours by task', 'Advisor', 'Advisor contact',
     'Status', 'Note', 'Reviewed by', 'Admin initials', 'Reviewed on', 'Submitted on'];
   const lines = [header, ...rows.map(({ e, s }) => [
     fullName(s), s.email, s.grade, e.grade ? `Grade ${e.grade}` : '', e.title, e.clubName || e.organization || 'Own project', e.date, e.endDate, e.hours,
-    e.sdgs.map((g) => `${g.number}. ${g.name}`).join('; '), e.need, e.goal, e.actionSummary, e.reflection,
+    e.sdgs.map((g) => `${g.number}. ${g.name}`).join('; '), e.need, e.actionSummary, e.reflection,
     e.tasks.map((t) => `${t.task} (${t.hours})`).join('; '), e.advisorName, e.advisorContact,
     STATUS_LABEL[e.status] || e.status, e.note, e.reviewedBy, e.approvedBy, e.reviewedAt ? e.reviewedAt.slice(0, 10) : '', e.createdAt.slice(0, 10),
   ])].map((cells) => cells.map(csvCell).join(','));

@@ -175,7 +175,7 @@ test('hours count toward 100 to graduate and 25 for this school year', async () 
   const coord = await coordinator('hrs.targetsetter@kpis.ac.th');
 
   const mine = (await student.agent.get('/api/cs-hours')).body;
-  assert.deepEqual(mine.targets, { total: 100, yearly: 25 });
+  assert.deepEqual(mine.targets, { total: 100, yearly: 25, custom: false });
 
   // One entry from this school year and one from the year before.
   const lastYear = new Date(Date.parse(`${schoolYearStart()}T00:00:00Z`) - 86400000).toISOString().slice(0, 10);
@@ -191,7 +191,7 @@ test('hours count toward 100 to graduate and 25 for this school year', async () 
 
   const saved = await coord.agent.put('/api/cs-hours/review/targets').send({ total: 120, yearly: 30 });
   assert.equal(saved.status, 200, saved.text);
-  assert.deepEqual((await student.agent.get('/api/cs-hours')).body.targets, { total: 120, yearly: 30 });
+  assert.deepEqual((await student.agent.get('/api/cs-hours')).body.targets, { total: 120, yearly: 30, custom: false });
 
   for (const bad of [{ total: 0, yearly: 25 }, { total: 100, yearly: -1 }, { total: '100', yearly: 25 }, { total: 100 }]) {
     assert.equal((await coord.agent.put('/api/cs-hours/review/targets').send(bad)).status, 400, JSON.stringify(bad));
@@ -476,4 +476,64 @@ test('hours imported from the school sheet (no report, maybe no date) show every
     await coord.agent.get('/api/cs-hours/export.csv'), await (await admin()).get('/api/admin/cs-hours/export.csv')]) {
     assert.equal(res.status, 200, res.text);
   }
+});
+
+test('a report fixed after "Not approved" is marked as resubmitted, with the earlier feedback', async () => {
+  const student = await signedIn('hrs.resubmit@kpis.ac.th', 'Grade 10');
+  const coord = await coordinator('hrs.resubmitcoord@kpis.ac.th');
+  const report = (await student.agent.post('/api/cs-hours').send(entry())).body.entry;
+
+  // Editing a report that is still waiting is not a resubmission.
+  await student.agent.put(`/api/cs-hours/${report.id}`).send(entry({ activity: 'Beach clean-up, edited' }));
+  const find = async () => (await coord.agent.get('/api/cs-hours/review')).body.entries.find((e) => e.id === report.id);
+  assert.equal((await find()).resubmitted, false);
+
+  await coord.agent.post(`/api/cs-hours/review/${report.id}/reject`).send({ note: 'Please add a photo' });
+  await student.agent.put(`/api/cs-hours/${report.id}`).send(entry({ activity: 'Beach clean-up, with photo' }));
+  let seen = await find();
+  assert.equal(seen.status, 'pending');
+  assert.equal(seen.resubmitted, true);
+  assert.equal(seen.resubmissions, 1);
+  assert.equal(seen.previousNote, 'Please add a photo');
+  assert.ok(seen.sentAt > seen.createdAt);
+
+  await coord.agent.post(`/api/cs-hours/review/${report.id}/reject`).send({ note: 'The photo is blurry' });
+  await student.agent.put(`/api/cs-hours/${report.id}`).send(entry());
+  seen = await find();
+  assert.equal(seen.resubmissions, 2);
+  assert.equal(seen.previousNote, 'The photo is blurry');
+});
+
+test('the coordinator can give one student their own hours to graduate', async () => {
+  const student = await signedIn('hrs.owntarget@kpis.ac.th', 'Grade 10');
+  const other = await signedIn('hrs.owntargetother@kpis.ac.th', 'Grade 10');
+  const coord = await coordinator('hrs.owntargetcoord@kpis.ac.th');
+  const url = `/api/cs-hours/review/students/${student.id}/target`;
+
+  assert.equal((await coord.agent.put(url).send({ total: 0 })).status, 400);
+  assert.equal((await coord.agent.put(url).send({ total: '75' })).status, 400);
+  assert.equal((await student.agent.put(url).send({ total: 10 })).status, 403);
+  assert.equal((await (await admin()).put(`/api/admin/cs-hours/students/${student.id}/target`).send({ total: 10 })).status, 404);
+
+  const saved = await coord.agent.put(url).send({ total: 75 });
+  assert.equal(saved.status, 200, saved.text);
+  assert.deepEqual((await student.agent.get('/api/cs-hours')).body.targets, { total: 75, yearly: 25, custom: true });
+  assert.equal((await other.agent.get('/api/cs-hours')).body.targets.total, 100);
+  const row = (await coord.agent.get('/api/cs-hours/review')).body.students.find((s) => s.id === student.id);
+  assert.equal(row.target, 75);
+  assert.equal(row.customTarget, true);
+
+  await coord.agent.put(url).send({ total: null });
+  assert.deepEqual((await student.agent.get('/api/cs-hours')).body.targets, { total: 100, yearly: 25, custom: false });
+
+  await coord.agent.put(url).send({ total: 75 });
+  await (await admin()).delete(`/api/admin/students/${student.id}`);
+  assert.ok(!db.readCsStudentTargets().some((t) => t.id === student.id));
+});
+
+test('reports no longer ask for the goal of the project', async () => {
+  const { agent } = await signedIn('hrs.nogoal@kpis.ac.th', 'Grade 9');
+  const res = await agent.post('/api/cs-hours').send(entry({ goal: undefined }));
+  assert.equal(res.status, 201, res.text);
+  assert.equal(res.body.entry.goal, undefined);
 });

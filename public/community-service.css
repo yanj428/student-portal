@@ -167,3 +167,30 @@ p.cs-events-empty { display: block; }
 .cs-tab[aria-selected="true"] { color: var(--primary); border-bottom-color: var(--primary); }
 .cs-tab:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
 .cs-panel[hidden] { display: none; }
+
+/* Registering for an event */
+.cs-event-when { margin: -2px 0 8px; font-size: 14px; font-weight: 600; color: var(--text); }
+.cs-event-spots { margin: 0 0 10px; font-size: 13.5px; color: var(--text-muted); }
+.cs-event-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+button.cs-event-signup { border: 0; font: inherit; cursor: pointer; }
+.cs-registered { display: inline-flex; align-items: center; gap: 4px; padding: 7px 14px; border-radius: 999px; background: #E3F3E6; color: #2F7A3C; font-size: 14px; font-weight: 700; }
+.cs-event-cancel, .cs-event-who { background: none; border: 0; padding: 0; font: inherit; font-size: 14px; font-weight: 600; color: var(--primary); cursor: pointer; }
+.cs-event-cancel { color: #C0392B; }
+.cs-event-cancel:hover, .cs-event-who:hover { text-decoration: underline; }
+.cs-event-closed { font-size: 14px; font-weight: 600; color: var(--text-muted); }
+.cs-event-extra { font-size: 14px; font-weight: 600; color: var(--primary); }
+.cs-event-who { display: block; margin-top: 12px; }
+.cs-registrants { margin: 8px 0 0; padding-left: 22px; font-size: 14px; line-height: 1.6; }
+.cs-registrants span { color: var(--text-muted); }
+.cs-events-empty-line { margin: 8px 0 0; font-size: 14px; color: var(--text-muted); }
+.cs-event-error { margin: 8px 0 0; font-size: 14px; font-weight: 500; color: #C0392B; }
+
+/* The hosting club's logo and the event's pictures */
+.cs-event-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.cs-event-head .cs-event-club { margin: 2px 0 0; }
+.cs-event-logo { width: 48px; height: 48px; flex-shrink: 0; border-radius: 50%; border: 1.3px solid var(--border); background: #fff; object-fit: contain; padding: 3px; }
+.cs-event-images { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.cs-event-images img { display: block; width: 140px; height: 100px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); }
+@media (max-width: 560px) {
+  .cs-event-images img { width: calc(50vw - 70px); height: 90px; }
+}

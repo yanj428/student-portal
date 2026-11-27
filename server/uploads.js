@@ -13,8 +13,11 @@ const LUNCH_SUBDIR = 'lunch';
 const CLUB_LOGO_SUBDIR = 'club-logos';
 const COUNCIL_PHOTO_SUBDIR = 'council-photos';
 const QUICK_LINK_LOGO_SUBDIR = 'quick-link-logos';
+// Photos and posters club leaders attach to their community service events.
+// They are meant for every student to see, so they live in the public uploads.
+const EVENT_IMAGE_SUBDIR = 'event-images';
 const CALENDAR_SUBDIR = 'calendar';
-for (const subdir of [LUNCH_SUBDIR, CLUB_LOGO_SUBDIR, COUNCIL_PHOTO_SUBDIR, CALENDAR_SUBDIR, QUICK_LINK_LOGO_SUBDIR]) {
+for (const subdir of [LUNCH_SUBDIR, CLUB_LOGO_SUBDIR, COUNCIL_PHOTO_SUBDIR, CALENDAR_SUBDIR, QUICK_LINK_LOGO_SUBDIR, EVENT_IMAGE_SUBDIR]) {
   fs.mkdirSync(path.join(UPLOADS_DIR, subdir), { recursive: true });
 }
 
@@ -102,11 +105,13 @@ module.exports = {
   COUNCIL_PHOTO_SUBDIR,
   CALENDAR_SUBDIR,
   QUICK_LINK_LOGO_SUBDIR,
+  EVENT_IMAGE_SUBDIR,
   // The lunch menu can also be a PDF.
   lunchImageUpload: makeImageUpload(10, LUNCH_SUBDIR, { allowPdf: true }),
   clubLogoUpload: makeImageUpload(4, CLUB_LOGO_SUBDIR),
   councilPhotoUpload: makeImageUpload(4, COUNCIL_PHOTO_SUBDIR),
   quickLinkLogoUpload: makeImageUpload(4, QUICK_LINK_LOGO_SUBDIR),
+  eventImageUpload: makeImageUpload(8, EVENT_IMAGE_SUBDIR),
   // A full-page calendar scan, so a larger cap than the logos and photos.
   calendarImageUpload: makeImageUpload(10, CALENDAR_SUBDIR),
   memoryImageUpload: makeImageUpload(8),

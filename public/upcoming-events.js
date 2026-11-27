@@ -39,7 +39,8 @@ function calPrepare(raw, today) {
       const startKey = calDayKey(sy, sm - 1, sd);
       const endKey = Math.max(startKey, calDayKey(ey, em - 1, ed));
       const past = endKey < calDayKey(today.year, today.month, today.day);
-      return { title: e.title, subtitle: e.subtitle || '', category: e.category || 'school', sy, sm: sm - 1, sd, ey, em: em - 1, ed, startKey, endKey, past };
+      // Community service events also carry the host's logo and a link to register.
+      return { title: e.title, subtitle: e.subtitle || '', category: e.category || 'school', logoUrl: e.logoUrl || '', link: e.link || '', sy, sm: sm - 1, sd, ey, em: em - 1, ed, startKey, endKey, past };
     })
     .filter(Boolean)
     .sort((a, b) => a.startKey - b.startKey || a.endKey - b.endKey);
@@ -83,9 +84,10 @@ function calRenderPop() {
     ${here.length
       ? here.map((e) => `
         <div class="cal-pop-item cat-${e.category}${e.past ? ' is-past' : ''}">
-          <strong>${escapeHtml(e.title)}</strong>
+          <strong>${e.logoUrl ? `<img class="cal-pop-logo" src="${escapeHtml(e.logoUrl)}" alt="" />` : ''}${escapeHtml(e.title)}</strong>
           ${e.subtitle ? `<span>${escapeHtml(e.subtitle)}</span>` : ''}
           ${e.startKey === e.endKey ? '' : `<small>${calDateText(e)}</small>`}
+          ${e.link && !e.past ? `<a class="cal-pop-link" href="${escapeHtml(e.link)}">Details &amp; register</a>` : ''}
         </div>`).join('')
       : '<p class="cal-pop-none">Nothing on this day.</p>'}`;
 

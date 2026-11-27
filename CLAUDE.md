@@ -87,6 +87,20 @@ they are in `DATA_DIR/cs-evidence/` and only served through
 the coordinator. The report form shrinks photos in the browser before upload
 (the Fly volume is only 1 GB).
 
+### Community service events and club leaders
+
+Events (`csEvents`) are posted by StuCo in the admin panel (stored with
+`host: 'stuco'`, shown as hosted by the Student Council with the crest) or by
+club leaders from `/club-events` (`postedBy: 'leader'`). An admin makes an
+account a leader of a club (`clubLeaders`, Clubs -> Club leaders). Every event
+has a real `eventDay`, optional time, place, spots and up to 4 pictures in
+`uploads/event-images`. Students register on Community Service -> Events
+(`csEventRegistrations`); the club's leaders, the coordinator and admins see
+who registered. Dated events also appear on the Upcoming Events calendar
+(`server/utils/serviceEvents.js`) in their own Community Service colour.
+Posting events while testing locally rewrites `server/seed/content.json`
+(csEvents is seed-synced): restore it with `git checkout` before committing.
+
 ## Security patterns already in place — don't relax without a reason
 
 - Every admin-editable URL field goes through `server/utils/validateUrl.js`,

@@ -57,6 +57,14 @@
           <span>Community Service</span>
 <% if (badges.replies) { %>          <span class="nav-badge" title="New replies from Ms. Gia"><%= badges.replies %><span class="sr-only"> new</span></span>
 <% } %>        </a>
+<% if (typeof ledClubs !== 'undefined' && ledClubs.length) { %>
+        <a href="/club-events" class="nav-item<%= activePage === 'club-events' ? ' active' : '' %>" data-page="club-events">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M3 9H21M8 2V5M16 2V5M12 12.5V17.5M9.5 15H14.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </span>
+          <span>My Club Events</span>
+        </a>
+<% } %>
 <% if (student.csCoordinator) { %>
         <a href="/service-hours" class="nav-item<%= activePage === 'service-hours' ? ' active' : '' %>" data-page="service-hours">
           <span class="nav-icon">

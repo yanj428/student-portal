@@ -131,39 +131,6 @@ sr.form.addEventListener('click', (e) => {
   }
 });
 
-// Phone photos are 3-5 MB and the server's storage is small, so a photo is
-// redrawn at most 1600 pixels on its longest side and saved as a JPEG before
-// it is sent: still sharp on any screen, about a tenth of the size. Redrawing
-// also drops the hidden location data phone cameras add, and turns iPhone
-// HEIC photos (where the browser can open them) into JPEGs the server accepts.
-// PDFs and GIFs are sent as they are; so is anything the browser cannot open.
-const PHOTO_MAX_SIDE = 1600;
-const PHOTO_QUALITY = 0.82;
-
-async function shrinkPhoto(file) {
-  if (!file.type.startsWith('image/') || file.type === 'image/gif') return file;
-  let bitmap;
-  try {
-    bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
-  } catch {
-    return file;
-  }
-  const scale = Math.min(1, PHOTO_MAX_SIDE / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  const ctx = canvas.getContext('2d');
-  // A transparent PNG would otherwise turn black as a JPEG.
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', PHOTO_QUALITY));
-  if (!blob) return file;
-  const name = `${file.name.replace(/\.[^.]+$/, '') || 'photo'}.jpg`;
-  return new File([blob], name, { type: 'image/jpeg' });
-}
-
 sr.form.querySelectorAll('.sr-upload input[type="file"]').forEach((input) => {
   input.addEventListener('change', async () => {
     const files = [...input.files];

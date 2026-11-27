@@ -273,6 +273,10 @@ function removeStudent(id) {
   if (keptHours.length !== hours.length) csHours.write(keptHours);
   const targets = csStudentTargets.read();
   if (targets.some((t) => t.id === id)) csStudentTargets.write(targets.filter((t) => t.id !== id));
+  const registrations = csEventRegistrations.read();
+  if (registrations.some((r) => r.studentId === id)) csEventRegistrations.write(registrations.filter((r) => r.studentId !== id));
+  const leads = clubLeaders.read();
+  if (leads.some((l) => l.studentId === id)) clubLeaders.write(leads.filter((l) => l.studentId !== id));
   return db.prepare('DELETE FROM students WHERE id = ?').run(id).changes > 0;
 }
 
@@ -538,6 +542,11 @@ const csHourTargets = jsonCollection('csHourTargets');
 // A student's own hours-to-graduate when it differs from the school's (someone
 // who joined in Grade 10 needs 75, say), keyed by student id.
 const csStudentTargets = jsonCollection('csStudentTargets');
+// Who registered for which community service event, and which accounts lead
+// which clubs (they post their club's events). Both are about accounts, so
+// neither feeds the content seed.
+const csEventRegistrations = jsonCollection('csEventRegistrations');
+const clubLeaders = jsonCollection('clubLeaders');
 // The photos and PDFs attached to service reports: who uploaded each one and
 // whether a saved report uses it (the files themselves are in cs-evidence/).
 const csEvidence = jsonCollection('csEvidence');
@@ -645,6 +654,10 @@ module.exports = {
   writeCsHourTargets: csHourTargets.write,
   readCsStudentTargets: csStudentTargets.read,
   writeCsStudentTargets: csStudentTargets.write,
+  readCsEventRegistrations: csEventRegistrations.read,
+  writeCsEventRegistrations: csEventRegistrations.write,
+  readClubLeaders: clubLeaders.read,
+  writeClubLeaders: clubLeaders.write,
   readCsEvidence: csEvidence.read,
   writeCsEvidence: csEvidence.write,
 

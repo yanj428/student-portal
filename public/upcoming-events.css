@@ -118,6 +118,7 @@
 .cat-activities { --cat: #8A4FC4; --cat-tint: #EEE3F8; --cat-dark: #532D7A; }
 .cat-family { --cat: #1F9AA6; --cat-tint: #DAF1F3; --cat-dark: #0F5C64; }
 .cat-school { --cat: #8B1E1E; --cat-tint: #F6E1E1; --cat-dark: #5C1212; }
+.cat-csevent { --cat: #C03A7A; --cat-tint: #F9E3EE; --cat-dark: #6E1F45; }
 
 .cal-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); }
 .cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
@@ -153,3 +154,6 @@
 .cal-pop-item span, .cal-pop-item small { font-size: 13px; color: var(--cat-dark, var(--primary-dark)); }
 .cal-pop-item.is-past { opacity: 0.65; }
 .cal-pop-none { margin: 0; font-size: 14px; color: var(--text-muted); }
+/* Community service events: the host's logo and a link to register */
+.cal-pop-logo { width: 20px; height: 20px; border-radius: 50%; object-fit: contain; background: #fff; border: 1px solid var(--border); vertical-align: -5px; margin-right: 6px; }
+.cal-pop-link { display: inline-block; margin-top: 6px; font-size: 13px; font-weight: 700; color: var(--cat-dark); }

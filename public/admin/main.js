@@ -6,6 +6,7 @@ import { loadStudents } from './students.js';
 import { loadVoicePending } from './voice.js';
 import { loadCurrentSlide, loadSlideArchive } from './slides.js';
 import { loadClubs } from './clubs.js';
+import { loadClubLeaders } from './clubLeaders.js';
 import { loadCsEvents } from './csEvents.js';
 import { loadCsResources } from './csResources.js';
 import { loadCalendarEvents } from './calendarEvents.js';
@@ -26,6 +27,7 @@ initAuth((session) => {
     loadCurrentSlide,
     loadSlideArchive,
     loadClubs,
+    loadClubLeaders,
     loadCsEvents,
     loadCsResources,
     loadCalendarEvents,

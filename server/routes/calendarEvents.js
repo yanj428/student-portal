@@ -1,4 +1,5 @@
 const express = require('express');
+const { serviceEventsForCalendar, SERVICE_CATEGORY } = require('../utils/serviceEvents');
 const crypto = require('crypto');
 
 const db = require('../db');
@@ -112,7 +113,17 @@ const listEvents = (req, res) => {
   res.json({ calendarEvents: items.map(publicEvent), categories: CATEGORIES });
 };
 
-router.get('/api/calendar-events', requireActiveStudent, listEvents);
+// Students' calendar also shows community service events that have a date, in
+// their own colour, linking to where students register. (The admin list is
+// only the calendar's own events, which are what admins edit there.)
+router.get('/api/calendar-events', requireActiveStudent, (req, res) => {
+  const today = todayAtSchool();
+  const todayIso = toIso([today.year, today.month, today.day]);
+  const service = serviceEventsForCalendar().filter((e) => !req.query.upcoming || e.endDate >= todayIso);
+  const calendar = (req.query.upcoming ? sortByDate(db.readCalendarEvents()).filter((e) => isUpcoming(e, today)) : sortByDate(db.readCalendarEvents())).map(publicEvent);
+  const all = [...calendar, ...service].sort((a, b) => a.startDate.localeCompare(b.startDate) || a.endDate.localeCompare(b.endDate));
+  res.json({ calendarEvents: all, categories: [...CATEGORIES, SERVICE_CATEGORY] });
+});
 router.get('/api/admin/calendar-events', requireAdmin, listEvents);
 const TITLE_MAX = 200;
 const SUBTITLE_MAX = 300;

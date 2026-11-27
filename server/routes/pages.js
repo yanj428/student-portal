@@ -35,6 +35,12 @@ router.get('/service-report', requireStudentPage, (req, res) => {
   res.render('pages/service-report', { student: res.locals.student });
 });
 
+// Club leaders post and manage their club's community service events here.
+router.get('/club-events', requireStudentPage, (req, res) => {
+  if (!res.locals.ledClubs.length) return res.redirect('/community-service');
+  res.render('pages/club-events', { student: res.locals.student, ledClubs: res.locals.ledClubs });
+});
+
 // Only the community service coordinator has this page; anyone else who
 // follows a link to it lands on the ordinary Community Service page.
 router.get('/service-hours', requireStudentPage, (req, res) => {

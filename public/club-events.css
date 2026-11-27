@@ -1,0 +1,27 @@
+/* My Club Events: club leaders post their club's community service events. */
+/* The hidden attribute must win over the buttons' own display. */
+.ce-form [hidden], .sh-panel [hidden] { display: none !important; }
+.ce-form { max-width: 860px; }
+.ce-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.ce-heading { margin: 4px 0 0; }
+.ce-list { display: flex; flex-direction: column; gap: 10px; }
+.ce-list:empty { display: none; }
+.ce-event { border: 1.3px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; }
+.ce-event-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.ce-event-main { flex: 1; min-width: 0; }
+.ce-event-title { margin: 0; font-size: 16px; font-weight: 700; overflow-wrap: anywhere; }
+.ce-event-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin-top: 8px; }
+.ce-registrants { margin: 10px 0 6px; padding-left: 22px; font-size: 14px; line-height: 1.6; }
+.ce-registrants span { color: var(--text-muted); }
+
+@media (max-width: 900px) {
+  .ce-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .ce-grid { grid-template-columns: 1fr; }
+}
+.ce-images { display: flex; flex-wrap: wrap; gap: 8px; }
+.ce-images:empty { display: none; }
+.ce-event-logo { width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; border: 1.3px solid var(--border); background: #fff; object-fit: contain; padding: 3px; }
+.ce-event-images { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.ce-event-images img { display: block; width: 120px; height: 90px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); }

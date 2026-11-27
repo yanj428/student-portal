@@ -617,43 +617,76 @@
           <p class="empty-hint" id="club-empty-after-school">No after school clubs added yet.</p>
         </div>
       </section>
+
+      <section class="panel">
+        <h2>Club leaders</h2>
+        <p class="panel-hint">A club leader gets a My Club Events page on the student site to post their club's community service events and see who registered. They cannot change anything else.</p>
+        <form id="club-leader-form" class="create-form">
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label" for="club-leader-club">Club</label>
+              <select class="field-input" id="club-leader-club" required></select>
+            </div>
+            <div class="form-field">
+              <label class="field-label" for="club-leader-email">Leader's school email</label>
+              <input class="field-input" type="email" id="club-leader-email" placeholder="name@kpis.ac.th" required />
+            </div>
+          </div>
+          <p class="field-error" id="club-leader-error" hidden></p>
+          <div class="form-actions"><button type="submit" class="btn primary">Add leader</button></div>
+        </form>
+        <div class="simple-list" id="club-leader-list"></div>
+        <p class="empty-hint" id="club-leader-empty">No club leaders yet.</p>
+      </section>
       </section>
 
       <section class="admin-page-section" data-section="community" hidden>
       <section class="panel">
         <h2>Community Service events &amp; opportunities</h2>
-        <p class="panel-hint">Post volunteer opportunities for clubs to recruit students. Students see these on the Community Service page.</p>
+        <p class="panel-hint">Events posted here are StuCo's own and show as hosted by the Student Council. Club leaders post their clubs' events from My Club Events on the student site; those appear in this list too. Students register on the Community Service page.</p>
 
         <form id="cs-event-form" class="archive-form">
+          <div class="form-field">
+            <label class="field-label" for="cs-event-title">Event title</label>
+            <input class="field-input" type="text" id="cs-event-title" placeholder="e.g. Beach Cleanup Day" required />
+          </div>
           <div class="form-row">
             <div class="form-field">
-              <label class="field-label" for="cs-event-title">Event title</label>
-              <input class="field-input" type="text" id="cs-event-title" placeholder="e.g. Beach Cleanup Day" required />
+              <label class="field-label" for="cs-event-day">Date</label>
+              <input class="field-input" type="date" id="cs-event-day" required />
             </div>
             <div class="form-field">
-              <label class="field-label" for="cs-event-club">Hosting club</label>
-              <input class="field-input" type="text" id="cs-event-club" list="cs-club-options" autocomplete="off" placeholder="Start typing a club name" required />
-              <datalist id="cs-club-options"></datalist>
-              <p class="club-detected" id="cs-event-club-detected" hidden></p>
+              <label class="field-label" for="cs-event-time">Time (optional)</label>
+              <input class="field-input" type="text" id="cs-event-time" maxlength="60" placeholder="e.g. 8:00 AM - 12:00 PM" />
             </div>
           </div>
           <div class="form-row">
             <div class="form-field">
-              <label class="field-label" for="cs-event-date">Date</label>
-              <input class="field-input" type="text" id="cs-event-date" placeholder="e.g. Sat, Sep 20" required />
+              <label class="field-label" for="cs-event-location">Place (optional)</label>
+              <input class="field-input" type="text" id="cs-event-location" maxlength="120" placeholder="e.g. Meet at the school gate" />
             </div>
             <div class="form-field">
-              <label class="field-label" for="cs-event-signup">Signup link (optional)</label>
-              <input class="field-input" type="text" id="cs-event-signup" placeholder="Google Form, sheet, etc." />
+              <label class="field-label" for="cs-event-spots">Spots (blank = no limit)</label>
+              <input class="field-input" type="number" id="cs-event-spots" min="1" max="1000" step="1" inputmode="numeric" placeholder="No limit" />
             </div>
+          </div>
+          <div class="form-field">
+            <label class="field-label" for="cs-event-signup">Extra sign-up form (optional)</label>
+            <input class="field-input" type="text" id="cs-event-signup" placeholder="Google Form, sheet, etc." />
           </div>
           <div class="form-field">
             <label class="field-label" for="cs-event-description">Description</label>
             <textarea class="field-input" id="cs-event-description" rows="3" placeholder="What will volunteers do? How many are needed?" required></textarea>
           </div>
+          <div class="form-field">
+            <span class="field-label">Photos or posters (optional, up to 4)</span>
+            <div class="cs-event-images-edit" id="cs-event-images"></div>
+            <label class="btn ghost cs-event-add-images" id="cs-event-add-images"><input type="file" accept="image/*" multiple id="cs-event-image-input" />Add pictures</label>
+          </div>
+          <label class="radio-option"><input type="checkbox" id="cs-event-open" checked /> Registration is open</label>
           <p class="field-error" id="cs-event-error" hidden></p>
           <div class="form-actions">
-            <button type="submit" class="btn primary" id="cs-event-submit">Post opportunity</button>
+            <button type="submit" class="btn primary" id="cs-event-submit">Post event</button>
             <button type="button" class="btn ghost" id="cs-event-cancel-edit" hidden>Cancel edit</button>
           </div>
         </form>

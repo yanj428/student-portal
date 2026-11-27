@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('../partials/head-links', { pageTitle: 'My Club Events', pageCss: 'service-hours.css' }) %>
+  <link rel="stylesheet" href="club-events.css" />
+</head>
+<body>
+  <div class="app">
+<%- include('../partials/sidebar', { activePage: 'club-events' }) %>
+    <main class="main">
+<%- include('../partials/topbar', { student }) %>
+
+      <section class="page-header">
+        <h1>My Club Events</h1>
+        <p>Post community service events for <%= ledClubs.map(function (c) { return c.name; }).join(', ') %>. They appear on the Community Service page, where students register.</p>
+      </section>
+
+      <form class="sr-section ce-form" id="ce-form" novalidate>
+        <h2 class="sr-step" id="ce-form-title"><span>+</span>Post an event</h2>
+        <div class="sr-dates">
+          <label class="hrs-field"><span>Club</span>
+            <select class="hrs-input" id="ce-club">
+<% ledClubs.forEach(function (c) { %>              <option value="<%= c.id %>"><%= c.name %></option>
+<% }) %>            </select>
+          </label>
+          <label class="hrs-field"><span>Event title</span><input class="hrs-input" id="ce-title" maxlength="200" placeholder="e.g. Beach clean-up at Bang Saen" required /></label>
+        </div>
+        <div class="ce-grid">
+          <label class="hrs-field"><span>Date</span><input class="hrs-input" type="date" id="ce-day" required /></label>
+          <label class="hrs-field"><span>Time <small>(optional)</small></span><input class="hrs-input" id="ce-time" maxlength="60" placeholder="e.g. 8:00 AM - 12:00 PM" /></label>
+          <label class="hrs-field"><span>Place <small>(optional)</small></span><input class="hrs-input" id="ce-location" maxlength="120" placeholder="e.g. Meet at the school gate" /></label>
+          <label class="hrs-field"><span>Spots <small>(blank = no limit)</small></span><input class="hrs-input" type="number" id="ce-spots" min="1" max="1000" step="1" inputmode="numeric" placeholder="No limit" /></label>
+        </div>
+        <label class="hrs-field"><span>Description</span><textarea class="hrs-input sr-text" id="ce-description" maxlength="2000" required></textarea></label>
+        <div class="hrs-field">
+          <span>Photos or posters <small>(optional, up to 4)</small></span>
+          <div class="ce-images" id="ce-images"></div>
+          <label class="hrs-btn ghost sr-upload" id="ce-add-images"><input type="file" accept="image/*" multiple id="ce-image-input" />Add pictures</label>
+        </div>
+        <label class="hrs-field"><span>Extra sign-up form <small>(optional, if your club also needs one)</small></span><input class="hrs-input" id="ce-signup" maxlength="500" placeholder="https://..." /></label>
+        <label class="sh-only-behind"><input type="checkbox" id="ce-open" checked /> Registration is open</label>
+        <p class="hrs-error" id="ce-error" role="alert" hidden></p>
+        <div class="hrs-form-buttons">
+          <button type="button" class="hrs-btn ghost" id="ce-cancel" hidden>Cancel edit</button>
+          <button type="submit" class="hrs-btn primary" id="ce-submit">Post event</button>
+        </div>
+      </form>
+
+      <section class="sh-panel">
+        <h2 class="cs-label ce-heading">Upcoming</h2>
+        <div class="ce-list" id="ce-upcoming"></div>
+        <p class="sh-empty-line" id="ce-upcoming-empty" hidden>No upcoming events. Post one above.</p>
+        <h2 class="cs-label ce-heading">Past</h2>
+        <div class="ce-list" id="ce-past"></div>
+        <p class="sh-empty-line" id="ce-past-empty" hidden>No past events yet.</p>
+      </section>
+    </main>
+  </div>
+
+  <script src="common.js"></script>
+  <script src="hours-shared.js"></script>
+  <script src="club-events.js"></script>
+</body>
+</html>

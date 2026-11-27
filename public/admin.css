@@ -1131,3 +1131,13 @@ body.ec-dragging, body.ec-dragging * { cursor: grabbing !important; }
 .admin-page-section[data-section="hours"] .sh-root { gap: 20px; }
 .sdg-notice { margin: 12px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--text-muted); }
 .sdg-notice a { color: inherit; }
+.cs-event-regs { margin: 8px 0 0; padding-left: 22px; font-size: 14px; line-height: 1.6; }
+.cs-event-images-edit { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.cs-event-images-edit:empty { display: none; }
+.cs-event-images-edit .thumb { position: relative; }
+.cs-event-images-edit img, .cs-event-thumbs img { display: block; width: 96px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+.cs-event-images-edit .thumb button { position: absolute; top: -6px; right: -6px; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border); background: #fff; color: #C0392B; font-size: 16px; line-height: 1; cursor: pointer; }
+.cs-event-add-images { position: relative; overflow: hidden; display: inline-block; }
+.cs-event-add-images input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.cs-event-add-images[hidden] { display: none; }
+.cs-event-thumbs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }

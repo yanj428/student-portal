@@ -5,10 +5,13 @@
 //   npm run import:hours -- "path/to/workbook.xlsx" --apply    (writes to the database)
 //   --date-fix "8-Aug-0205=2025-08-08"                          (repeatable: a date typed wrongly in the sheet)
 //   --id-fix 241920=20241920                                    (repeatable: an ID typed wrongly on a tab)
+//   --tab-id "Darren=20231701"                                  (repeatable: the right ID for one tab, when
+//                                                                the tab was copied and still has another student's ID)
 //
 // A tab belongs to the account <ID number>@kpis.ac.th (the ID is on the tab).
-// Tabs with no matching account are listed and skipped. Running it again is
-// safe: a row that was already imported is not added twice.
+// Tabs with no matching account are listed and skipped. Two tabs with the same
+// ID stop the import, so one student's hours never land on another. Running it
+// again is safe: a row that was already imported is not added twice.
 const fs = require('fs');
 const crypto = require('crypto');
 const zlib = require('zlib');
@@ -92,10 +95,16 @@ function readTab(sheet, fixes) {
   let name = '';
   let id = '';
   const activities = [];
+  const noHours = [];
   sheet.rows.forEach(({ number, cells }) => {
     if (cells.H === 'Student name:') name = cells.I || '';
     if (cells.H === 'ID Number:') id = cells.I ? String(Math.round(Number(cells.I))) : '';
-    if (number === 1 || !cells.C || !(Number(cells.D) > 0)) return;
+    if (number === 1 || !cells.C) return;
+    // An activity written down with no hours yet is left out, but listed.
+    if (!(Number(cells.D) > 0)) {
+      if (cells.C.trim().length > 1) noHours.push(`row ${number} "${cells.C.trim()}"`);
+      return;
+    }
     activities.push({
       row: number,
       date: isoDate(cells.A, fixes),
@@ -106,26 +115,39 @@ function readTab(sheet, fixes) {
       initials: (cells.F || '').trim().toUpperCase(),
     });
   });
-  return { sheet: sheet.name, name, id, activities };
+  return { sheet: sheet.name, name, id, activities, noHours };
 }
 
 // ---- Main ----
 
 const args = process.argv.slice(2);
-const file = args.find((a, i) => !a.startsWith('--') && !['--date-fix', '--id-fix'].includes(args[i - 1]));
+const file = args.find((a, i) => !a.startsWith('--') && !['--date-fix', '--id-fix', '--tab-id'].includes(args[i - 1]));
 const apply = args.includes('--apply');
 const optionPairs = (flag) => new Map(args.flatMap((a, i) => (args[i - 1] === flag ? [a.split('=')] : [])));
 const fixes = optionPairs('--date-fix');
 const idFixes = optionPairs('--id-fix');
+const tabIds = optionPairs('--tab-id');
 if (!file) {
-  console.error('Usage: npm run import:hours -- <workbook.xlsx> [--apply] [--date-fix "8-Aug-0205=2025-08-08"]');
+  console.error('Usage: npm run import:hours -- <workbook.xlsx> [--apply] [--date-fix "8-Aug-0205=2025-08-08"] [--tab-id "Darren=20231701"]');
   process.exit(1);
 }
 
 const tabs = readWorkbook(file)
   .filter((s) => !['Instructions', 'Sample'].includes(s.name))
   .map((s) => readTab(s, fixes))
+  .map((t) => (tabIds.has(t.sheet) ? { ...t, id: tabIds.get(t.sheet) } : t))
   .filter((t) => t.activities.length > 0);
+
+// A tab copied from another student's and never given its own ID would put
+// its hours on that student (and its rows would clash with theirs).
+const byId = new Map();
+tabs.forEach((t) => byId.set(t.id, [...(byId.get(t.id) || []), t.sheet]));
+const shared = [...byId].filter(([id, sheets]) => id && sheets.length > 1);
+if (shared.length) {
+  shared.forEach(([id, sheets]) => console.error(`Tabs ${sheets.join(' and ')} have the same ID number (${id}).`));
+  console.error('Nothing was imported. Give the right ID with --tab-id "<tab name>=<ID number>".');
+  process.exit(1);
+}
 
 const all = db.readCsHours();
 const already = new Set(all.map((e) => e.importKey).filter(Boolean));
@@ -168,6 +190,7 @@ tabs.forEach((tab) => {
   const hours = fresh.reduce((n, a) => n + a.hours, 0);
   const undated = fresh.filter((a) => !a.date).length;
   console.log(`+ ${tab.sheet}: ${fresh.length} new of ${tab.activities.length} activities, ${Math.round(hours * 100) / 100} hours${undated ? `, ${undated} with no date` : ''}`);
+  if (tab.noHours.length) console.log(`  left out (no hours in the sheet): ${tab.noHours.join(', ')}`);
 });
 
 const totalHours = added.reduce((n, e) => n + e.hours, 0);

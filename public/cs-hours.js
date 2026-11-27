@@ -61,7 +61,7 @@ function renderHoursSummary(totals, targets) {
 
 // 14-Dec-2023, the way the school's sheet writes it.
 function sheetDate(iso) {
-  if (!iso) return '\u2014';
+  if (!iso) return 'No date';
   const [y, m, d] = iso.split('-').map(Number);
   return `${d}-${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1]}-${y}`;
 }
